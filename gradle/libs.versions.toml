@@ -1,0 +1,175 @@
+[versions]
+# Kotlin
+kotlin = "1.8.20"
+
+# Minecraft
+minecraft = "1.19.4"
+# Loom
+loom = "1.2.7"
+# Quilt
+quilt-loader = "0.18.5"
+quilt-mappings = "1.19.4+build.10"
+quilt-kotlin-libraries = "2.0.2+kt.1.8.20+flk.1.9.3"
+quilt-standard-libraries = "5.0.0-beta.10+1.19.4"
+quilt-fabric-api = "6.0.0-beta.9+0.83.0-1.19.4"
+# Fabric
+fabric-loader = "0.14.19"
+fabric-api = "0.77.0+1.19.4"
+fabric-language-kotlin = "1.9.3+kotlin.1.8.20"
+fabric-yarn = "1.19.4+build.2"
+
+owo-lib = "0.10.3+1.19.3"
+
+mixin = "0.12.4+mixin.0.8.5"
+
+# Shadow
+shadow = "8.1.1"
+
+# Cloud
+cloud = "1.8.3"
+
+# Silk
+silk = "1.9.6"
+
+# Jackson
+jackson = "2.14.2"
+
+[plugins]
+
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+
+quilt-loom = { id = "org.quiltmc.loom", version.ref = "loom" }
+fabric-loom = { id = "fabric-loom", version.ref = "loom" }
+
+[libraries]
+
+# Kotlin stdlib
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+
+
+minecraft = { group = "com.mojang", name = "minecraft", version.ref = "minecraft" }
+
+
+fabric-loader = { group = "net.fabricmc", name = "fabric-loader", version.ref = "fabric-loader" }
+fabric-api = { group = "net.fabricmc.fabric-api", name = "fabric-api", version.ref = "fabric-api" }
+fabric-language-kotlin = { group = "net.fabricmc", name = "fabric-language-kotlin", version.ref = "fabric-language-kotlin" }
+yarn-mappings = { group = "net.fabricmc", name = "yarn", version.ref = "fabric-yarn" }
+
+
+quilt-loader = { group = "org.quiltmc", name = "quilt-loader", version.ref = "quilt-loader" }
+quilt-fabric-api = { module = "org.quiltmc.quilted-fabric-api:quilted-fabric-api", version.ref = "quilt-fabric-api" }
+quilt-kotlin-libraries = { group = "org.quiltmc", name = "quilt-kotlin-libraries", version.ref = "quilt-kotlin-libraries" }
+quilt-mappings = { group = "org.quiltmc", name = "quilt-mappings", version.ref = "quilt-mappings" }
+
+quilt-qsl-core = { group = "org.quiltmc.qsl", name = "core", version.ref = "quilt-standard-libraries" }
+quilt-qsl-block = { group = "org.quiltmc.qsl", name = "block", version.ref = "quilt-standard-libraries" }
+quilt-qsl-data = { group = "org.quiltmc.qsl", name = "data", version.ref = "quilt-standard-libraries" }
+quilt-qsl-entity = { group = "org.quiltmc.qsl", name = "entity", version.ref = "quilt-standard-libraries" }
+quilt-qsl-gui = { group = "org.quiltmc.qsl", name = "gui", version.ref = "quilt-standard-libraries" }
+quilt-qsl-item = { group = "org.quiltmc.qsl", name = "item", version.ref = "quilt-standard-libraries" }
+quilt-qsl-management = { group = "org.quiltmc.qsl", name = "management", version.ref = "quilt-standard-libraries" }
+quilt-qsl-misc = { group = "org.quiltmc.qsl", name = "misc", version.ref = "quilt-standard-libraries" }
+quilt-qsl-rendering = { group = "org.quiltmc.qsl", name = "rendering", version.ref = "quilt-standard-libraries" }
+quilt-qsl-worldgen = { group = "org.quiltmc.qsl", name = "worldgen", version.ref = "quilt-standard-libraries" }
+
+# SLF4K
+## SLF4K is a set of kotlin extensions for SLF4J
+slf4k = { group = "ca.solo-studios", name = "slf4k", version = "0.5.1" }
+
+
+# Sponge Mixin
+sponge-mixin = { group = "net.fabricmc", name = "sponge-mixin", version.ref = "mixin" }
+
+
+# Cloud
+## Cloud is a general-purpose Java command dispatcher & framework
+cloud-core = { group = "cloud.commandframework", name = "cloud-core", version.ref = "cloud" }
+cloud-annotations = { group = "cloud.commandframework", name = "cloud-annotations", version.ref = "cloud" }
+cloud-kotlin-extensions = { group = "cloud.commandframework", name = "cloud-kotlin-extensions", version.ref = "cloud" }
+cloud-kotlin-coroutines = { group = "cloud.commandframework", name = "cloud-kotlin-coroutines", version.ref = "cloud" }
+cloud-kotlin-coroutines-annotations = { group = "cloud.commandframework", name = "cloud-kotlin-coroutines-annotations", version.ref = "cloud" }
+cloud-services = { group = "cloud.commandframework", name = "cloud-services", version.ref = "cloud" }
+cloud-tasks = { group = "cloud.commandframework", name = "cloud-tasks", version.ref = "cloud" }
+cloud-brigadier = { group = "cloud.commandframework", name = "cloud-brigadier", version.ref = "cloud" }
+cloud-fabric = { group = "cloud.commandframework", name = "cloud-fabric", version.ref = "cloud" }
+cloud-minecraft-extras = { group = "cloud.commandframework", name = "cloud-minecraft-extras", version.ref = "cloud" }
+
+
+silk-core = { group = "net.silkmc", name = "silk-core", version.ref = "silk" }
+silk-game = { group = "net.silkmc", name = "silk-game", version.ref = "silk" }
+silk-igui = { group = "net.silkmc", name = "silk-igui", version.ref = "silk" }
+silk-nbt = { group = "net.silkmc", name = "silk-nbt", version.ref = "silk" }
+silk-network = { group = "net.silkmc", name = "silk-network", version.ref = "silk" }
+silk-persistence = { group = "net.silkmc", name = "silk-persistence", version.ref = "silk" }
+
+
+owo-lib = { group = "io.wispforest", name = "owo-lib", version.ref = "owo-lib" }
+owo-sentinel = { group = "io.wispforest", name = "owo-sentinel", version.ref = "owo-lib" }
+
+
+konf = { group = "com.uchuhimo", name = "konf", version = "1.1.2" }
+
+
+jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson" }
+jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson" }
+jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson" }
+jackson-module-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version.ref = "jackson" }
+
+
+# Runtime mods
+## Mods loaded at runtime in a development environment for performance optimizations
+mod-runtime-lithium = { group = "maven.modrinth", name = "lithium", version = "mc1.19.3-0.11.1" }
+mod-runtime-lazydfu = { group = "maven.modrinth", name = "lazydfu", version = "0.1.3" }
+mod-runtime-ferrite-core = { group = "maven.modrinth", name = "ferrite-core", version = "5.1.0-fabric" }
+mod-runtime-starlight = { group = "maven.modrinth", name = "starlight", version = "1.1.1+1.19" }
+mod-runtime-krypton = { group = "maven.modrinth", name = "krypton", version = "0.2.1" }
+mod-runtime-c2me = { group = "maven.modrinth", name = "c2me-fabric", version = "0.2.0+alpha.10.0+1.19.3" }
+mod-runtime-fastload = { group = "maven.modrinth", name = "fastload", version = "2.6.11" }
+mod-runtime-chat-reports = { group = "maven.modrinth", name = "no-chat-reports", version = "Fabric-1.19.3-v2.0.0" }
+mod-runtime-fabric-carpet = { group = "carpet", name = "fabric-carpet", version = "1.19.3-1.4.96+v230201" }
+
+[bundles]
+cloud = [
+    "cloud-core",
+    "cloud-annotations",
+    "cloud-kotlin-extensions",
+    "cloud-kotlin-coroutines",
+    "cloud-kotlin-coroutines-annotations",
+    "cloud-services",
+    "cloud-tasks",
+    "cloud-brigadier",
+    "cloud-fabric",
+    "cloud-minecraft-extras",
+]
+
+silk = [
+    "silk-core",
+    "silk-game",
+    "silk-igui",
+    "silk-nbt",
+    "silk-network",
+    "silk-persistence",
+]
+
+mod-runtime = [
+    "mod-runtime-lithium",
+    "mod-runtime-lazydfu",
+    "mod-runtime-ferrite-core",
+    "mod-runtime-starlight",
+    #    "mod-runtime-krypton",
+    "mod-runtime-c2me",
+    "mod-runtime-fastload",
+    "mod-runtime-chat-reports",
+    #    "mod-runtime-fabric-carpet",
+]
+
+jackson = [
+    "jackson-core",
+    "jackson-databind",
+    "jackson-annotations",
+    "jackson-module-kotlin",
+]
