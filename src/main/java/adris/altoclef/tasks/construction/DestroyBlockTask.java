@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.construction;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.movement.RunAwayFromPositionTask;
 import adris.altoclef.tasks.movement.SafeRandomShimmyTask;
@@ -16,7 +15,13 @@ import baritone.api.pathing.goals.GoalBlock;
 import baritone.api.pathing.goals.GoalNear;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
-import net.minecraft.block.*;
+import gay.solonovamax.altoclef.AltoClef;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.DoorBlock;
+import net.minecraft.block.FenceBlock;
+import net.minecraft.block.FenceGateBlock;
+import net.minecraft.block.FlowerBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.PillagerEntity;
 import net.minecraft.item.ItemStack;
@@ -104,84 +109,84 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getClientBaritone().getPathingBehavior().forceCancel();
+    protected void onStart() {
+        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
         _moveChecker.reset();
         stuckCheck.reset();
         ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
         if (!cursorStack.isEmpty()) {
-            Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
-            moveTo.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+            moveTo.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             }
-            Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+            Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
             // Try throwing away cursor slot if it's garbage
-            garbage.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            garbage.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
         } else {
             StorageHelper.closeScreen();
         }
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (mod.getWorld().getBlockState(_pos).getBlock() == Blocks.WHITE_WOOL) {
-            Iterable<Entity> entities = mod.getWorld().getEntities();
+    protected Task onTick() {
+        if (AltoClef.INSTANCE.getWorld().getBlockState(_pos).getBlock() == Blocks.WHITE_WOOL) {
+            Iterable<Entity> entities = AltoClef.INSTANCE.getWorld().getEntities();
             for (Entity entity : entities) {
                 if (entity instanceof PillagerEntity) {
                     if (_pos.isWithinDistance(entity.getPos(), 144)) {
                         Debug.logMessage("Blacklisting pillager wool.");
-                        mod.getBlockTracker().requestBlockUnreachable(_pos, 0);
+                        AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(_pos, 0);
                     }
                 }
             }
         }
-        if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
+        if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
             _moveChecker.reset();
         }
-        if (WorldHelper.isInNetherPortal(mod)) {
-            if (!mod.getClientBaritone().getPathingBehavior().isPathing()) {
+        if (WorldHelper.isInNetherPortal(AltoClef.INSTANCE)) {
+            if (!AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
                 setDebugState("Getting out from nether portal");
-                mod.getInputControls().hold(Input.SNEAK);
-                mod.getInputControls().hold(Input.MOVE_FORWARD);
+                AltoClef.INSTANCE.getInputControls().hold(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().hold(Input.MOVE_FORWARD);
                 return null;
             } else {
-                mod.getInputControls().release(Input.SNEAK);
-                mod.getInputControls().release(Input.MOVE_BACK);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             }
         } else {
-            if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
-                mod.getInputControls().release(Input.SNEAK);
-                mod.getInputControls().release(Input.MOVE_BACK);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
+            if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             }
         }
-        if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished(mod) && stuckInBlock(mod) != null) {
+        if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished() && stuckInBlock(AltoClef.INSTANCE) != null) {
             setDebugState("Getting unstuck from block.");
             stuckCheck.reset();
             // Stop other tasks, we are JUST shimmying
-            mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-            mod.getClientBaritone().getExploreProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getExploreProcess().onLostControl();
             return _unstuckTask;
         }
-        if (!_moveChecker.check(mod) || !stuckCheck.check(mod)) {
-            BlockPos blockStuck = stuckInBlock(mod);
+        if (!_moveChecker.check(AltoClef.INSTANCE) || !stuckCheck.check(AltoClef.INSTANCE)) {
+            BlockPos blockStuck = stuckInBlock(AltoClef.INSTANCE);
             if (blockStuck != null) {
                 _unstuckTask = getFenceUnstuckTask();
                 return _unstuckTask;
             }
             stuckCheck.reset();
         }
-        if (!_moveChecker.check(mod)) {
+        if (!_moveChecker.check(AltoClef.INSTANCE)) {
             _moveChecker.reset();
-            mod.getBlockTracker().requestBlockUnreachable(_pos);
+            AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(_pos);
         }
 
         // do NOT break if we're standing above it and it's dangerous below...
-        if (!WorldHelper.isSolid(mod, _pos.up()) && mod.getPlayer().getPos().y > _pos.getY() && _pos.isWithinDistance(mod.getPlayer().isOnGround() ? mod.getPlayer().getPos() : mod.getPlayer().getPos().add(0, -1, 0), 0.89)) {
-            if (WorldHelper.dangerousToBreakIfRightAbove(mod, _pos)) {
+        if (!WorldHelper.isSolid(AltoClef.INSTANCE, _pos.up()) && AltoClef.INSTANCE.getPlayer().getPos().y > _pos.getY() && _pos.isWithinDistance(AltoClef.INSTANCE.getPlayer().isOnGround() ? AltoClef.INSTANCE.getPlayer().getPos() : AltoClef.INSTANCE.getPlayer().getPos().add(0, -1, 0), 0.89)) {
+            if (WorldHelper.dangerousToBreakIfRightAbove(AltoClef.INSTANCE, _pos)) {
                 setDebugState("It's dangerous to break as we're right above it, moving away and trying again.");
                 return new RunAwayFromPositionTask(3, _pos.getY(), _pos);
             }
@@ -189,47 +194,47 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
 
         // We're trying to mine
         Optional<Rotation> reach = LookHelper.getReach(_pos);
-        if (reach.isPresent() && (mod.getPlayer().isTouchingWater() || mod.getPlayer().isOnGround()) &&
-                !mod.getFoodChain().needsToEat() && !WorldHelper.isInNetherPortal(mod) &&
-                mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
+        if (reach.isPresent() && (AltoClef.INSTANCE.getPlayer().isTouchingWater() || AltoClef.INSTANCE.getPlayer().isOnGround()) &&
+                !AltoClef.INSTANCE.getFoodChain().needsToEat() && !WorldHelper.isInNetherPortal(AltoClef.INSTANCE) &&
+                AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
             setDebugState("Block in range, mining...");
             stuckCheck.reset();
             isMining = true;
-            mod.getInputControls().release(Input.SNEAK);
-            mod.getInputControls().release(Input.MOVE_BACK);
-            mod.getInputControls().release(Input.MOVE_FORWARD);
+            AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+            AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+            AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             // Break the block, force it.
-            mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-            mod.getClientBaritone().getBuilderProcess().onLostControl();
-            if (!LookHelper.isLookingAt(mod, reach.get())) {
-                reach.ifPresent(rotation -> LookHelper.lookAt(mod, rotation));
+            AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getBuilderProcess().onLostControl();
+            if (!LookHelper.isLookingAt(AltoClef.INSTANCE, reach.get())) {
+                reach.ifPresent(rotation -> LookHelper.lookAt(AltoClef.INSTANCE, rotation));
             }
-            if (LookHelper.isLookingAt(mod, reach.get())) {
+            if (LookHelper.isLookingAt(AltoClef.INSTANCE, reach.get())) {
                 // Tool equip is handled in `PlayerInteractionFixChain`. Oof.
-                mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, true);
+                AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, true);
             }
         } else {
             setDebugState("Getting to block...");
-            if (isMining && mod.getPlayer().isTouchingWater()) {
+            if (isMining && AltoClef.INSTANCE.getPlayer().isTouchingWater()) {
                 isMining = false;
-                mod.getBlockTracker().requestBlockUnreachable(_pos);
+                AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(_pos);
             } else {
                 isMining = false;
             }
-            boolean isCloseToMoveBack = _pos.isWithinDistance(mod.getPlayer().getPos(), 2);
+            boolean isCloseToMoveBack = _pos.isWithinDistance(AltoClef.INSTANCE.getPlayer().getPos(), 2);
             if (isCloseToMoveBack) {
-                if (!mod.getClientBaritone().getPathingBehavior().isPathing() && !mod.getPlayer().isTouchingWater() &&
-                        !mod.getFoodChain().needsToEat()) {
-                    mod.getInputControls().hold(Input.SNEAK);
-                    mod.getInputControls().hold(Input.MOVE_BACK);
+                if (!AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing() && !AltoClef.INSTANCE.getPlayer().isTouchingWater() &&
+                        !AltoClef.INSTANCE.getFoodChain().needsToEat()) {
+                    AltoClef.INSTANCE.getInputControls().hold(Input.SNEAK);
+                    AltoClef.INSTANCE.getInputControls().hold(Input.MOVE_BACK);
                 } else {
-                    mod.getInputControls().release(Input.SNEAK);
-                    mod.getInputControls().release(Input.MOVE_BACK);
+                    AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                    AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
                 }
             }
-            if (!mod.getClientBaritone().getCustomGoalProcess().isActive()) {
-                mod.getClientBaritone().getBuilderProcess().onLostControl();
-                mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(mod.getWorld().getBlockState(_pos.up()).getBlock() ==
+            if (!AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().isActive()) {
+                AltoClef.INSTANCE.getClientBaritone().getBuilderProcess().onLostControl();
+                AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().setGoalAndPath(AltoClef.INSTANCE.getWorld().getBlockState(_pos.up()).getBlock() ==
                         Blocks.SNOW ? new GoalBlock(_pos) : new GoalNear(_pos, 1));
             }
         }
@@ -237,22 +242,22 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getClientBaritone().getPathingBehavior().forceCancel();
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
         if (!AltoClef.inGame()) {
             return;
         }
         // Do not keep breaking.
         // Can lead to trouble, for example, if lava is right above the NEXT block.
-        mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, false);
-        mod.getInputControls().release(Input.SNEAK);
-        mod.getInputControls().release(Input.MOVE_BACK);
-        mod.getInputControls().release(Input.MOVE_FORWARD);
+        AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, false);
+        AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+        AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+        AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return WorldHelper.isAir(mod, _pos);//;
+    public boolean isFinished() {
+        return WorldHelper.isAir(AltoClef.INSTANCE, _pos);//;
     }
 
     @Override

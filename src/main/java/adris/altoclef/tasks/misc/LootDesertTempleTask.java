@@ -1,9 +1,9 @@
 package adris.altoclef.tasks.misc;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.construction.DestroyBlockTask;
 import adris.altoclef.tasks.container.LootContainerTask;
 import adris.altoclef.tasksystem.Task;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
@@ -29,20 +29,20 @@ public class LootDesertTempleTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getClientBaritoneSettings().blocksToAvoid.value.add(Blocks.STONE_PRESSURE_PLATE);
+    protected void onStart() {
+        AltoClef.INSTANCE.getClientBaritoneSettings().blocksToAvoid.value.add(Blocks.STONE_PRESSURE_PLATE);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         if (_lootTask != null) {
-            if (!_lootTask.isFinished(mod)) {
+            if (!_lootTask.isFinished()) {
                 setDebugState("Looting a desert temple chest");
                 return _lootTask;
             }
             _looted++;
         }
-        if (mod.getWorld().getBlockState(_temple).getBlock() == Blocks.STONE_PRESSURE_PLATE) {
+        if (AltoClef.INSTANCE.getWorld().getBlockState(_temple).getBlock() == Blocks.STONE_PRESSURE_PLATE) {
             setDebugState("Breaking pressure plate");
             return new DestroyBlockTask(_temple);
         }
@@ -56,8 +56,8 @@ public class LootDesertTempleTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task task) {
-        mod.getClientBaritoneSettings().blocksToAvoid.value.remove(Blocks.STONE_PRESSURE_PLATE);
+    protected void onStop(Task task) {
+        AltoClef.INSTANCE.getClientBaritoneSettings().blocksToAvoid.value.remove(Blocks.STONE_PRESSURE_PLATE);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class LootDesertTempleTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return _looted == 4;
     }
 

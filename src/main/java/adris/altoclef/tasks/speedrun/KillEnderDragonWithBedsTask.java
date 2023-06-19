@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.speedrun;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.movement.GetToBlockTask;
@@ -10,6 +9,7 @@ import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.boss.dragon.phase.Phase;
@@ -38,12 +38,12 @@ public class KillEnderDragonWithBedsTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         /*
             If dragon is perching:
                 If we're not in position (XZ):
@@ -58,7 +58,7 @@ public class KillEnderDragonWithBedsTask extends Task {
                 // Perform "Default Wander" mode and avoid dragon breath.
          */
         if (_endPortalTop == null) {
-            _endPortalTop = locateExitPortalTop(mod);
+            _endPortalTop = locateExitPortalTop(AltoClef.INSTANCE);
             if (_endPortalTop != null) {
                 ((IDragonWaiter) _whenNotPerchingTask).setExitPortalTop(_endPortalTop);
             }
@@ -69,11 +69,11 @@ public class KillEnderDragonWithBedsTask extends Task {
             return new GetToXZTask(0, 0);
         }
 
-        if (!mod.getEntityTracker().entityFound(EnderDragonEntity.class)) {
+        if (!AltoClef.INSTANCE.getEntityTracker().entityFound(EnderDragonEntity.class)) {
             setDebugState("No dragon found.");
             return new GetToXZTask(0, 0);
         }
-        List<EnderDragonEntity> dragons = mod.getEntityTracker().getTrackedEntities(EnderDragonEntity.class);
+        List<EnderDragonEntity> dragons = AltoClef.INSTANCE.getEntityTracker().getTrackedEntities(EnderDragonEntity.class);
         if (!dragons.isEmpty()) {
             for (EnderDragonEntity dragon : dragons) {
                 Phase dragonPhase = dragon.getPhaseManager().getCurrent();
@@ -84,60 +84,60 @@ public class KillEnderDragonWithBedsTask extends Task {
                 }
                 ((IDragonWaiter) _whenNotPerchingTask).setPerchState(perching);
                 // When the dragon is not perching...
-                if (_whenNotPerchingTask.isActive() && !_whenNotPerchingTask.isFinished(mod)) {
+                if (_whenNotPerchingTask.isActive() && !_whenNotPerchingTask.isFinished()) {
                     setDebugState("Dragon not perching, performing special behavior...");
                     return _whenNotPerchingTask;
                 }
                 if (perching) {
-                    mod.getFoodChain().shouldStop(true);
+                    AltoClef.INSTANCE.getFoodChain().shouldStop(true);
                     BlockPos targetStandPosition = _endPortalTop.add(-1, -1, 0);
-                    BlockPos playerPosition = mod.getPlayer().getBlockPos();
+                    BlockPos playerPosition = AltoClef.INSTANCE.getPlayer().getBlockPos();
                     // If we're not positioned (above is OK), go there and make sure we're at the right height.
-                    if (_positionTask != null && _positionTask.isActive() && !_positionTask.isFinished(mod)) {
+                    if (_positionTask != null && _positionTask.isActive() && !_positionTask.isFinished()) {
                         setDebugState("Going to position for bed cycle...");
                         return _positionTask;
                     }
-                    if ((!WorldHelper.inRangeXZ(WorldHelper.toVec3d(targetStandPosition), mod.getPlayer().getPos(), 1)
-                            || playerPosition.getY() < targetStandPosition.getY()) && mod.getPlayer().getVelocity().getX() == 0 &&
-                            mod.getPlayer().getVelocity().getY() == 0 && mod.getPlayer().getVelocity().getZ() == 0) {
+                    if ((!WorldHelper.inRangeXZ(WorldHelper.toVec3d(targetStandPosition), AltoClef.INSTANCE.getPlayer().getPos(), 1)
+                            || playerPosition.getY() < targetStandPosition.getY()) && AltoClef.INSTANCE.getPlayer().getVelocity().getX() == 0 &&
+                            AltoClef.INSTANCE.getPlayer().getVelocity().getY() == 0 && AltoClef.INSTANCE.getPlayer().getVelocity().getZ() == 0) {
                         _positionTask = new GetToBlockTask(targetStandPosition);
                         setDebugState("Moving to target stand position");
                         return _positionTask;
                     }
                     // We're positioned. Perform bed strats!
                     BlockPos bedTargetPosition = _endPortalTop.up();
-                    boolean bedPlaced = mod.getBlockTracker().blockIsValid(bedTargetPosition, ItemHelper.itemsToBlocks(ItemHelper.BED));
+                    boolean bedPlaced = AltoClef.INSTANCE.getBlockTracker().blockIsValid(bedTargetPosition, ItemHelper.itemsToBlocks(ItemHelper.BED));
                     if (!bedPlaced) {
                         setDebugState("Placing bed");
                         // If no bed, place bed.
                         // Fire messes up our "reach" so we just assume we're good when we're above a height.
-                        boolean canPlace = LookHelper.getCameraPos(mod).y > bedTargetPosition.getY();
+                        boolean canPlace = LookHelper.getCameraPos(AltoClef.INSTANCE).y > bedTargetPosition.getY();
                         //Optional<Rotation> placeReach = LookHelper.getReach(bedTargetPosition.down(), Direction.UP);
                         if (canPlace) {
                             // Look at and place!
-                            if (mod.getSlotHandler().forceEquipItem(ItemHelper.BED, true)) {
-                                LookHelper.lookAt(mod, bedTargetPosition.down(), Direction.UP);
-                                //mod.getClientBaritone().getLookBehavior().updateTarget(placeReach.get(), true);
-                                //if (mod.getClientBaritone().getPlayerContext().isLookingAt(bedTargetPosition.down())) {
+                            if (AltoClef.INSTANCE.getSlotHandler().forceEquipItem(ItemHelper.BED, true)) {
+                                LookHelper.lookAt(AltoClef.INSTANCE, bedTargetPosition.down(), Direction.UP);
+                                // mod.getClientBaritone().getLookBehavior().updateTarget(placeReach.get(), true);
+                                // if (mod.getClientBaritone().getPlayerContext().isLookingAt(bedTargetPosition.down())) {
                                 // There could be fire so eh place right away
-                                mod.getInputControls().tryPress(Input.CLICK_RIGHT);
+                                AltoClef.INSTANCE.getInputControls().tryPress(Input.CLICK_RIGHT);
                                 //}
                             }
                         } else {
-                            if (mod.getPlayer().isOnGround()) {
+                            if (AltoClef.INSTANCE.getPlayer().isOnGround()) {
                                 // Jump
-                                mod.getInputControls().tryPress(Input.JUMP);
+                                AltoClef.INSTANCE.getInputControls().tryPress(Input.JUMP);
                             }
                         }
                     } else {
                         setDebugState("Wait for it...");
                         // Make sure we're standing on the ground so we don't blow ourselves up lmfao
-                        if (!mod.getPlayer().isOnGround()) {
+                        if (!AltoClef.INSTANCE.getPlayer().isOnGround()) {
                             // Wait to fall
                             return null;
                         }
                         // Wait for dragon head to be close enough to the bed's head...
-                        BlockPos bedfoot = WorldHelper.getBedFoot(mod, bedTargetPosition);
+                        BlockPos bedfoot = WorldHelper.getBedFoot(AltoClef.INSTANCE, bedTargetPosition);
                         assert bedfoot != null;
                         Vec3d headPos = dragon.head.getBoundingBox().getCenter(); // dragon.head.getPos();
                         double dist = headPos.distanceTo(WorldHelper.toVec3d(bedfoot));
@@ -152,19 +152,19 @@ public class KillEnderDragonWithBedsTask extends Task {
                 }
             }
         }
-        mod.getFoodChain().shouldStop(false);
+        AltoClef.INSTANCE.getFoodChain().shouldStop(false);
         // Start our "Not perching task"
         return _whenNotPerchingTask;
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getFoodChain().shouldStop(false);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getFoodChain().shouldStop(false);
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return super.isFinished(mod);
+    public boolean isFinished() {
+        return super.isFinished();
     }
 
     @Override

@@ -1,16 +1,33 @@
 package adris.altoclef.control;
 
-import gay.solonovamax.altoclef.AltoClef;
+import adris.altoclef.Settings;
+import adris.altoclef.chains.FoodChain;
+import adris.altoclef.chains.MLGBucketFallChain;
+import adris.altoclef.trackers.EntityTracker;
+import adris.altoclef.trackers.storage.ItemStorageTracker;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.StlHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.slots.Slot;
 import adris.altoclef.util.time.TimerGame;
+import baritone.Baritone;
+import baritone.altoclef.AltoClefSettings;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.boss.WitherEntity;
-import net.minecraft.entity.mob.*;
+import net.minecraft.entity.mob.BlazeEntity;
+import net.minecraft.entity.mob.CreeperEntity;
+import net.minecraft.entity.mob.HoglinEntity;
+import net.minecraft.entity.mob.PiglinEntity;
+import net.minecraft.entity.mob.PillagerEntity;
+import net.minecraft.entity.mob.SkeletonEntity;
+import net.minecraft.entity.mob.StrayEntity;
+import net.minecraft.entity.mob.WardenEntity;
+import net.minecraft.entity.mob.WitchEntity;
+import net.minecraft.entity.mob.ZoglinEntity;
 import net.minecraft.entity.projectile.FireballEntity;
 import net.minecraft.entity.projectile.thrown.PotionEntity;
 import net.minecraft.item.Item;
@@ -34,8 +51,8 @@ public class KillAura {
     private double _forceFieldRange = Double.POSITIVE_INFINITY;
     private Entity _forceHit = null;
 
-    public static void equipWeapon(AltoClef mod) {
-        List<ItemStack> invStacks = mod.getItemStorage().getItemStacksPlayerInventory(true);
+    public static void equipWeapon() {
+        List<ItemStack> invStacks = AltoClef.INSTANCE.getItemStorage().getItemStacksPlayerInventory(true);
         if (!invStacks.isEmpty()) {
             float handDamage = Float.NEGATIVE_INFINITY;
             for (ItemStack invStack : invStacks) {
@@ -45,10 +62,11 @@ public class KillAura {
                     if (handItem instanceof SwordItem handToolItem) {
                         handDamage = handToolItem.getMaterial().getAttackDamage();
                     }
+                    SlotHandler slotHandler = AltoClef.INSTANCE.getSlotHandler();
                     if (itemDamage > handDamage) {
-                        mod.getSlotHandler().forceEquipItem(item);
+                        slotHandler.forceEquipItem(item);
                     } else {
-                        mod.getSlotHandler().forceEquipItem(handItem);
+                        slotHandler.forceEquipItem(handItem);
                     }
                 }
             }
@@ -70,38 +88,50 @@ public class KillAura {
         _forceFieldRange = range;
     }
 
-    public void tickEnd(AltoClef mod) {
+    public void tickEnd() {
         PlayerSlot offhandSlot = PlayerSlot.OFFHAND_SLOT;
         Item offhandItem = StorageHelper.getItemStackInSlot(offhandSlot).getItem();
-        Optional<Entity> entities = _targets.stream().min(StlHelper.compareValues(entity -> entity.squaredDistanceTo(mod.getPlayer())));
-        if (entities.isPresent() && mod.getPlayer().getHealth() >= 10 &&
-                !mod.getEntityTracker().entityFound(PotionEntity.class) && !mod.getFoodChain().needsToEat() &&
-                (mod.getItemStorage().hasItem(Items.SHIELD) || mod.getItemStorage().hasItemInOffhand(Items.SHIELD)) &&
-                (Double.isInfinite(_forceFieldRange) || entities.get().squaredDistanceTo(mod.getPlayer()) < _forceFieldRange * _forceFieldRange ||
-                        entities.get().squaredDistanceTo(mod.getPlayer()) < 40) &&
-                !mod.getMLGBucketChain().isFallingOhNo(mod) && mod.getMLGBucketChain().doneMLG() &&
-                !mod.getMLGBucketChain().isChorusFruiting() &&
-                !mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandItem)) {
+
+        ClientPlayerEntity player = AltoClef.INSTANCE.getPlayer();
+
+        MLGBucketFallChain mlgBucketChain = AltoClef.INSTANCE.getMLGBucketChain();
+        ItemStorageTracker itemStorage = AltoClef.INSTANCE.getItemStorage();
+        EntityTracker entityTracker = AltoClef.INSTANCE.getEntityTracker();
+        FoodChain foodChain = AltoClef.INSTANCE.getFoodChain();
+        SlotHandler slotHandler = AltoClef.INSTANCE.getSlotHandler();
+        Settings modSettings = AltoClef.INSTANCE.getModSettings();
+
+        Optional<Entity> entities = _targets.stream().min(StlHelper.compareValues(entity -> entity.squaredDistanceTo(player)));
+
+        if (entities.isPresent() && player.getHealth() >= 10 &&
+                !entityTracker.entityFound(PotionEntity.class) && !foodChain.needsToEat() &&
+                (itemStorage.hasItem(Items.SHIELD) || itemStorage.hasItemInOffhand(Items.SHIELD)) &&
+                (Double.isInfinite(_forceFieldRange) || entities.get().squaredDistanceTo(player) < _forceFieldRange * _forceFieldRange ||
+                        entities.get().squaredDistanceTo(player) < 40) &&
+                !mlgBucketChain.isFallingOhNo(AltoClef.INSTANCE) && mlgBucketChain.doneMLG() &&
+                !mlgBucketChain.isChorusFruiting() &&
+                !player.getItemCooldownManager().isCoolingDown(offhandItem)) {
             if (entities.get().getClass() != CreeperEntity.class && entities.get().getClass() != HoglinEntity.class &&
                     entities.get().getClass() != ZoglinEntity.class && entities.get().getClass() != WardenEntity.class &&
                     entities.get().getClass() != WitherEntity.class) {
-                LookHelper.lookAt(mod, entities.get().getEyePos());
+                LookHelper.lookAt(AltoClef.INSTANCE, entities.get().getEyePos());
                 ItemStack shieldSlot = StorageHelper.getItemStackInSlot(PlayerSlot.OFFHAND_SLOT);
                 if (shieldSlot.getItem() != Items.SHIELD) {
-                    mod.getSlotHandler().forceEquipItemToOffhand(Items.SHIELD);
+                    slotHandler.forceEquipItemToOffhand(Items.SHIELD);
                 } else {
-                    startShielding(mod);
-                    performDelayedAttack(mod);
+                    startShielding();
+                    performDelayedAttack(AltoClef.INSTANCE);
                     return;
                 }
             }
         } else {
-            stopShielding(mod);
+            stopShielding();
         }
         // Run force field on map
-        switch (mod.getModSettings().getForceFieldStrategy()) {
+
+        switch (modSettings.getForceFieldStrategy()) {
             case FASTEST:
-                performFastestAttack(mod);
+                performFastestAttack(AltoClef.INSTANCE);
                 break;
             case SMART:
                 if (_targets.size() <= 2 || _targets.stream().allMatch(entity -> entity instanceof SkeletonEntity) ||
@@ -110,26 +140,26 @@ public class KillAura {
                         _targets.stream().allMatch(entity -> entity instanceof PiglinEntity) ||
                         _targets.stream().allMatch(entity -> entity instanceof StrayEntity) ||
                         _targets.stream().allMatch(entity -> entity instanceof BlazeEntity)) {
-                    performDelayedAttack(mod);
+                    performDelayedAttack(AltoClef.INSTANCE);
                 } else {
-                    if (!mod.getFoodChain().needsToEat() && !mod.getMLGBucketChain().isFallingOhNo(mod) &&
-                            mod.getMLGBucketChain().doneMLG() && !mod.getMLGBucketChain().isChorusFruiting()) {
+                    if (!foodChain.needsToEat() && !mlgBucketChain.isFallingOhNo(AltoClef.INSTANCE) &&
+                            mlgBucketChain.doneMLG() && !mlgBucketChain.isChorusFruiting()) {
                         // Attack force mobs ALWAYS.
                         if (_forceHit != null) {
-                            attack(mod, _forceHit, true);
+                            attack(_forceHit, true);
                         }
                         if (_hitDelay.elapsed()) {
                             _hitDelay.reset();
 
-                            Optional<Entity> toHit = _targets.stream().min(StlHelper.compareValues(entity -> entity.squaredDistanceTo(mod.getPlayer())));
+                            Optional<Entity> toHit = _targets.stream().min(StlHelper.compareValues(entity -> entity.squaredDistanceTo(player)));
 
-                            toHit.ifPresent(entity -> attack(mod, entity, true));
+                            toHit.ifPresent(entity -> attack(entity, true));
                         }
                     }
                 }
                 break;
             case DELAY:
-                performDelayedAttack(mod);
+                performDelayedAttack(AltoClef.INSTANCE);
                 break;
             case OFF:
                 break;
@@ -140,7 +170,7 @@ public class KillAura {
         if (!mod.getFoodChain().needsToEat() && !mod.getMLGBucketChain().isFallingOhNo(mod) &&
                 mod.getMLGBucketChain().doneMLG() && !mod.getMLGBucketChain().isChorusFruiting()) {
             if (_forceHit != null) {
-                attack(mod, _forceHit, true);
+                attack(_forceHit, true);
             }
             // wait for the attack delay
             if (_targets.isEmpty()) {
@@ -153,7 +183,7 @@ public class KillAura {
                 return;
             }
 
-            toHit.ifPresent(entity -> attack(mod, entity, true));
+            toHit.ifPresent(entity -> attack(entity, true));
         }
     }
 
@@ -168,73 +198,87 @@ public class KillAura {
     }
 
     private void attack(AltoClef mod, Entity entity) {
-        attack(mod, entity, false);
+        attack(entity, false);
     }
 
-    private void attack(AltoClef mod, Entity entity, boolean equipSword) {
+    private void attack(Entity entity, boolean equipSword) {
         if (entity == null) return;
         if (!(entity instanceof FireballEntity)) {
-            LookHelper.lookAt(mod, entity.getEyePos());
+            LookHelper.lookAt(AltoClef.INSTANCE, entity.getEyePos());
         }
-        if (Double.isInfinite(_forceFieldRange) || entity.squaredDistanceTo(mod.getPlayer()) < _forceFieldRange * _forceFieldRange ||
-                entity.squaredDistanceTo(mod.getPlayer()) < 40) {
+
+        ClientPlayerEntity player = AltoClef.INSTANCE.getPlayer();
+
+        if (Double.isInfinite(_forceFieldRange) || entity.squaredDistanceTo(player) < _forceFieldRange * _forceFieldRange ||
+                entity.squaredDistanceTo(player) < 40) {
             if (entity instanceof FireballEntity) {
-                mod.getControllerExtras().attack(entity);
+                AltoClef.INSTANCE.getControllerExtras().attack(entity);
             }
             boolean canAttack;
             if (equipSword) {
-                equipWeapon(mod);
+                equipWeapon();
                 canAttack = true;
             } else {
                 // Equip non-tool
-                canAttack = mod.getSlotHandler().forceDeequipHitTool();
+                canAttack = AltoClef.INSTANCE.getSlotHandler().forceDeequipHitTool();
             }
             if (canAttack) {
-                if (mod.getPlayer().isOnGround() || mod.getPlayer().getVelocity().getY() < 0 || mod.getPlayer().isTouchingWater()) {
-                    mod.getControllerExtras().attack(entity);
+                if (player.isOnGround() || player.getVelocity().getY() < 0 || player.isTouchingWater()) {
+                    AltoClef.INSTANCE.getControllerExtras().attack(entity);
                 }
             }
         }
     }
 
-    public void startShielding(AltoClef mod) {
+    public void startShielding() {
         _shielding = true;
-        mod.getInputControls().hold(Input.SNEAK);
-        mod.getInputControls().hold(Input.CLICK_RIGHT);
-        mod.getClientBaritone().getPathingBehavior().softCancelIfSafe();
-        mod.getExtraBaritoneSettings().setInteractionPaused(true);
-        if (!mod.getPlayer().isBlocking()) {
+        InputControls inputControls = AltoClef.INSTANCE.getInputControls();
+        SlotHandler slotHandler = AltoClef.INSTANCE.getSlotHandler();
+        Baritone clientBaritone = AltoClef.INSTANCE.getClientBaritone();
+        AltoClefSettings extraBaritoneSettings = AltoClef.INSTANCE.getExtraBaritoneSettings();
+
+        inputControls.hold(Input.SNEAK);
+        inputControls.hold(Input.CLICK_RIGHT);
+
+        clientBaritone.getPathingBehavior().softCancelIfSafe();
+        extraBaritoneSettings.setInteractionPaused(true);
+
+        if (!AltoClef.INSTANCE.getPlayer().isBlocking()) {
             ItemStack handItem = StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot());
             if (handItem.isFood()) {
-                List<ItemStack> spaceSlots = mod.getItemStorage().getItemStacksPlayerInventory(false);
+                List<ItemStack> spaceSlots = AltoClef.INSTANCE.getItemStorage().getItemStacksPlayerInventory(false);
                 if (!spaceSlots.isEmpty()) {
                     for (ItemStack spaceSlot : spaceSlots) {
                         if (spaceSlot.isEmpty()) {
-                            mod.getSlotHandler().clickSlot(PlayerSlot.getEquipSlot(), 0, SlotActionType.QUICK_MOVE);
+                            slotHandler.clickSlot(PlayerSlot.getEquipSlot(), 0, SlotActionType.QUICK_MOVE);
                             return;
                         }
                     }
                 }
-                Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
-                garbage.ifPresent(slot -> mod.getSlotHandler().forceEquipItem(StorageHelper.getItemStackInSlot(slot).getItem()));
+                Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
+                garbage.ifPresent(slot -> slotHandler.forceEquipItem(StorageHelper.getItemStackInSlot(slot).getItem()));
             }
         }
     }
 
-    public void stopShielding(AltoClef mod) {
+    public void stopShielding() {
+        ItemStorageTracker itemStorage = AltoClef.INSTANCE.getItemStorage();
+        SlotHandler slotHandler = AltoClef.INSTANCE.getSlotHandler();
+        InputControls inputControls = AltoClef.INSTANCE.getInputControls();
+
         if (_shielding) {
             ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
             if (cursor.isFood()) {
-                Optional<Slot> toMoveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursor, false).or(() -> StorageHelper.getGarbageSlot(mod));
+                Optional<Slot> toMoveTo = itemStorage.getSlotThatCanFitInPlayerInventory(cursor, false).or(() -> StorageHelper.getGarbageSlot(AltoClef.INSTANCE));
                 if (toMoveTo.isPresent()) {
                     Slot garbageSlot = toMoveTo.get();
-                    mod.getSlotHandler().clickSlot(garbageSlot, 0, SlotActionType.PICKUP);
+                    slotHandler.clickSlot(garbageSlot, 0, SlotActionType.PICKUP);
                 }
             }
-            mod.getInputControls().release(Input.SNEAK);
-            mod.getInputControls().release(Input.CLICK_RIGHT);
-            mod.getInputControls().release(Input.JUMP);
-            mod.getExtraBaritoneSettings().setInteractionPaused(false);
+            inputControls.release(Input.SNEAK);
+            inputControls.release(Input.CLICK_RIGHT);
+            inputControls.release(Input.JUMP);
+            AltoClef.INSTANCE.getExtraBaritoneSettings().setInteractionPaused(false);
             _shielding = false;
         }
     }

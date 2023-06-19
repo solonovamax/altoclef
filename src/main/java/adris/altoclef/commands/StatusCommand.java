@@ -1,9 +1,9 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 import adris.altoclef.tasksystem.Task;
+import gay.solonovamax.altoclef.AltoClef;
 
 import java.util.List;
 
@@ -13,12 +13,12 @@ public class StatusCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) {
-        List<Task> tasks = mod.getUserTaskChain().getTasks();
+    protected void call(ArgParser parser) {
+        List<Task> tasks = AltoClef.INSTANCE.getUserTaskChain().getTasks();
         if (tasks.size() == 0) {
-            mod.log("No tasks currently running.");
+            AltoClef.INSTANCE.log("No tasks currently running.");
         } else {
-            mod.log("CURRENT TASK: " + tasks.get(0).toString());
+            AltoClef.INSTANCE.log("CURRENT TASK: " + tasks.get(0).toString());
         }
         finish();
     }

@@ -1,10 +1,10 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 import adris.altoclef.commandsystem.CommandException;
 import adris.altoclef.tasks.construction.CoverWithSandTask;
+import gay.solonovamax.altoclef.AltoClef;
 
 public class CoverWithSandCommand extends Command {
     public CoverWithSandCommand() {
@@ -12,7 +12,7 @@ public class CoverWithSandCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
-        mod.runUserTask(new CoverWithSandTask(), this::finish);
+    protected void call(ArgParser parser) throws CommandException {
+        AltoClef.INSTANCE.runUserTask(new CoverWithSandTask(), this::finish);
     }
 }

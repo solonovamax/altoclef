@@ -1,10 +1,10 @@
 package adris.altoclef.tasks.entity;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.progresscheck.IProgressChecker;
 import adris.altoclef.util.progresscheck.LinearProgressChecker;
 import adris.altoclef.util.progresscheck.ProgressCheckerRetry;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.entity.Entity;
 
 import java.util.Optional;
@@ -24,13 +24,13 @@ public class KillPlayerTask extends AbstractKillEntityTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         // If we're closer to the player, our task isn't bad.
-        Optional<Entity> player = getEntityTarget(mod);
+        Optional<Entity> player = getEntityTarget(AltoClef.INSTANCE);
         if (player.isEmpty()) {
             _distancePlayerCheck.reset();
         } else {
-            double distSq = player.get().squaredDistanceTo(mod.getPlayer());
+            double distSq = player.get().squaredDistanceTo(AltoClef.INSTANCE.getPlayer());
             if (distSq < 10 * 10) {
                 _distancePlayerCheck.reset();
             }
@@ -39,7 +39,7 @@ public class KillPlayerTask extends AbstractKillEntityTask {
                 _progress.reset();
             }
         }
-        return super.onTick(mod);
+        return super.onTick();
     }
 
     @Override

@@ -1,11 +1,11 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask;
 import adris.altoclef.tasks.construction.compound.ConstructNetherPortalObsidianTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 
@@ -28,39 +28,39 @@ public class DefaultGoToDimensionTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBlockTracker().trackBlock(Blocks.NETHER_PORTAL);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(Blocks.NETHER_PORTAL);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         if (WorldHelper.getCurrentDimension() == _target) return null;
 
         switch (_target) {
             case OVERWORLD:
                 switch (WorldHelper.getCurrentDimension()) {
                     case NETHER:
-                        return goToOverworldFromNetherTask(mod);
+                        return goToOverworldFromNetherTask(AltoClef.INSTANCE);
                     case END:
-                        return goToOverworldFromEndTask(mod);
+                        return goToOverworldFromEndTask(AltoClef.INSTANCE);
                 }
                 break;
             case NETHER:
                 switch (WorldHelper.getCurrentDimension()) {
                     case OVERWORLD:
-                        return goToNetherFromOverworldTask(mod);
+                        return goToNetherFromOverworldTask(AltoClef.INSTANCE);
                     case END:
                         // First go to the overworld
-                        return goToOverworldFromEndTask(mod);
+                        return goToOverworldFromEndTask(AltoClef.INSTANCE);
                 }
                 break;
             case END:
                 switch (WorldHelper.getCurrentDimension()) {
                     case NETHER:
                         // First go to the overworld
-                        return goToOverworldFromNetherTask(mod);
+                        return goToOverworldFromNetherTask(AltoClef.INSTANCE);
                     case OVERWORLD:
-                        return goToEndTask(mod);
+                        return goToEndTask(AltoClef.INSTANCE);
                 }
                 break;
         }
@@ -70,8 +70,8 @@ public class DefaultGoToDimensionTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBlockTracker().stopTracking(Blocks.NETHER_PORTAL);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.NETHER_PORTAL);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class DefaultGoToDimensionTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return WorldHelper.getCurrentDimension() == _target;
     }
 

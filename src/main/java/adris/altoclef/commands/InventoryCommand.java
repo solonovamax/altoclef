@@ -1,6 +1,5 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.commandsystem.Arg;
 import adris.altoclef.commandsystem.ArgParser;
@@ -8,6 +7,8 @@ import adris.altoclef.commandsystem.Command;
 import adris.altoclef.commandsystem.CommandException;
 import adris.altoclef.ui.MessagePriority;
 import adris.altoclef.util.helpers.ItemHelper;
+import gay.solonovamax.altoclef.AltoClef;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
@@ -19,14 +20,15 @@ public class InventoryCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(ArgParser parser) throws CommandException {
         String item = parser.get(String.class);
         if (item == null) {
             // Print inventory
             // Get item counts
             HashMap<String, Integer> counts = new HashMap<>();
-            for (int i = 0; i < mod.getPlayer().getInventory().size(); ++i) {
-                ItemStack stack = mod.getPlayer().getInventory().getStack(i);
+            PlayerInventory inventory = AltoClef.INSTANCE.getPlayer().getInventory();
+            for (int i = 0; i < inventory.size(); ++i) {
+                ItemStack stack = inventory.getStack(i);
                 if (!stack.isEmpty()) {
                     String name = ItemHelper.stripItemName(stack.getItem());
                     if (!counts.containsKey(name)) counts.put(name, 0);
@@ -34,24 +36,24 @@ public class InventoryCommand extends Command {
                 }
             }
             // Print
-            mod.log("INVENTORY: ", MessagePriority.OPTIONAL);
+            AltoClef.INSTANCE.log("INVENTORY: ", MessagePriority.OPTIONAL);
             for (String name : counts.keySet()) {
-                mod.log(name + " : " + counts.get(name), MessagePriority.OPTIONAL);
+                AltoClef.INSTANCE.log(name + " : " + counts.get(name), MessagePriority.OPTIONAL);
             }
-            mod.log("(inventory list sent) ", MessagePriority.OPTIONAL);
+            AltoClef.INSTANCE.log("(inventory list sent) ", MessagePriority.OPTIONAL);
         } else {
             // Print item quantity
             Item[] matches = TaskCatalogue.getItemMatches(item);
             if (matches == null || matches.length == 0) {
-                mod.logWarning("Item \"" + item + "\" is not catalogued/recognized.");
+                AltoClef.INSTANCE.logWarning("Item \"" + item + "\" is not catalogued/recognized.");
                 finish();
                 return;
             }
-            int count = mod.getItemStorage().getItemCount(matches);
+            int count = AltoClef.INSTANCE.getItemStorage().getItemCount(matches);
             if (count == 0) {
-                mod.log(item + " COUNT: (none)");
+                AltoClef.INSTANCE.log(item + " COUNT: (none)");
             } else {
-                mod.log(item + " COUNT: " + count);
+                AltoClef.INSTANCE.log(item + " COUNT: " + count);
             }
         }
         finish();

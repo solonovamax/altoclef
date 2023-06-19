@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.slot;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.slots.Slot;
 
@@ -9,16 +8,16 @@ public class ThrowCursorTask extends Task {
     private final Task _throwTask = new ClickSlotTask(Slot.UNDEFINED);
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         return _throwTask;
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 
@@ -33,7 +32,7 @@ public class ThrowCursorTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return _throwTask.isFinished(mod);
+    public boolean isFinished() {
+        return _throwTask.isFinished();
     }
 }

@@ -1,11 +1,11 @@
 package adris.altoclef.tasks.stupid;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.entity.AbstractKillEntityTask;
 import adris.altoclef.tasks.entity.DoToClosestEntityTask;
 import adris.altoclef.tasks.movement.GetToEntityTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.LookHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 
@@ -22,7 +22,6 @@ import java.util.HashMap;
  * - Have a "last velocity" of the change of a player's closeness. If the velocity is high in one direction, stop early.
  */
 public class SCP173Task extends Task {
-
     private static final double MAX_RANGE = 300;
     private static final double LOOK_CLOSENESS_THRESHOLD = 0.2;
     private static final double HIT_RANGE = 2.5;
@@ -32,17 +31,17 @@ public class SCP173Task extends Task {
     private Vec3d _lastWalkVelocity = Vec3d.ZERO;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _lastLookCloseness.clear();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
 
         // FREEZE when nobody is looking.
-        boolean seen = isSeenByPlayer(mod);
+        boolean seen = isSeenByPlayer(AltoClef.INSTANCE);
 
-        Vec3d currentVelocity = mod.getPlayer().getVelocity();
+        Vec3d currentVelocity = AltoClef.INSTANCE.getPlayer().getVelocity();
         if (currentVelocity.lengthSquared() > WALK_THRESHOLD * WALK_THRESHOLD) {
             _lastWalkVelocity = currentVelocity;
         }
@@ -56,18 +55,18 @@ public class SCP173Task extends Task {
         if (seen) {
             // Stare at them, menacingly!!!
             if (_lastTarget != null) {
-                LookHelper.lookAt(mod, LookHelper.getCameraPos(_lastTarget));
+                LookHelper.lookAt(AltoClef.INSTANCE, LookHelper.getCameraPos(_lastTarget));
             }
             return null;
         }
 
         // Manually attack, since we ONLY attack when we can SEE the player.
-        if (_lastTarget != null && mod.getPlayer().isInRange(_lastTarget, HIT_RANGE)) {
-            if (LookHelper.seesPlayer(mod.getPlayer(), _lastTarget, HIT_RANGE)) {
+        if (_lastTarget != null && AltoClef.INSTANCE.getPlayer().isInRange(_lastTarget, HIT_RANGE)) {
+            if (LookHelper.seesPlayer(AltoClef.INSTANCE.getPlayer(), _lastTarget, HIT_RANGE)) {
                 // Equip weapon
-                AbstractKillEntityTask.equipWeapon(mod);
-                if (mod.getPlayer().getAttackCooldownProgress(0) >= 0.99) {
-                    mod.getControllerExtras().attack(_lastTarget);
+                AbstractKillEntityTask.equipWeapon(AltoClef.INSTANCE);
+                if (AltoClef.INSTANCE.getPlayer().getAttackCooldownProgress(0) >= 0.99) {
+                    AltoClef.INSTANCE.getControllerExtras().attack(_lastTarget);
                 }
             }
         }
@@ -82,7 +81,7 @@ public class SCP173Task extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

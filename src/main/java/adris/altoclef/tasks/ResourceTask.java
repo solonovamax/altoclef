@@ -1,6 +1,5 @@
 package adris.altoclef.tasks;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.container.PickupFromContainerTask;
 import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
 import adris.altoclef.tasks.movement.PickupDroppedItemTask;
@@ -20,6 +19,7 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
@@ -38,7 +38,6 @@ import java.util.Optional;
  * If the target item is on the ground or in a chest, will grab from those sources first.
  */
 public abstract class ResourceTask extends Task implements ITaskCanForce {
-
     protected final ItemTarget[] _itemTargets;
 
     private final PickupDroppedItemTask _pickupTask;
@@ -64,83 +63,83 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return StorageHelper.itemTargetsMetInventoryNoCursor(mod, _itemTargets);
+    public boolean isFinished() {
+        return StorageHelper.itemTargetsMetInventoryNoCursor(AltoClef.INSTANCE, _itemTargets);
     }
 
     @Override
-    public boolean shouldForce(AltoClef mod, Task interruptingCandidate) {
+    public boolean shouldForce(Task interruptingCandidate) {
         // We have an important item target in our cursor.
-        return StorageHelper.itemTargetsMetInventory(mod, _itemTargets) && !isFinished(mod)
+        return StorageHelper.itemTargetsMetInventory(_itemTargets) && !isFinished()
                 // This _should_ be redundant, but it'll be a guard just to make 100% sure.
                 && Arrays.stream(_itemTargets).anyMatch(target -> target.matches(StorageHelper.getItemStackInCursorSlot().getItem()));
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
-        //removeThrowawayItems(_itemTargets);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
+        // removeThrowawayItems(_itemTargets);
         if (_mineIfPresent != null) {
-            mod.getBlockTracker().trackBlock(_mineIfPresent);
+            AltoClef.INSTANCE.getBlockTracker().trackBlock(_mineIfPresent);
         }
-        onResourceStart(mod);
+        onResourceStart(AltoClef.INSTANCE);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        mod.getBehaviour().addProtectedItems(ItemTarget.getMatches(_itemTargets));
+    protected Task onTick() {
+        AltoClef.INSTANCE.getBehaviour().addProtectedItems(ItemTarget.getMatches(_itemTargets));
         // If we have an item in an INACCESSIBLE inventory slot
         if (!(thisOrChildSatisfies(task -> task instanceof ITaskUsesCraftingGrid)) || _ensureFreeCraftingGridTask.isActive()) {
             for (ItemTarget target : _itemTargets) {
-                if (StorageHelper.isItemInaccessibleToContainer(mod, target)) {
+                if (StorageHelper.isItemInaccessibleToContainer(AltoClef.INSTANCE, target)) {
                     setDebugState("Moving from SPECIAL inventory slot");
                     return new MoveInaccessibleItemToInventoryTask(target);
                 }
             }
         }
         // We have enough items COUNTING the cursor slot, we just need to move an item from our cursor.
-        if (StorageHelper.itemTargetsMetInventory(mod, _itemTargets) && Arrays.stream(_itemTargets).anyMatch(target -> target.matches(StorageHelper.getItemStackInCursorSlot().getItem()))) {
+        if (StorageHelper.itemTargetsMetInventory(_itemTargets) && Arrays.stream(_itemTargets).anyMatch(target -> target.matches(StorageHelper.getItemStackInCursorSlot().getItem()))) {
             setDebugState("Moving from cursor");
-            Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(StorageHelper.getItemStackInCursorSlot(), false);
+            Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(StorageHelper.getItemStackInCursorSlot(), false);
             if (moveTo.isPresent()) {
-                mod.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
                 return null;
             }
-            if (ItemHelper.canThrowAwayStack(mod, StorageHelper.getItemStackInCursorSlot())) {
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, StorageHelper.getItemStackInCursorSlot())) {
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                 return null;
             }
-            Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+            Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
             // Try throwing away cursor slot if it's garbage
             if (garbage.isPresent()) {
-                mod.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
                 return null;
             }
-            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             return null;
         }
 
-        if (!shouldAvoidPickingUp(mod)) {
+        if (!shouldAvoidPickingUp(AltoClef.INSTANCE)) {
             // Check if items are on the floor. If so, pick em up.
-            if (mod.getEntityTracker().itemDropped(_itemTargets)) {
+            if (AltoClef.INSTANCE.getEntityTracker().itemDropped(_itemTargets)) {
 
                 // If we're picking up a pickaxe (we can't go far underground or mine much)
-                if (PickupDroppedItemTask.isIsGettingPickaxeFirst(mod)) {
+                if (PickupDroppedItemTask.isIsGettingPickaxeFirst(AltoClef.INSTANCE)) {
                     if (_pickupTask.isCollectingPickaxeForThis()) {
                         setDebugState("Picking up (pickaxe first!)");
                         // Our pickup task is the one collecting the pickaxe, keep it going.
                         return _pickupTask;
                     }
                     // Only get items that are CLOSE to us.
-                    Optional<ItemEntity> closest = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), _itemTargets);
-                    if (closest.isPresent() && !closest.get().isInRange(mod.getPlayer(), 10)) {
-                        return onResourceTick(mod);
+                    Optional<ItemEntity> closest = AltoClef.INSTANCE.getEntityTracker().getClosestItemDrop(AltoClef.INSTANCE.getPlayer().getPos(), _itemTargets);
+                    if (closest.isPresent() && !closest.get().isInRange(AltoClef.INSTANCE.getPlayer(), 10)) {
+                        return onResourceTick(AltoClef.INSTANCE);
                     }
                 }
 
-                double range = mod.getModSettings().getResourcePickupRange();
-                Optional<ItemEntity> closest = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), _itemTargets);
-                if (range < 0 || (closest.isPresent() && closest.get().isInRange(mod.getPlayer(), range)) || (_pickupTask.isActive() && !_pickupTask.isFinished(mod))) {
+                double range = AltoClef.INSTANCE.getModSettings().getResourcePickupRange();
+                Optional<ItemEntity> closest = AltoClef.INSTANCE.getEntityTracker().getClosestItemDrop(AltoClef.INSTANCE.getPlayer().getPos(), _itemTargets);
+                if (range < 0 || (closest.isPresent() && closest.get().isInRange(AltoClef.INSTANCE.getPlayer(), range)) || (_pickupTask.isActive() && !_pickupTask.isFinished())) {
                     setDebugState("Picking up");
                     return _pickupTask;
                 }
@@ -149,16 +148,16 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
 
         // Check for chests and grab resources from them.
         if (_currentContainer == null) {
-            List<ContainerCache> containersWithItem = mod.getItemStorage().getContainersWithItem(Arrays.stream(_itemTargets).reduce(new Item[0], (items, target) -> ArrayUtils.addAll(items, target.getMatches()), ArrayUtils::addAll));
+            List<ContainerCache> containersWithItem = AltoClef.INSTANCE.getItemStorage().getContainersWithItem(Arrays.stream(_itemTargets).reduce(new Item[0], (items, target) -> ArrayUtils.addAll(items, target.getMatches()), ArrayUtils::addAll));
             if (!containersWithItem.isEmpty()) {
-                ContainerCache closest = containersWithItem.stream().min(StlHelper.compareValues(container -> container.getBlockPos().getSquaredDistance(mod.getPlayer().getPos()))).get();
-                if (closest.getBlockPos().isWithinDistance(mod.getPlayer().getPos(), mod.getModSettings().getResourceChestLocateRange())) {
+                ContainerCache closest = containersWithItem.stream().min(StlHelper.compareValues(container -> container.getBlockPos().getSquaredDistance(AltoClef.INSTANCE.getPlayer().getPos()))).get();
+                if (closest.getBlockPos().isWithinDistance(AltoClef.INSTANCE.getPlayer().getPos(), AltoClef.INSTANCE.getModSettings().getResourceChestLocateRange())) {
                     _currentContainer = closest;
                 }
             }
         }
         if (_currentContainer != null) {
-            Optional<ContainerCache> container = mod.getItemStorage().getContainerAtPosition(_currentContainer.getBlockPos());
+            Optional<ContainerCache> container = AltoClef.INSTANCE.getItemStorage().getContainerAtPosition(_currentContainer.getBlockPos());
             if (container.isPresent()) {
                 if (Arrays.stream(_itemTargets).noneMatch(target -> container.get().hasItem(target.getMatches()))) {
                     _currentContainer = null;
@@ -175,15 +174,15 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
         // We may just mine if a block is found.
         if (_mineIfPresent != null) {
             ArrayList<Block> satisfiedReqs = new ArrayList<>(Arrays.asList(_mineIfPresent));
-            satisfiedReqs.removeIf(block -> !StorageHelper.miningRequirementMet(mod, MiningRequirement.getMinimumRequirementForBlock(block)));
+            satisfiedReqs.removeIf(block -> !StorageHelper.miningRequirementMet(MiningRequirement.getMinimumRequirementForBlock(block)));
             if (!satisfiedReqs.isEmpty()) {
-                if (mod.getBlockTracker().anyFound(satisfiedReqs.toArray(Block[]::new))) {
-                    Optional<BlockPos> closest = mod.getBlockTracker().getNearestTracking(mod.getPlayer().getPos(), _mineIfPresent);
-                    if (closest.isPresent() && closest.get().isWithinDistance(mod.getPlayer().getPos(), mod.getModSettings().getResourceMineRange())) {
+                if (AltoClef.INSTANCE.getBlockTracker().anyFound(satisfiedReqs.toArray(Block[]::new))) {
+                    Optional<BlockPos> closest = AltoClef.INSTANCE.getBlockTracker().getNearestTracking(AltoClef.INSTANCE.getPlayer().getPos(), _mineIfPresent);
+                    if (closest.isPresent() && closest.get().isWithinDistance(AltoClef.INSTANCE.getPlayer().getPos(), AltoClef.INSTANCE.getModSettings().getResourceMineRange())) {
                         _mineLastClosest = closest.get();
                     }
                     if (_mineLastClosest != null) {
-                        if (_mineLastClosest.isWithinDistance(mod.getPlayer().getPos(), mod.getModSettings().getResourceMineRange() * 1.5 + 20)) {
+                        if (_mineLastClosest.isWithinDistance(AltoClef.INSTANCE.getPlayer().getPos(), AltoClef.INSTANCE.getModSettings().getResourceMineRange() * 1.5 + 20)) {
                             return new MineAndCollectTask(_itemTargets, _mineIfPresent, MiningRequirement.HAND);
                         }
                     }
@@ -200,16 +199,16 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
                 }
             }
         }
-        return onResourceTick(mod);
+        return onResourceTick(AltoClef.INSTANCE);
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBehaviour().pop();
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBehaviour().pop();
         if (_mineIfPresent != null) {
-            mod.getBlockTracker().stopTracking(_mineIfPresent);
+            AltoClef.INSTANCE.getBlockTracker().stopTracking(_mineIfPresent);
         }
-        onResourceStop(mod, interruptTask);
+        onResourceStop(AltoClef.INSTANCE, interruptTask);
     }
 
     @Override

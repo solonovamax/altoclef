@@ -1,6 +1,5 @@
 package adris.altoclef.chains;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.control.KillAura;
 import adris.altoclef.tasks.entity.KillEntitiesTask;
@@ -11,19 +10,41 @@ import adris.altoclef.tasks.movement.RunAwayFromHostilesTask;
 import adris.altoclef.tasks.speedrun.DragonBreathTracker;
 import adris.altoclef.tasksystem.TaskRunner;
 import adris.altoclef.util.baritone.CachedProjectile;
-import adris.altoclef.util.helpers.*;
+import adris.altoclef.util.helpers.BaritoneHelper;
+import adris.altoclef.util.helpers.EntityHelper;
+import adris.altoclef.util.helpers.LookHelper;
+import adris.altoclef.util.helpers.ProjectileHelper;
+import adris.altoclef.util.helpers.StorageHelper;
+import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.slots.Slot;
 import adris.altoclef.util.time.TimerGame;
 import baritone.Baritone;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.AbstractFireBlock;
 import net.minecraft.block.Block;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.*;
+import net.minecraft.entity.mob.BlazeEntity;
+import net.minecraft.entity.mob.CreeperEntity;
+import net.minecraft.entity.mob.EndermanEntity;
+import net.minecraft.entity.mob.GhastEntity;
+import net.minecraft.entity.mob.HoglinEntity;
+import net.minecraft.entity.mob.MagmaCubeEntity;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.PiglinBruteEntity;
+import net.minecraft.entity.mob.PiglinEntity;
+import net.minecraft.entity.mob.PillagerEntity;
+import net.minecraft.entity.mob.SkeletonEntity;
+import net.minecraft.entity.mob.SlimeEntity;
+import net.minecraft.entity.mob.StrayEntity;
+import net.minecraft.entity.mob.WardenEntity;
+import net.minecraft.entity.mob.WitchEntity;
+import net.minecraft.entity.mob.WitherSkeletonEntity;
+import net.minecraft.entity.mob.ZoglinEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.DragonFireballEntity;
 import net.minecraft.entity.projectile.FireballEntity;
@@ -36,7 +57,11 @@ import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
 public class MobDefenseChain extends SingleTaskChain {
     private static final double DANGER_KEEP_DISTANCE = 30;
@@ -69,8 +94,8 @@ public class MobDefenseChain extends SingleTaskChain {
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
-        _cachedLastPriority = getPriorityInner(mod);
+    public float getPriority() {
+        _cachedLastPriority = getPriorityInner(AltoClef.INSTANCE);
         return _cachedLastPriority;
     }
 
@@ -155,7 +180,7 @@ public class MobDefenseChain extends SingleTaskChain {
 
         if (mod.getFoodChain().needsToEat() || mod.getMLGBucketChain().isFallingOhNo(mod) ||
                 !mod.getMLGBucketChain().doneMLG() || mod.getMLGBucketChain().isChorusFruiting()) {
-            _killAura.stopShielding(mod);
+            _killAura.stopShielding();
             stopShielding(mod);
             return Float.NEGATIVE_INFINITY;
         }
@@ -374,7 +399,7 @@ public class MobDefenseChain extends SingleTaskChain {
             }
         }
         // By default if we aren't "immediately" in danger but were running away, keep running away until we're good.
-        if (_runAwayTask != null && !_runAwayTask.isFinished(mod)) {
+        if (_runAwayTask != null && !_runAwayTask.isFinished()) {
             setTask(_runAwayTask);
             return _cachedLastPriority;
         } else {
@@ -452,7 +477,7 @@ public class MobDefenseChain extends SingleTaskChain {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        _killAura.tickEnd(mod);
+        _killAura.tickEnd();
     }
 
     private void applyForceField(Entity entity) {
@@ -651,7 +676,7 @@ public class MobDefenseChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onTaskFinish(AltoClef mod) {
+    protected void onTaskFinish() {
         // Task is done, so I guess we move on?
     }
 

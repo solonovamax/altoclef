@@ -1,8 +1,9 @@
 package adris.altoclef.tasks.construction.compound;
 
-import gay.solonovamax.altoclef.AltoClef;
+import adris.altoclef.BotBehaviour;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
+import adris.altoclef.control.SlotHandler;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.construction.ClearLiquidTask;
 import adris.altoclef.tasks.construction.DestroyBlockTask;
@@ -11,14 +12,21 @@ import adris.altoclef.tasks.movement.PickupDroppedItemTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
 import adris.altoclef.tasks.speedrun.MarvionBeatMinecraftTask;
 import adris.altoclef.tasksystem.Task;
+import adris.altoclef.trackers.BlockTracker;
+import adris.altoclef.trackers.EntityTracker;
+import adris.altoclef.trackers.storage.ItemStorageTracker;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import adris.altoclef.util.time.TimerGame;
+import baritone.Baritone;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
@@ -54,21 +62,21 @@ public class ConstructNetherPortalBucketTask extends Task {
     };
 
     private static final Vec3i[] PORTAL_INTERIOR = new Vec3i[]{
-            //Inside
+            // Inside
             new Vec3i(0, 0, 0),
             new Vec3i(0, 1, 0),
             new Vec3i(0, 2, 0),
             new Vec3i(0, 0, 1),
             new Vec3i(0, 1, 1),
             new Vec3i(0, 2, 1),
-            //Outside 1
+            // Outside 1
             new Vec3i(1, 0, 0),
             new Vec3i(1, 1, 0),
             new Vec3i(1, 2, 0),
             new Vec3i(1, 0, 1),
             new Vec3i(1, 1, 1),
             new Vec3i(1, 2, 1),
-            //Outside 2
+            // Outside 2
             new Vec3i(-1, 0, 0),
             new Vec3i(-1, 1, 0),
             new Vec3i(-1, 2, 0),
@@ -90,28 +98,32 @@ public class ConstructNetherPortalBucketTask extends Task {
     private final TimerGame _refreshTimer = new TimerGame(11);
     private BlockPos _portalOrigin = null;
 
-    //private BlockPos _currentLavaTarget = null;
+    // private BlockPos _currentLavaTarget = null;
     private BlockPos _currentDestroyTarget = null;
     private boolean _firstSearch = false;
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBlockTracker().trackBlock(Blocks.LAVA);
+    protected void onStart() {
+        BlockTracker blockTracker = AltoClef.INSTANCE.getBlockTracker();
+        BotBehaviour behaviour = AltoClef.INSTANCE.getBehaviour();
+        ClientWorld world = AltoClef.INSTANCE.getWorld();
+
+        blockTracker.trackBlock(Blocks.LAVA);
 
         _currentDestroyTarget = null;
 
-        mod.getBehaviour().push();
+        behaviour.push();
 
         // Avoid breaking portal frame if we're obsidian.
         // Also avoid placing on the lava + water
         // Also avoid breaking the cast frame
-        mod.getBehaviour().avoidBlockBreaking(block -> {
+        behaviour.avoidBlockBreaking(block -> {
             if (_portalOrigin != null) {
                 // Don't break frame
                 for (Vec3i framePosRelative : PORTAL_FRAME) {
                     BlockPos framePos = _portalOrigin.add(framePosRelative);
                     if (block.equals(framePos)) {
-                        return mod.getWorld().getBlockState(framePos).getBlock() == Blocks.OBSIDIAN;
+                        return world.getBlockState(framePos).getBlock() == Blocks.OBSIDIAN;
                     }
                 }
             }
@@ -119,39 +131,50 @@ public class ConstructNetherPortalBucketTask extends Task {
         });
 
         // Protect some used items
-        mod.getBehaviour().addProtectedItems(Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.FLINT_AND_STEEL, Items.FIRE_CHARGE);
+        behaviour.addProtectedItems(Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.FLINT_AND_STEEL, Items.FIRE_CHARGE);
 
         _progressChecker.reset();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
+        ClientPlayerEntity player = AltoClef.INSTANCE.getPlayer();
+        ClientWorld world = AltoClef.INSTANCE.getWorld();
+        BlockTracker blockTracker = AltoClef.INSTANCE.getBlockTracker();
+        Baritone clientBaritone = AltoClef.INSTANCE.getClientBaritone();
+        SlotHandler slotHandler = AltoClef.INSTANCE.getSlotHandler();
+        ItemStorageTracker itemStorage = AltoClef.INSTANCE.getItemStorage();
+        EntityTracker entityTracker = AltoClef.INSTANCE.getEntityTracker();
+
         if (MarvionBeatMinecraftTask.getConfig().renderDistanceManipulation) {
             MinecraftClient.getInstance().options.getViewDistance().setValue(2);
             MinecraftClient.getInstance().options.getEntityDistanceScaling().setValue(0.5);
         }
+
         if (_portalOrigin != null) {
-            if (mod.getWorld().getBlockState(_portalOrigin.up()).getBlock() == Blocks.NETHER_PORTAL) {
+            if (world.getBlockState(_portalOrigin.up()).getBlock() == Blocks.NETHER_PORTAL) {
                 setDebugState("Done constructing nether portal.");
-                mod.getBlockTracker().addBlock(Blocks.NETHER_PORTAL, _portalOrigin.up());
+                blockTracker.addBlock(Blocks.NETHER_PORTAL, _portalOrigin.up());
                 return null;
             }
         }
-        if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
+
+        if (clientBaritone.getPathingBehavior().isPathing()) {
             _progressChecker.reset();
         }
-        if (wanderTask.isActive() && !wanderTask.isFinished(mod)) {
+
+        if (wanderTask.isActive() && !wanderTask.isFinished()) {
             setDebugState("Trying again.");
             _progressChecker.reset();
             return wanderTask;
         }
 
-        if (!_progressChecker.check(mod)) {
-            mod.getClientBaritone().getPathingBehavior().forceCancel();
+        if (!_progressChecker.check(AltoClef.INSTANCE)) {
+            clientBaritone.getPathingBehavior().forceCancel();
             if (_portalOrigin != null && _currentDestroyTarget != null) {
-                mod.getBlockTracker().requestBlockUnreachable(_portalOrigin);
-                mod.getBlockTracker().requestBlockUnreachable(_currentDestroyTarget);
-                if (mod.getBlockTracker().unreachable(_portalOrigin) && mod.getBlockTracker().unreachable(_currentDestroyTarget)) {
+                blockTracker.requestBlockUnreachable(_portalOrigin);
+                blockTracker.requestBlockUnreachable(_currentDestroyTarget);
+                if (blockTracker.unreachable(_portalOrigin) && blockTracker.unreachable(_currentDestroyTarget)) {
                     _portalOrigin = null;
                     _currentDestroyTarget = null;
                 }
@@ -161,40 +184,40 @@ public class ConstructNetherPortalBucketTask extends Task {
         if (_refreshTimer.elapsed()) {
             Debug.logMessage("Duct tape: Refreshing inventory again just in case");
             _refreshTimer.reset();
-            mod.getSlotHandler().refreshInventory();
+            slotHandler.refreshInventory();
         }
 
-        //If too far, reset.
-        if (_portalOrigin != null && !_portalOrigin.isWithinDistance(mod.getPlayer().getPos(), 2000)) {
+        // If too far, reset.
+        if (_portalOrigin != null && !_portalOrigin.isWithinDistance(player.getPos(), 2000)) {
             _portalOrigin = null;
             _currentDestroyTarget = null;
         }
 
         if (_currentDestroyTarget != null) {
-            if (!WorldHelper.isSolid(mod, _currentDestroyTarget)) {
+            if (!WorldHelper.isSolid(AltoClef.INSTANCE, _currentDestroyTarget)) {
                 _currentDestroyTarget = null;
             } else {
                 return new DestroyBlockTask(_currentDestroyTarget);
             }
         }
         // Get flint & steel if we don't have one
-        if (!mod.getItemStorage().hasItem(Items.FLINT_AND_STEEL) && !mod.getItemStorage().hasItem(Items.FIRE_CHARGE)) {
+        if (!itemStorage.hasItem(Items.FLINT_AND_STEEL) && !itemStorage.hasItem(Items.FIRE_CHARGE)) {
             setDebugState("Getting flint & steel");
             _progressChecker.reset();
             return TaskCatalogue.getItemTask(Items.FLINT_AND_STEEL, 1);
         }
         // Get bucket if we don't have one.
-        int bucketCount = mod.getItemStorage().getItemCount(Items.BUCKET, Items.LAVA_BUCKET, Items.WATER_BUCKET);
+        int bucketCount = itemStorage.getItemCount(Items.BUCKET, Items.LAVA_BUCKET, Items.WATER_BUCKET);
         if (bucketCount < 2) {
             setDebugState("Getting buckets");
             _progressChecker.reset();
             // If we have lava/water, get the inverse. Otherwise we dropped a bucket, just get a bucket.
-            if (mod.getItemStorage().hasItem(Items.LAVA_BUCKET)) {
+            if (itemStorage.hasItem(Items.LAVA_BUCKET)) {
                 return TaskCatalogue.getItemTask(Items.WATER_BUCKET, 1);
-            } else if (mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
+            } else if (itemStorage.hasItem(Items.WATER_BUCKET)) {
                 return TaskCatalogue.getItemTask(Items.LAVA_BUCKET, 1);
             }
-            if (mod.getEntityTracker().itemDropped(Items.WATER_BUCKET, Items.LAVA_BUCKET)) {
+            if (entityTracker.itemDropped(Items.WATER_BUCKET, Items.LAVA_BUCKET)) {
                 return new PickupDroppedItemTask(new ItemTarget(new Item[]{Items.WATER_BUCKET, Items.LAVA_BUCKET}, 1), true);
             }
             return TaskCatalogue.getItemTask(Items.BUCKET, 2);
@@ -204,7 +227,7 @@ public class ConstructNetherPortalBucketTask extends Task {
         if (needsToLookForPortal) {
             _progressChecker.reset();
             // Get water before searching, just for convenience.
-            if (!mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
+            if (!itemStorage.hasItem(Items.WATER_BUCKET)) {
                 setDebugState("Getting water");
                 _progressChecker.reset();
                 return TaskCatalogue.getItemTask(Items.WATER_BUCKET, 1);
@@ -216,10 +239,10 @@ public class ConstructNetherPortalBucketTask extends Task {
                 _firstSearch = false;
                 _lavaSearchTimer.reset();
                 Debug.logMessage("(Searching for lava lake with portalable spot nearby...)");
-                BlockPos lavaPos = findLavaLake(mod, mod.getPlayer().getBlockPos());
+                BlockPos lavaPos = findLavaLake(player.getBlockPos());
                 if (lavaPos != null) {
                     // We have a lava lake, set our portal origin!
-                    BlockPos foundPortalRegion = getPortalableRegion(mod, lavaPos, mod.getPlayer().getBlockPos(), new Vec3i(-1, 0, 0), PORTALABLE_REGION_SIZE, 20);
+                    BlockPos foundPortalRegion = getPortalableRegion(AltoClef.INSTANCE, lavaPos, player.getBlockPos(), new Vec3i(-1, 0, 0), PORTALABLE_REGION_SIZE, 20);
                     if (foundPortalRegion == null) {
                         Debug.logWarning("Failed to find portalable region nearby. Consider increasing the search timeout range");
                     } else {
@@ -237,14 +260,15 @@ public class ConstructNetherPortalBucketTask extends Task {
             }
         }
 
+
         // We have a portal, now build it.
         for (Vec3i framePosRelative : PORTAL_FRAME) {
             BlockPos framePos = _portalOrigin.add(framePosRelative);
-            Block frameBlock = mod.getWorld().getBlockState(framePos).getBlock();
+            Block frameBlock = world.getBlockState(framePos).getBlock();
             if (frameBlock == Blocks.OBSIDIAN) {
                 // Already satisfied, clear water above if need be.
                 BlockPos waterCheck = framePos.up();
-                if (mod.getWorld().getBlockState(waterCheck).getBlock() == Blocks.WATER && WorldHelper.isSourceBlock(mod, waterCheck, true)) {
+                if (world.getBlockState(waterCheck).getBlock() == Blocks.WATER && WorldHelper.isSourceBlock(AltoClef.INSTANCE, waterCheck, true)) {
                     setDebugState("Clearing water from cast");
                     return new ClearLiquidTask(waterCheck);
                 }
@@ -252,14 +276,14 @@ public class ConstructNetherPortalBucketTask extends Task {
             }
 
             // Get lava early so placing it is faster
-            if (!mod.getItemStorage().hasItem(Items.LAVA_BUCKET) && frameBlock != Blocks.LAVA) {
+            if (!itemStorage.hasItem(Items.LAVA_BUCKET) && frameBlock != Blocks.LAVA) {
                 setDebugState("Collecting lava");
                 _progressChecker.reset();
                 return _collectLavaTask;
             }
 
             // We need to place obsidian here.
-            if (mod.getBlockTracker().unreachable(framePos)) {
+            if (blockTracker.unreachable(framePos)) {
                 _portalOrigin = null;
             }
             return new PlaceObsidianBucketTask(framePos);
@@ -273,7 +297,7 @@ public class ConstructNetherPortalBucketTask extends Task {
                 setDebugState("Clearing inside of portal");
                 _currentDestroyTarget = p;
                 return null;
-                //return new DestroyBlockTask(p);
+                // return new DestroyBlockTask(p);
             }
         }
 
@@ -283,9 +307,9 @@ public class ConstructNetherPortalBucketTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBlockTracker().stopTracking(Blocks.LAVA);
-        mod.getBehaviour().pop();
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.LAVA);
+        AltoClef.INSTANCE.getBehaviour().pop();
     }
 
     @Override
@@ -298,11 +322,11 @@ public class ConstructNetherPortalBucketTask extends Task {
         return "Construct Nether Portal";
     }
 
-    private BlockPos findLavaLake(AltoClef mod, BlockPos playerPos) {
+    private BlockPos findLavaLake(BlockPos playerPos) {
         HashSet<BlockPos> alreadyExplored = new HashSet<>();
         double nearestSqDistance = Double.POSITIVE_INFINITY;
         BlockPos nearestLake = null;
-        List<BlockPos> lavas = mod.getBlockTracker().getKnownLocations(Blocks.LAVA);
+        List<BlockPos> lavas = AltoClef.INSTANCE.getBlockTracker().getKnownLocations(Blocks.LAVA);
         if (!lavas.isEmpty()) {
             for (BlockPos pos : lavas) {
                 if (alreadyExplored.contains(pos)) continue;
@@ -337,7 +361,7 @@ public class ConstructNetherPortalBucketTask extends Task {
             // We may not be a full lava block
             if (!s.getFluidState().isStill()) return 0;
             int level = s.getFluidState().getLevel();
-            //Debug.logMessage("TEST LEVEL: " + level + ", " + height);
+            // Debug.logMessage("TEST LEVEL: " + level + ", " + height);
             // Only accept FULL SOURCE BLOCKS
             if (level != 8) return 0;
         }

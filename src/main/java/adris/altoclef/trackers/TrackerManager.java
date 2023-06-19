@@ -8,13 +8,7 @@ public class TrackerManager {
 
     private final ArrayList<Tracker> _trackers = new ArrayList<>();
 
-    private final AltoClef _mod;
-
     private boolean _wasInGame = false;
-
-    public TrackerManager(AltoClef mod) {
-        _mod = mod;
-    }
 
     public void tick() {
         boolean inGame = AltoClef.inGame();
@@ -24,8 +18,8 @@ public class TrackerManager {
                 tracker.reset();
             }
             // This is a a spaghetti. Fix at some point.
-            _mod.getChunkTracker().reset(_mod);
-            _mod.getMiscBlockTracker().reset();
+            AltoClef.INSTANCE.getChunkTracker().reset(AltoClef.INSTANCE);
+            AltoClef.INSTANCE.getMiscBlockTracker().reset();
         }
         _wasInGame = inGame;
 
@@ -35,7 +29,6 @@ public class TrackerManager {
     }
 
     public void addTracker(Tracker tracker) {
-        tracker._mod = _mod;
         _trackers.add(tracker);
     }
 }

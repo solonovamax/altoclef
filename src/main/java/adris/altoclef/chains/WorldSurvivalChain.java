@@ -1,6 +1,5 @@
 package adris.altoclef.chains;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.DoToClosestBlockTask;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.construction.PutOutFireTask;
@@ -15,6 +14,7 @@ import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.time.TimerGame;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.AbstractFireBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -38,43 +38,43 @@ public class WorldSurvivalChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onTaskFinish(AltoClef mod) {
+    protected void onTaskFinish() {
 
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
+    public float getPriority() {
         if (!AltoClef.inGame()) return Float.NEGATIVE_INFINITY;
 
         // Drowning
-        handleDrowning(mod);
+        handleDrowning(AltoClef.INSTANCE);
 
         // Lava Escape
-        if (isInLavaOhShit(mod) && mod.getBehaviour().shouldEscapeLava()) {
+        if (isInLavaOhShit(AltoClef.INSTANCE) && AltoClef.INSTANCE.getBehaviour().shouldEscapeLava()) {
             setTask(new EscapeFromLavaTask());
             return 100;
         }
 
         // Fire escape
-        if (isInFire(mod)) {
+        if (isInFire(AltoClef.INSTANCE)) {
             setTask(new DoToClosestBlockTask(PutOutFireTask::new, Blocks.FIRE, Blocks.SOUL_FIRE));
             return 100;
         }
 
         // Extinguish with water
-        if (mod.getModSettings().shouldExtinguishSelfWithWater()) {
-            if (!(_mainTask instanceof EscapeFromLavaTask && isCurrentlyRunning(mod)) && mod.getPlayer().isOnFire() && !mod.getPlayer().hasStatusEffect(StatusEffects.FIRE_RESISTANCE) && !mod.getWorld().getDimension().ultrawarm()) {
+        if (AltoClef.INSTANCE.getModSettings().shouldExtinguishSelfWithWater()) {
+            if (!(_mainTask instanceof EscapeFromLavaTask && isCurrentlyRunning(AltoClef.INSTANCE)) && AltoClef.INSTANCE.getPlayer().isOnFire() && !AltoClef.INSTANCE.getPlayer().hasStatusEffect(StatusEffects.FIRE_RESISTANCE) && !AltoClef.INSTANCE.getWorld().getDimension().ultrawarm()) {
                 // Extinguish ourselves
-                if (mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
-                    BlockPos targetWaterPos = mod.getPlayer().getBlockPos();
-                    if (WorldHelper.isSolid(mod, targetWaterPos.down()) && WorldHelper.canPlace(mod, targetWaterPos)) {
+                if (AltoClef.INSTANCE.getItemStorage().hasItem(Items.WATER_BUCKET)) {
+                    BlockPos targetWaterPos = AltoClef.INSTANCE.getPlayer().getBlockPos();
+                    if (WorldHelper.isSolid(AltoClef.INSTANCE, targetWaterPos.down()) && WorldHelper.canPlace(AltoClef.INSTANCE, targetWaterPos)) {
                         Optional<Rotation> reach = LookHelper.getReach(targetWaterPos.down(), Direction.UP);
                         if (reach.isPresent()) {
-                            mod.getClientBaritone().getLookBehavior().updateTarget(reach.get(), true);
-                            if (mod.getClientBaritone().getPlayerContext().isLookingAt(targetWaterPos.down())) {
-                                if (mod.getSlotHandler().forceEquipItem(Items.WATER_BUCKET)) {
+                            AltoClef.INSTANCE.getClientBaritone().getLookBehavior().updateTarget(reach.get(), true);
+                            if (AltoClef.INSTANCE.getClientBaritone().getPlayerContext().isLookingAt(targetWaterPos.down())) {
+                                if (AltoClef.INSTANCE.getSlotHandler().forceEquipItem(Items.WATER_BUCKET)) {
                                     _extinguishWaterPosition = targetWaterPos;
-                                    mod.getInputControls().tryPress(Input.CLICK_RIGHT);
+                                    AltoClef.INSTANCE.getInputControls().tryPress(Input.CLICK_RIGHT);
                                     setTask(null);
                                     return 90;
                                 }
@@ -84,7 +84,7 @@ public class WorldSurvivalChain extends SingleTaskChain {
                 }
                 setTask(new DoToClosestBlockTask(GetToBlockTask::new, Blocks.WATER));
                 return 90;
-            } else if (mod.getItemStorage().hasItem(Items.BUCKET) && _extinguishWaterPosition != null && mod.getBlockTracker().blockIsValid(_extinguishWaterPosition, Blocks.WATER)) {
+            } else if (AltoClef.INSTANCE.getItemStorage().hasItem(Items.BUCKET) && _extinguishWaterPosition != null && AltoClef.INSTANCE.getBlockTracker().blockIsValid(_extinguishWaterPosition, Blocks.WATER)) {
                 // Pick up the water
                 setTask(new InteractWithBlockTask(new ItemTarget(Items.BUCKET, 1), Direction.UP, _extinguishWaterPosition.down(), true));
                 return 60;
@@ -94,13 +94,13 @@ public class WorldSurvivalChain extends SingleTaskChain {
         }
 
         // Portal stuck
-        if (isStuckInNetherPortal(mod)) {
+        if (isStuckInNetherPortal(AltoClef.INSTANCE)) {
             // We can't break or place while inside a portal (not really)
-            mod.getExtraBaritoneSettings().setInteractionPaused(true);
+            AltoClef.INSTANCE.getExtraBaritoneSettings().setInteractionPaused(true);
         } else {
             // We're no longer stuck, but we might want to move AWAY from our stuck position.
             _portalStuckTimer.reset();
-            mod.getExtraBaritoneSettings().setInteractionPaused(false);
+            AltoClef.INSTANCE.getExtraBaritoneSettings().setInteractionPaused(false);
         }
         if (_portalStuckTimer.elapsed()) {
             // We're stuck inside a portal, so get out.
@@ -170,7 +170,7 @@ public class WorldSurvivalChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onStop(AltoClef mod) {
-        super.onStop(mod);
+    protected void onStop() {
+        super.onStop();
     }
 }

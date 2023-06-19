@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.container.SmeltInSmokerTask;
@@ -14,6 +13,7 @@ import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.SmokerSlot;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
@@ -76,22 +76,22 @@ public class CollectMeatTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (mod.getEntityTracker().entityFound(ChickenEntity.class)) {
-            Optional<Entity> chickens = mod.getEntityTracker().getClosestEntity(ChickenEntity.class);
+    protected Task onTick() {
+        if (AltoClef.INSTANCE.getEntityTracker().entityFound(ChickenEntity.class)) {
+            Optional<Entity> chickens = AltoClef.INSTANCE.getEntityTracker().getClosestEntity(ChickenEntity.class);
             if (chickens.isPresent()) {
-                Iterable<Entity> entities = mod.getWorld().getEntities();
+                Iterable<Entity> entities = AltoClef.INSTANCE.getWorld().getEntities();
                 for (Entity entity : entities) {
                     if (entity instanceof HostileEntity || entity instanceof SlimeEntity) {
                         if (chickens.get().hasPassenger(entity)) {
-                            if (mod.getEntityTracker().isEntityReachable(entity)) {
+                            if (AltoClef.INSTANCE.getEntityTracker().isEntityReachable(entity)) {
                                 Debug.logMessage("Blacklisting chicken jockey.");
-                                mod.getEntityTracker().requestEntityUnreachable(chickens.get());
+                                AltoClef.INSTANCE.getEntityTracker().requestEntityUnreachable(chickens.get());
                             }
                         }
                     }
@@ -99,7 +99,7 @@ public class CollectMeatTask extends Task {
             }
         }
         // If we were previously smelting, keep on smelting.
-        if (_smeltTask != null && _smeltTask.isActive() && !_smeltTask.isFinished(mod)) {
+        if (_smeltTask != null && _smeltTask.isActive() && !_smeltTask.isFinished()) {
             setDebugState("Cooking...");
             if (MarvionBeatMinecraftTask.getConfig().renderDistanceManipulation) {
                 MinecraftClient.getInstance().options.getViewDistance().setValue(2);
@@ -114,21 +114,21 @@ public class CollectMeatTask extends Task {
             _checkNewOptionsTimer.reset();
             _currentResourceTask = null;
         }
-        if (_currentResourceTask != null && _currentResourceTask.isActive() && !_currentResourceTask.isFinished(mod) && !_currentResourceTask.thisOrChildAreTimedOut()) {
+        if (_currentResourceTask != null && _currentResourceTask.isActive() && !_currentResourceTask.isFinished() && !_currentResourceTask.thisOrChildAreTimedOut()) {
             return _currentResourceTask;
         }
         // Calculate potential
-        double potentialFood = calculateFoodPotential(mod);
+        double potentialFood = calculateFoodPotential(AltoClef.INSTANCE);
         if (potentialFood >= _unitsNeeded) {
             // Convert our raw foods
             // PLAN:
             // - If we have raw foods, smelt all of them
             // Convert raw foods -> cooked foods
             for (CookableFoodTarget cookable : COOKABLE_FOODS) {
-                int rawCount = mod.getItemStorage().getItemCount(cookable.getRaw());
+                int rawCount = AltoClef.INSTANCE.getItemStorage().getItemCount(cookable.getRaw());
                 if (rawCount > 0) {
                     //Debug.logMessage("STARTING COOK OF " + cookable.getRaw().getTranslationKey());
-                    int toSmelt = rawCount + mod.getItemStorage().getItemCount(cookable.getCooked());
+                    int toSmelt = rawCount + AltoClef.INSTANCE.getItemStorage().getItemCount(cookable.getCooked());
                     _smeltTask = new SmeltInSmokerTask(new SmeltTarget(new ItemTarget(cookable.cookedFood, toSmelt), new ItemTarget(cookable.rawFood, rawCount)));
                     _smeltTask.ignoreMaterials();
                     return _smeltTask;
@@ -137,8 +137,8 @@ public class CollectMeatTask extends Task {
         } else {
             // Pick up raw/cooked foods on ground
             for (CookableFoodTarget cookable : COOKABLE_FOODS) {
-                Task t = this.pickupTaskOrNull(mod, cookable.getRaw(), 20);
-                if (t == null) t = this.pickupTaskOrNull(mod, cookable.getCooked(), 40);
+                Task t = this.pickupTaskOrNull(AltoClef.INSTANCE, cookable.getRaw(), 20);
+                if (t == null) t = this.pickupTaskOrNull(AltoClef.INSTANCE, cookable.getCooked(), 40);
                 if (t != null) {
                     setDebugState("Picking up Cookable food");
                     _currentResourceTask = t;
@@ -150,15 +150,15 @@ public class CollectMeatTask extends Task {
             Entity bestEntity = null;
             Item bestRawFood = null;
             for (CookableFoodTarget cookable : COOKABLE_FOODS) {
-                if (!mod.getEntityTracker().entityFound(cookable.mobToKill)) continue;
-                Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), cookable.mobToKill);
+                if (!AltoClef.INSTANCE.getEntityTracker().entityFound(cookable.mobToKill)) continue;
+                Optional<Entity> nearest = AltoClef.INSTANCE.getEntityTracker().getClosestEntity(AltoClef.INSTANCE.getPlayer().getPos(), cookable.mobToKill);
                 if (nearest.isEmpty()) continue; // ?? This crashed once?
                 if (nearest.get() instanceof LivingEntity livingEntity) {
                     // Peta
                     if (livingEntity.isBaby()) continue;
                 }
                 int hungerPerformance = cookable.getCookedUnits();
-                double sqDistance = nearest.get().squaredDistanceTo(mod.getPlayer());
+                double sqDistance = nearest.get().squaredDistanceTo(AltoClef.INSTANCE.getPlayer());
                 double score = (double) 100 * hungerPerformance / (sqDistance);
                 if (score > bestScore) {
                     bestScore = score;
@@ -173,10 +173,10 @@ public class CollectMeatTask extends Task {
             }
         }
         for (Item raw : ItemHelper.RAW_FOODS) {
-            if (mod.getItemStorage().hasItem(raw)) {
+            if (AltoClef.INSTANCE.getItemStorage().hasItem(raw)) {
                 Optional<Item> cooked = ItemHelper.getCookedFood(raw);
                 if (cooked.isPresent()) {
-                    int targetCount = mod.getItemStorage().getItemCount(cooked.get()) + mod.getItemStorage().getItemCount(raw);
+                    int targetCount = AltoClef.INSTANCE.getItemStorage().getItemCount(cooked.get()) + AltoClef.INSTANCE.getItemStorage().getItemCount(raw);
                     _smeltTask = new SmeltInSmokerTask(new SmeltTarget(new ItemTarget(cooked.get(), targetCount), new ItemTarget(raw, targetCount)));
                     return _smeltTask;
                 }
@@ -210,13 +210,13 @@ public class CollectMeatTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return StorageHelper.calculateInventoryFoodScore(mod) >= _unitsNeeded && _smeltTask == null;
+    public boolean isFinished() {
+        return StorageHelper.calculateInventoryFoodScore(AltoClef.INSTANCE) >= _unitsNeeded && _smeltTask == null;
     }
 
     @Override

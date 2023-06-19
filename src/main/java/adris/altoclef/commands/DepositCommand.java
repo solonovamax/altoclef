@@ -1,11 +1,15 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
-import adris.altoclef.commandsystem.*;
+import adris.altoclef.commandsystem.Arg;
+import adris.altoclef.commandsystem.ArgParser;
+import adris.altoclef.commandsystem.Command;
+import adris.altoclef.commandsystem.CommandException;
+import adris.altoclef.commandsystem.ItemList;
 import adris.altoclef.tasks.container.StoreInAnyContainerTask;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.PlayerSlot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
@@ -16,7 +20,7 @@ public class DepositCommand extends Command {
         super("deposit", "Deposit ALL of our items", new Arg(ItemList.class, "items (empty for ALL non gear items)", null, 0, false));
     }
 
-    public static ItemTarget[] getAllNonEquippedOrToolItemsAsTarget(AltoClef mod) {
+    public static ItemTarget[] getAllNonEquippedOrToolItemsAsTarget() {
         return StorageHelper.getAllInventoryItemsAsTargets(slot -> {
             // Ignore armor
             if (ArrayUtils.contains(PlayerSlot.ARMOR_SLOTS, slot))
@@ -32,15 +36,15 @@ public class DepositCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(ArgParser parser) throws CommandException {
         ItemList itemList = parser.get(ItemList.class);
         ItemTarget[] items;
         if (itemList == null) {
-            items = getAllNonEquippedOrToolItemsAsTarget(mod);
+            items = getAllNonEquippedOrToolItemsAsTarget();
         } else {
             items = itemList.items;
         }
 
-        mod.runUserTask(new StoreInAnyContainerTask(false, items), this::finish);
+        AltoClef.INSTANCE.runUserTask(new StoreInAnyContainerTask(false, items), this::finish);
     }
 }

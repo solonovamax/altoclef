@@ -1,8 +1,8 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.BiomeKeys;
@@ -12,14 +12,14 @@ public class LocateDesertTempleTask extends Task {
     private BlockPos _finalPos;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         // Track desert pyramid blocks
-        mod.getBlockTracker().trackBlock(Blocks.STONE_PRESSURE_PLATE);
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(Blocks.STONE_PRESSURE_PLATE);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        BlockPos desertTemplePos = WorldHelper.getADesertTemple(mod);
+    protected Task onTick() {
+        BlockPos desertTemplePos = WorldHelper.getADesertTemple(AltoClef.INSTANCE);
         if (desertTemplePos != null) {
             _finalPos = desertTemplePos.up(14);
         }
@@ -31,8 +31,8 @@ public class LocateDesertTempleTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBlockTracker().stopTracking(Blocks.STONE_PRESSURE_PLATE);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.STONE_PRESSURE_PLATE);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class LocateDesertTempleTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return mod.getPlayer().getBlockPos().equals(_finalPos);
+    public boolean isFinished() {
+        return AltoClef.INSTANCE.getPlayer().getBlockPos().equals(_finalPos);
     }
 }

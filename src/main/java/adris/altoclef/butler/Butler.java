@@ -1,11 +1,11 @@
 package adris.altoclef.butler;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.events.ChatMessageEvent;
 import adris.altoclef.eventbus.events.TaskFinishedEvent;
 import adris.altoclef.ui.MessagePriority;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.client.MinecraftClient;
 
 /**
@@ -17,10 +17,7 @@ import net.minecraft.client.MinecraftClient;
  * and depends on the "useButlerWhitelist" and "useButlerBlacklist" settings in "altoclef_settings.json"
  */
 public class Butler {
-
     private static final String BUTLER_MESSAGE_START = "` ";
-
-    private final AltoClef _mod;
 
     private final WhisperChecker _whisperChecker = new WhisperChecker();
 
@@ -32,9 +29,8 @@ public class Butler {
     private boolean _commandInstantRan = false;
     private boolean _commandFinished = false;
 
-    public Butler(AltoClef mod) {
-        _mod = mod;
-        _userAuth = new UserAuth(mod);
+    public Butler() {
+        _userAuth = new UserAuth();
 
         // Revoke our current user whenever a task finishes.
         EventBus.subscribe(TaskFinishedEvent.class, evt -> {
@@ -50,7 +46,7 @@ public class Butler {
             if (debug) {
                 Debug.logMessage("RECEIVED WHISPER: \"" + message + "\".");
             }
-            _mod.getButler().receiveMessage(message);
+            AltoClef.INSTANCE.getButler().receiveMessage(message);
         });
     }
 
@@ -58,7 +54,7 @@ public class Butler {
         // Format: <USER> whispers to you: <MESSAGE>
         // Format: <USER> whispers: <MESSAGE>
         String ourName = MinecraftClient.getInstance().getName();
-        WhisperChecker.MessageResult result = this._whisperChecker.receiveMessage(_mod, ourName, msg);
+        WhisperChecker.MessageResult result = this._whisperChecker.receiveMessage(AltoClef.INSTANCE, ourName, msg);
         if (result != null) {
             this.receiveWhisper(result.from, result.message);
         } else if (ButlerConfig.getInstance().whisperFormatDebug) {
@@ -124,8 +120,8 @@ public class Butler {
         _commandFinished = false;
         _currentUser = username;
         sendWhisper("Command Executing: " + message, MessagePriority.TIMELY);
-        String prefix = ButlerConfig.getInstance().requirePrefixMsg ? _mod.getModSettings().getCommandPrefix() : "";
-        AltoClef.getCommandExecutor().execute(prefix + message, () -> {
+        String prefix = ButlerConfig.getInstance().requirePrefixMsg ? AltoClef.INSTANCE.getModSettings().getCommandPrefix() : "";
+        AltoClef.INSTANCE.getCommandExecutor().execute(prefix + message, () -> {
             // On finish
             sendWhisper("Command Finished: " + message, MessagePriority.TIMELY);
             if (!_commandInstantRan) {
@@ -154,6 +150,6 @@ public class Butler {
     }
 
     private void sendWhisper(String username, String message, MessagePriority priority) {
-        _mod.getMessageSender().enqueueWhisper(username, BUTLER_MESSAGE_START + message, priority);
+        AltoClef.INSTANCE.getMessageSender().enqueueWhisper(username, BUTLER_MESSAGE_START + message, priority);
     }
 }

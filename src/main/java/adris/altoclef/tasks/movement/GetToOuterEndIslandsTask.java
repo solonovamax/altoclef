@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.resources.GetBuildingMaterialsTask;
@@ -15,6 +14,7 @@ import adris.altoclef.util.helpers.WorldHelper;
 import baritone.api.pathing.goals.GoalComposite;
 import baritone.api.pathing.goals.GoalGetToBlock;
 import baritone.api.pathing.goals.GoalYLevel;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
@@ -40,33 +40,33 @@ public class GetToOuterEndIslandsTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
-        mod.getBlockTracker().trackBlock(Blocks.END_GATEWAY);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(Blocks.END_GATEWAY);
         _beatTheGame = new BeatMinecraft2Task();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (mod.getBlockTracker().anyFound(Blocks.END_GATEWAY)) {
-            if (!mod.getItemStorage().hasItemInventoryOnly(Items.ENDER_PEARL)) {
+    protected Task onTick() {
+        if (AltoClef.INSTANCE.getBlockTracker().anyFound(Blocks.END_GATEWAY)) {
+            if (!AltoClef.INSTANCE.getItemStorage().hasItemInventoryOnly(Items.ENDER_PEARL)) {
                 setDebugState("Getting an ender pearl");
                 return new CataloguedResourceTask(new ItemTarget(Items.ENDER_PEARL, 1));
             }
-            BlockPos gateway = mod.getBlockTracker().getNearestTracking(Blocks.END_GATEWAY).get();
-            int blocksNeeded = Math.abs(mod.getPlayer().getBlockY() - gateway.getY()) +
-                    Math.abs(mod.getPlayer().getBlockX() - gateway.getX()) +
-                    Math.abs(mod.getPlayer().getBlockZ() - gateway.getZ()) - 3;
-            if (StorageHelper.getBuildingMaterialCount(mod) < blocksNeeded) {
+            BlockPos gateway = AltoClef.INSTANCE.getBlockTracker().getNearestTracking(Blocks.END_GATEWAY).get();
+            int blocksNeeded = Math.abs(AltoClef.INSTANCE.getPlayer().getBlockY() - gateway.getY()) +
+                    Math.abs(AltoClef.INSTANCE.getPlayer().getBlockX() - gateway.getX()) +
+                    Math.abs(AltoClef.INSTANCE.getPlayer().getBlockZ() - gateway.getZ()) - 3;
+            if (StorageHelper.getBuildingMaterialCount(AltoClef.INSTANCE) < blocksNeeded) {
                 setDebugState("Getting building materials");
                 return new GetBuildingMaterialsTask(blocksNeeded);
             }
             GoalAnd goal = makeGoal(gateway);
-            Debug.logMessage(mod.getPlayer().getBlockPos().toString());
-            if (!goal.isInGoal(mod.getPlayer().getBlockPos()) || !mod.getPlayer().isOnGround()) {
-                mod.getClientBaritone().getCustomGoalProcess().setGoal(goal);
-                if (!mod.getClientBaritone().getPathingBehavior().isPathing()) {
-                    mod.getClientBaritone().getCustomGoalProcess().path();
+            Debug.logMessage(AltoClef.INSTANCE.getPlayer().getBlockPos().toString());
+            if (!goal.isInGoal(AltoClef.INSTANCE.getPlayer().getBlockPos()) || !AltoClef.INSTANCE.getPlayer().isOnGround()) {
+                AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().setGoal(goal);
+                if (!AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
+                    AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().path();
                 }
                 setDebugState("Getting close to gateway...");
                 return null;
@@ -79,9 +79,9 @@ public class GetToOuterEndIslandsTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBlockTracker().stopTracking(Blocks.END_GATEWAY);
-        mod.getBehaviour().pop();
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.END_GATEWAY);
+        AltoClef.INSTANCE.getBehaviour().pop();
     }
 
     @Override
@@ -90,9 +90,9 @@ public class GetToOuterEndIslandsTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return WorldHelper.getCurrentDimension() == Dimension.END &&
-                !WorldHelper.inRangeXZ(new Vec3d(0, 64, 0), mod.getPlayer().getPos(), END_ISLAND_START_RADIUS);
+                !WorldHelper.inRangeXZ(new Vec3d(0, 64, 0), AltoClef.INSTANCE.getPlayer().getPos(), END_ISLAND_START_RADIUS);
     }
 
     @Override

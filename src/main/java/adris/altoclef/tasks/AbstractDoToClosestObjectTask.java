@@ -1,9 +1,9 @@
 package adris.altoclef.tasks;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.HashMap;
@@ -56,19 +56,18 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-
+    protected Task onTick() {
         _wasWandering = false;
 
         // Reset our pursuit if our pursuing object no longer is pursuable.
-        if (_currentlyPursuing != null && !isValid(mod, _currentlyPursuing)) {
+        if (_currentlyPursuing != null && !isValid(AltoClef.INSTANCE, _currentlyPursuing)) {
             // This is probably a good idea, no?
             _heuristicMap.remove(_currentlyPursuing);
             _currentlyPursuing = null;
         }
 
         // Get closest object
-        Optional<T> checkNewClosest = getClosestTo(mod, getOriginPos(mod));
+        Optional<T> checkNewClosest = getClosestTo(AltoClef.INSTANCE, getOriginPos(AltoClef.INSTANCE));
 
         // Receive closest object and position
         if (checkNewClosest.isPresent() && !checkNewClosest.get().equals(_currentlyPursuing)) {
@@ -78,10 +77,10 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
                 // We don't have a closest object
                 _currentlyPursuing = newClosest;
             } else {
-                if (isMovingToClosestPos(mod)) {
+                if (isMovingToClosestPos(AltoClef.INSTANCE)) {
                     setDebugState("Moving towards closest...");
-                    double currentHeuristic = getCurrentCalculatedHeuristic(mod);
-                    double closestDistanceSqr = getPos(mod, _currentlyPursuing).squaredDistanceTo(mod.getPlayer().getPos());
+                    double currentHeuristic = getCurrentCalculatedHeuristic(AltoClef.INSTANCE);
+                    double closestDistanceSqr = getPos(AltoClef.INSTANCE, _currentlyPursuing).squaredDistanceTo(AltoClef.INSTANCE.getPlayer().getPos());
                     int lastTick = WorldHelper.getTicks();
 
                     if (!_heuristicMap.containsKey(_currentlyPursuing)) {
@@ -94,7 +93,7 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
                     if (_heuristicMap.containsKey(newClosest)) {
                         // Our new object has a past potential heuristic calculated, if it's better try it out.
                         CachedHeuristic maybeReAttempt = _heuristicMap.get(newClosest);
-                        double maybeClosestDistance = getPos(mod, newClosest).squaredDistanceTo(mod.getPlayer().getPos());
+                        double maybeClosestDistance = getPos(AltoClef.INSTANCE, newClosest).squaredDistanceTo(AltoClef.INSTANCE.getPlayer().getPos());
                         // Get considerably closer (divide distance by 2)
                         if (maybeReAttempt.getHeuristicValue() < h.getHeuristicValue() || maybeClosestDistance < maybeReAttempt.getClosestDistanceSqr() / 4) {
                             setDebugState("Retrying old heuristic!");
@@ -127,7 +126,7 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
         if (checkNewClosest.isEmpty() && _currentlyPursuing == null) {
             setDebugState("Waiting for calculations I think (wandering)");
             _wasWandering = true;
-            return getWanderTask(mod);
+            return getWanderTask(AltoClef.INSTANCE);
         }
 
         setDebugState("Waiting for calculations I think (NOT wandering)");

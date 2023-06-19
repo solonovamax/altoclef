@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.DoToClosestBlockTask;
 import adris.altoclef.tasks.InteractWithBlockTask;
@@ -10,6 +9,7 @@ import adris.altoclef.tasks.construction.PlaceBlockNearbyTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.StorageHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 
@@ -63,7 +63,7 @@ public class CarveThenCollectTask extends ResourceTask {
             return new DoToClosestBlockTask(DestroyBlockTask::new, _targetBlocks);
         }
         // Collect our "carve with" item (can be shears, axe, whatever)
-        if (!StorageHelper.itemTargetsMetInventory(mod, _carveWith)) {
+        if (!StorageHelper.itemTargetsMetInventory(_carveWith)) {
             setDebugState("Collect our carve tool");
             return TaskCatalogue.getItemTask(_carveWith);
         }

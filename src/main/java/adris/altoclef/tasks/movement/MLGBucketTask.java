@@ -1,9 +1,12 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.*;
+import adris.altoclef.util.helpers.ConfigHelper;
+import adris.altoclef.util.helpers.EntityHelper;
+import adris.altoclef.util.helpers.LookHelper;
+import adris.altoclef.util.helpers.MathsHelper;
+import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.serialization.ItemDeserializer;
 import adris.altoclef.util.serialization.ItemSerializer;
 import baritone.api.utils.IPlayerContext;
@@ -12,6 +15,7 @@ import baritone.api.utils.RotationUtils;
 import baritone.api.utils.input.Input;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -123,22 +127,22 @@ public class MLGBucketTask extends Task {
         }
     }
 
-    private static void moveForwardBack(AltoClef mod, int delta) {
+    private static void moveForwardBack(int delta) {
         if (delta == 0) {
-            mod.getInputControls().release(Input.MOVE_FORWARD);
-            mod.getInputControls().release(Input.MOVE_BACK);
+            AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
+            AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
         } else if (delta > 0) {
-            mod.getInputControls().hold(Input.MOVE_FORWARD);
-            mod.getInputControls().release(Input.MOVE_BACK);
+            AltoClef.INSTANCE.getInputControls().hold(Input.MOVE_FORWARD);
+            AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
         } else {
-            mod.getInputControls().release(Input.MOVE_FORWARD);
-            mod.getInputControls().hold(Input.MOVE_BACK);
+            AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
+            AltoClef.INSTANCE.getInputControls().hold(Input.MOVE_BACK);
         }
     }
 
-    private Task onTickInternal(AltoClef mod, BlockPos oldMovingTorwards) {
-        Optional<BlockPos> willLandOn = getBlockWeWillLandOn(mod);
-        Optional<BlockPos> bestClutchPos = getBestConeClutchBlock(mod, oldMovingTorwards);
+    private Task onTickInternal(BlockPos oldMovingTorwards) {
+        Optional<BlockPos> willLandOn = getBlockWeWillLandOn();
+        Optional<BlockPos> bestClutchPos = getBestConeClutchBlock(oldMovingTorwards);
         // Move torwards our best "clutch" position
         if (bestClutchPos.isPresent()) {
             _movingTorwards = bestClutchPos.get().mutableCopy();
@@ -152,47 +156,47 @@ public class MLGBucketTask extends Task {
             Debug.logMessage("(LOST clutch position!)");
         }
         if (willLandOn.isPresent()) {
-            handleJumpForLand(mod, willLandOn.get());
-            return placeMLGBucketTask(mod, willLandOn.get());
+            handleJumpForLand(willLandOn.get());
+            return placeMLGBucketTask(willLandOn.get());
         } else {
             setDebugState("Wait for it...");
             // We must trigger jump as soon as we enter a "climbable" object
-            mod.getInputControls().release(Input.JUMP);
+            AltoClef.INSTANCE.getInputControls().release(Input.JUMP);
             return null;
         }
     }
 
-    private Task placeMLGBucketTask(AltoClef mod, BlockPos toPlaceOn) {
-        if (!hasClutchItem(mod)) {
+    private Task placeMLGBucketTask(BlockPos toPlaceOn) {
+        if (!hasClutchItem()) {
             setDebugState("No clutch item");
             return null;
         }
         // If our raycast hit a non-solid block, go DOWN one.
-        if (!WorldHelper.isSolid(mod, toPlaceOn)) {
+        if (!WorldHelper.isSolid(AltoClef.INSTANCE, toPlaceOn)) {
             toPlaceOn = toPlaceOn.down();
         }
         BlockPos willLandIn = toPlaceOn.up();
         // If we're water, we're ok. Do nothing.
-        BlockState willLandInState = mod.getWorld().getBlockState(willLandIn);
+        BlockState willLandInState = AltoClef.INSTANCE.getWorld().getBlockState(willLandIn);
         if (willLandInState.getBlock() == Blocks.WATER) {
             // We good.
             setDebugState("Waiting to fall into water");
-            mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, false);
+            AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, false);
             return null;
         }
 
-        IPlayerContext ctx = mod.getClientBaritone().getPlayerContext();
+        IPlayerContext ctx = AltoClef.INSTANCE.getClientBaritone().getPlayerContext();
         Optional<Rotation> reachable = RotationUtils.reachableCenter(ctx.player(), toPlaceOn, ctx.playerController().getBlockReachDistance(), false);
         if (reachable.isPresent()) {
             setDebugState("Performing MLG");
-            LookHelper.lookAt(mod, reachable.get());
+            LookHelper.lookAt(AltoClef.INSTANCE, reachable.get());
             // Try water by default
-            boolean hasClutch = (!mod.getWorld().getDimension().ultrawarm() && mod.getSlotHandler().forceEquipItem(Items.WATER_BUCKET));
+            boolean hasClutch = (!AltoClef.INSTANCE.getWorld().getDimension().ultrawarm() && AltoClef.INSTANCE.getSlotHandler().forceEquipItem(Items.WATER_BUCKET));
             if (!hasClutch) {
                 // Go through our "clutch" items and see if any fit
                 if (!_config.clutchItems.isEmpty()) {
                     for (Item tryEquip : _config.clutchItems) {
-                        if (mod.getSlotHandler().forceEquipItem(tryEquip)) {
+                        if (AltoClef.INSTANCE.getSlotHandler().forceEquipItem(tryEquip)) {
                             hasClutch = true;
                             break;
                         }
@@ -201,11 +205,11 @@ public class MLGBucketTask extends Task {
             }
             // Try to capture tall grass as well...
             BlockPos[] toCheckLook = new BlockPos[]{toPlaceOn, toPlaceOn.up(), toPlaceOn.up(2)};
-            if (hasClutch && Arrays.stream(toCheckLook).anyMatch(check -> mod.getClientBaritone().getPlayerContext().isLookingAt(check))) {
+            if (hasClutch && Arrays.stream(toCheckLook).anyMatch(check -> AltoClef.INSTANCE.getClientBaritone().getPlayerContext().isLookingAt(check))) {
                 Debug.logMessage("HIT: " + willLandIn);
                 _placedPos = willLandIn;
-                mod.getInputControls().tryPress(Input.CLICK_RIGHT);
-                //mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, true);
+                AltoClef.INSTANCE.getInputControls().tryPress(Input.CLICK_RIGHT);
+                // mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, true);
             } else {
                 setDebugState("NOT LOOKING CORRECTLY!");
             }
@@ -216,47 +220,47 @@ public class MLGBucketTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         // ALWAYS faster
-        mod.getInputControls().hold(Input.SPRINT);
+        AltoClef.INSTANCE.getInputControls().hold(Input.SPRINT);
         // Check AROUND player instead of directly under.
         // We may crop the edge of a block or wall.
         BlockPos oldMovingTorwards = _movingTorwards != null ? _movingTorwards.mutableCopy() : null;
         _movingTorwards = null;
-        Task result = onTickInternal(mod, oldMovingTorwards);
+        Task result = onTickInternal(oldMovingTorwards);
 
-        handleForwardVelocity(mod, !Objects.equals(oldMovingTorwards, _movingTorwards));
-        handleCancellingSidewaysVelocity(mod);
+        handleForwardVelocity(!Objects.equals(oldMovingTorwards, _movingTorwards));
+        handleCancellingSidewaysVelocity();
 
         return result;
     }
 
-    private void handleForwardVelocity(AltoClef mod, boolean newForwardTarget) {
-        if (mod.getPlayer().isOnGround() || _movingTorwards == null || WorldHelper.inRangeXZ(mod.getPlayer(), _movingTorwards, 0.05f)) {
-            moveForwardBack(mod, 0);
+    private void handleForwardVelocity(boolean newForwardTarget) {
+        if (AltoClef.INSTANCE.getPlayer().isOnGround() || _movingTorwards == null || WorldHelper.inRangeXZ(AltoClef.INSTANCE.getPlayer(), _movingTorwards, 0.05f)) {
+            moveForwardBack(0);
             return;
         }
         Rotation look = LookHelper.getLookRotation();
         look = new Rotation(look.getYaw(), 0);
         Vec3d forwardFacing = LookHelper.toVec3d(look).multiply(1, 0, 1).normalize();
-        Vec3d delta = WorldHelper.toVec3d(_movingTorwards).subtract(mod.getPlayer().getPos()).multiply(1, 0, 1);
-        Vec3d velocity = mod.getPlayer().getVelocity().multiply(1, 0, 1);
+        Vec3d delta = WorldHelper.toVec3d(_movingTorwards).subtract(AltoClef.INSTANCE.getPlayer().getPos()).multiply(1, 0, 1);
+        Vec3d velocity = AltoClef.INSTANCE.getPlayer().getVelocity().multiply(1, 0, 1);
         Vec3d pd = delta.subtract(velocity.multiply(3f));
         double forwardStrength = pd.dotProduct(forwardFacing);
         if (newForwardTarget) {
-            LookHelper.lookAt(mod, _movingTorwards);
+            LookHelper.lookAt(AltoClef.INSTANCE, _movingTorwards);
         }
         Debug.logInternal("F:" + forwardStrength);
-        moveForwardBack(mod, (int) Math.signum(forwardStrength));
+        moveForwardBack((int) Math.signum(forwardStrength));
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getClientBaritone().getPathingBehavior().forceCancel();
+    protected void onStart() {
+        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
         _placedPos = null;
         // hold shift while falling.
         // Look down at first, might help
-        mod.getPlayer().setPitch(90);
+        AltoClef.INSTANCE.getPlayer().setPitch(90);
     }
 
     /**
@@ -264,32 +268,32 @@ public class MLGBucketTask extends Task {
      * <p>
      * Twisted vines require we press space ONLY when we're inside the vines
      */
-    private void handleJumpForLand(AltoClef mod, BlockPos willLandOn) {
-        BlockPos willLandIn = WorldHelper.isSolid(mod, willLandOn) ? willLandOn.up() : willLandOn;
-        BlockState s = mod.getWorld().getBlockState(willLandIn);
+    private void handleJumpForLand(BlockPos willLandOn) {
+        BlockPos willLandIn = WorldHelper.isSolid(AltoClef.INSTANCE, willLandOn) ? willLandOn.up() : willLandOn;
+        BlockState s = AltoClef.INSTANCE.getWorld().getBlockState(willLandIn);
         if (s.getBlock() == Blocks.LAVA) {
             // ALWAYS hold jump for lava
-            mod.getInputControls().hold(Input.JUMP);
+            AltoClef.INSTANCE.getInputControls().hold(Input.JUMP);
             return;
         }
         Box blockBounds;
         try {
-            blockBounds = s.getCollisionShape(mod.getWorld(), willLandIn).getBoundingBox();
+            blockBounds = s.getCollisionShape(AltoClef.INSTANCE.getWorld(), willLandIn).getBoundingBox();
         } catch (UnsupportedOperationException ex) {
             blockBounds = Box.of(WorldHelper.toVec3d(willLandIn), 1, 1, 1);
         }
-        boolean inside = mod.getPlayer().getBoundingBox().intersects(blockBounds);
+        boolean inside = AltoClef.INSTANCE.getPlayer().getBoundingBox().intersects(blockBounds);
         if (inside)
-            mod.getInputControls().hold(Input.JUMP);
+            AltoClef.INSTANCE.getInputControls().hold(Input.JUMP);
         else
-            mod.getInputControls().release(Input.JUMP);
+            AltoClef.INSTANCE.getInputControls().release(Input.JUMP);
     }
 
-    private Optional<BlockPos> getBlockWeWillLandOn(AltoClef mod) {
-        Vec3d velCheck = mod.getPlayer().getVelocity();
+    private Optional<BlockPos> getBlockWeWillLandOn() {
+        Vec3d velCheck = AltoClef.INSTANCE.getPlayer().getVelocity();
         // Flatten and slightly exaggerate the velocity
         velCheck.multiply(10, 0, 10);
-        Box b = mod.getPlayer().getBoundingBox().offset(velCheck);
+        Box b = AltoClef.INSTANCE.getPlayer().getBoundingBox().offset(velCheck);
         Vec3d c = b.getCenter();
         Vec3d[] coords = new Vec3d[]{
                 c,
@@ -302,7 +306,7 @@ public class MLGBucketTask extends Task {
         double bestSqDist = Double.POSITIVE_INFINITY;
         for (Vec3d rayOrigin : coords) {
             RaycastContext rctx = castDown(rayOrigin);
-            BlockHitResult hit = mod.getWorld().raycast(rctx);
+            BlockHitResult hit = AltoClef.INSTANCE.getWorld().raycast(rctx);
             if (hit.getType() == HitResult.Type.BLOCK) {
                 double curDis = hit.getPos().squaredDistanceTo(rayOrigin);
                 if (curDis < bestSqDist) {
@@ -325,14 +329,14 @@ public class MLGBucketTask extends Task {
      * <p>
      * This will nudge the bot left/right so we're no longer "slipping" to the side.
      */
-    private void handleCancellingSidewaysVelocity(AltoClef mod) {
+    private void handleCancellingSidewaysVelocity() {
         if (_movingTorwards == null) {
-            moveLeftRight(mod, 0);
+            moveLeftRight(AltoClef.INSTANCE, 0);
             return;
         }
         // Cancel our left/right velocity with respect to block
-        Vec3d velocity = mod.getPlayer().getVelocity();
-        Vec3d deltaTarget = WorldHelper.toVec3d(_movingTorwards).subtract(mod.getPlayer().getPos());
+        Vec3d velocity = AltoClef.INSTANCE.getPlayer().getVelocity();
+        Vec3d deltaTarget = WorldHelper.toVec3d(_movingTorwards).subtract(AltoClef.INSTANCE.getPlayer().getPos());
         // "right" velocity relative to delta
         Rotation look = LookHelper.getLookRotation();
         Vec3d forwardFacing = LookHelper.toVec3d(look).multiply(1, 0, 1).normalize();
@@ -345,13 +349,13 @@ public class MLGBucketTask extends Task {
         Vec3d faceRight = forwardFacing.crossProduct(new Vec3d(0, 1, 0));
         boolean moveRight = pd.dotProduct(faceRight) > 0;
         if (moveRight) {
-            moveLeftRight(mod, 1);
+            moveLeftRight(AltoClef.INSTANCE, 1);
         } else {
-            moveLeftRight(mod, -1);
+            moveLeftRight(AltoClef.INSTANCE, -1);
         }
     }
 
-    private Optional<BlockPos> getBestConeClutchBlock(AltoClef mod, BlockPos oldClutchTarget) {
+    private Optional<BlockPos> getBestConeClutchBlock(BlockPos oldClutchTarget) {
         double pitchHalfWidth = _config.epicClutchConePitchAngle;
         double dpitchStart = pitchHalfWidth / _config.epicClutchConePitchResolution;
 
@@ -361,11 +365,11 @@ public class MLGBucketTask extends Task {
         // IF WE HAVE MLG
         // - Closer to player
 
-        ConeClutchContext cctx = new ConeClutchContext(mod);
+        ConeClutchContext cctx = new ConeClutchContext();
 
         // Always check our previous best so we don't lose it
         if (oldClutchTarget != null)
-            cctx.checkBlock(mod, oldClutchTarget);
+            cctx.checkBlock(oldClutchTarget);
 
         // Perform cone
         for (double pitch = dpitchStart; pitch <= pitchHalfWidth; pitch += pitchHalfWidth / _config.epicClutchConePitchResolution) {
@@ -373,17 +377,17 @@ public class MLGBucketTask extends Task {
             double yawResolution = _config.epicClutchConeYawDivisionStart + pitchProgress * (_config.epicClutchConeYawDivisionEnd - _config.epicClutchConeYawDivisionStart); // lerp from start to end
             for (double yaw = 0; yaw < 360; yaw += 360.0 / yawResolution) {
                 RaycastContext rctx = castCone(yaw, pitch);
-                cctx.checkRay(mod, rctx);
+                cctx.checkRay(rctx);
             }
         }
 
         // Perform NEARBY sweep
         //int nearbySweepSize =
-        Vec3d center = mod.getPlayer().getPos();
+        Vec3d center = AltoClef.INSTANCE.getPlayer().getPos();
         for (int dx = -2; dx <= 2; ++dx) {
             for (int dz = -2; dz <= 2; ++dz) {
                 RaycastContext ctx = castDown(center.add(dx, 0, dz));
-                cctx.checkRay(mod, ctx);
+                cctx.checkRay(ctx);
             }
         }
 
@@ -410,26 +414,26 @@ public class MLGBucketTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getClientBaritone().getPathingBehavior().forceCancel();
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
         _movingTorwards = null;
-        mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, false);
-        moveLeftRight(mod, 0);
-        moveForwardBack(mod, 0);
-        mod.getInputControls().release(Input.SPRINT);
-        mod.getInputControls().release(Input.JUMP);
+        AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, false);
+        moveLeftRight(AltoClef.INSTANCE, 0);
+        moveForwardBack(0);
+        AltoClef.INSTANCE.getInputControls().release(Input.SPRINT);
+        AltoClef.INSTANCE.getInputControls().release(Input.JUMP);
     }
 
-    private boolean hasClutchItem(AltoClef mod) {
-        if (!mod.getWorld().getDimension().ultrawarm() && mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
+    private boolean hasClutchItem() {
+        if (!AltoClef.INSTANCE.getWorld().getDimension().ultrawarm() && AltoClef.INSTANCE.getItemStorage().hasItem(Items.WATER_BUCKET)) {
             return true;
         }
-        return _config.clutchItems.stream().anyMatch(item -> mod.getItemStorage().hasItem(item));
+        return _config.clutchItems.stream().anyMatch(item -> AltoClef.INSTANCE.getItemStorage().hasItem(item));
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return mod.getPlayer().isSwimming() || mod.getPlayer().isTouchingWater() || mod.getPlayer().isOnGround() || mod.getPlayer().isClimbing();
+    public boolean isFinished() {
+        return AltoClef.INSTANCE.getPlayer().isSwimming() || AltoClef.INSTANCE.getPlayer().isTouchingWater() || AltoClef.INSTANCE.getPlayer().isOnGround() || AltoClef.INSTANCE.getPlayer().isClimbing();
     }
 
     @Override
@@ -474,15 +478,15 @@ public class MLGBucketTask extends Task {
         private boolean bestBlockIsDeadlyFall = false;
         private boolean bestBlockIsLava = false;
 
-        public ConeClutchContext(AltoClef mod) {
-            hasClutchItem = hasClutchItem(mod);
+        public ConeClutchContext() {
+            hasClutchItem = hasClutchItem();
         }
 
-        public void checkBlock(AltoClef mod, BlockPos check) {
+        public void checkBlock(BlockPos check) {
             // Already checked
             if (Objects.equals(bestBlock, check))
                 return;
-            if (WorldHelper.isAir(mod, check)) {
+            if (WorldHelper.isAir(AltoClef.INSTANCE, check)) {
                 Debug.logMessage("(MLG Air block checked for landing, the block broke. We'll try another): " + check);
                 return;
             }
@@ -494,7 +498,7 @@ public class MLGBucketTask extends Task {
             if (bestBlockIsSafe && !water)
                 return;
             double height = check.getY();
-            double distSqXZ = WorldHelper.distanceXZSquared(WorldHelper.toVec3d(check), mod.getPlayer().getPos());
+            double distSqXZ = WorldHelper.distanceXZSquared(WorldHelper.toVec3d(check), AltoClef.INSTANCE.getPlayer().getPos());
             boolean highestSoFar = height > highestY;
             boolean closestSoFar = distSqXZ < closestXZ;
             // We found a new contender
@@ -519,14 +523,14 @@ public class MLGBucketTask extends Task {
             }
         }
 
-        public void checkRay(AltoClef mod, RaycastContext rctx) {
-            BlockHitResult hit = mod.getWorld().raycast(rctx);
+        public void checkRay(RaycastContext rctx) {
+            BlockHitResult hit = AltoClef.INSTANCE.getWorld().raycast(rctx);
             if (hit.getType() == HitResult.Type.BLOCK) {
                 BlockPos check = hit.getBlockPos();
                 // For now, REQUIRE we land on this
                 if (hit.getSide().getOffsetY() <= 0)
                     return;
-                checkBlock(mod, check);
+                checkBlock(check);
             }
         }
     }

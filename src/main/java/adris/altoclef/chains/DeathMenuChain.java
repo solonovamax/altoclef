@@ -1,20 +1,23 @@
 package adris.altoclef.chains;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
+import adris.altoclef.mixins.DeathScreenAccessor;
 import adris.altoclef.tasksystem.TaskChain;
 import adris.altoclef.tasksystem.TaskRunner;
 import adris.altoclef.util.time.TimerGame;
 import adris.altoclef.util.time.TimerReal;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.*;
+import net.minecraft.client.gui.screen.ConnectScreen;
+import net.minecraft.client.gui.screen.DeathScreen;
+import net.minecraft.client.gui.screen.DisconnectedScreen;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
-import adris.altoclef.mixins.DeathScreenAccessor;
 
 public class DeathMenuChain extends TaskChain {
-
     // Sometimes we fuck up, so we might want to retry considering the death screen.
     private final TimerReal _deathRetryTimer = new TimerReal(8);
     private final TimerGame _reconnectTimer = new TimerGame(1);
@@ -38,24 +41,24 @@ public class DeathMenuChain extends TaskChain {
     }
 
     @Override
-    protected void onStop(AltoClef mod) {
+    protected void onStop() {
 
     }
 
     @Override
-    public void onInterrupt(AltoClef mod, TaskChain other) {
+    public void onInterrupt(TaskChain other) {
 
     }
 
     @Override
-    protected void onTick(AltoClef mod) {
+    protected void onTick() {
 
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
-        //MinecraftClient.getInstance().getCurrentServerEntry().address;
-//        MinecraftClient.getInstance().
+    public float getPriority() {
+        // MinecraftClient.getInstance().getCurrentServerEntry().address;
+        //        MinecraftClient.getInstance().
         Screen screen = MinecraftClient.getInstance().currentScreen;
 
         // This might fix Weird fail to respawn that happened only once
@@ -76,20 +79,23 @@ public class DeathMenuChain extends TaskChain {
         if (screen instanceof DeathScreen) {
             if (_waitOnDeathScreenBeforeRespawnTimer.elapsed()) {
                 _waitOnDeathScreenBeforeRespawnTimer.reset();
-                if (shouldAutoRespawn(mod)) {
+                if (shouldAutoRespawn(AltoClef.INSTANCE)) {
                     _deathCount++;
                     Debug.logMessage("RESPAWNING... (this is death #" + _deathCount + ")");
                     assert MinecraftClient.getInstance().player != null;
                     String deathmessage = ((DeathScreenAccessor) screen).getMessage().getString(); //"(not implemented yet)"; //screen.children().toString();
                     MinecraftClient.getInstance().player.requestRespawn();
                     MinecraftClient.getInstance().setScreen(null);
-                    for (String i :  mod.getModSettings().getDeathCommand().split(" & ")) {
+                    for (String i : AltoClef.INSTANCE.getModSettings().getDeathCommand().split(" & ")) {
                         String command = i.replace("{deathmessage}", deathmessage);
-                        String prefix = mod.getModSettings().getCommandPrefix();
-                        while (MinecraftClient.getInstance().player.isAlive());
-                        if (command != ""){
+                        String prefix = AltoClef.INSTANCE.getModSettings().getCommandPrefix();
+                        while (MinecraftClient.getInstance().player.isAlive()) ;
+                        if (command != "") {
                             if (command.startsWith(prefix)) {
-                                AltoClef.getCommandExecutor().execute(command, () -> {}, e -> {e.printStackTrace();});
+                                AltoClef.INSTANCE.getCommandExecutor().execute(command, () -> {
+                                }, e -> {
+                                    e.printStackTrace();
+                                });
                             } else if (command.startsWith("/")) {
                                 MinecraftClient.getInstance().player.networkHandler.sendChatCommand(command.substring(1));
                             } else {
@@ -99,7 +105,7 @@ public class DeathMenuChain extends TaskChain {
                     }
                 } else {
                     // Cancel if we die and are not auto-respawning.
-                    mod.cancelUserTask();
+                    AltoClef.INSTANCE.cancelUserTask();
                 }
             }
         } else {
@@ -107,13 +113,13 @@ public class DeathMenuChain extends TaskChain {
                 _waitOnDeathScreenBeforeRespawnTimer.reset();
             }
             if (screen instanceof DisconnectedScreen) {
-                if (shouldAutoReconnect(mod)) {
+                if (shouldAutoReconnect(AltoClef.INSTANCE)) {
                     Debug.logMessage("RECONNECTING: Going to Multiplayer Screen");
                     _reconnecting = true;
                     MinecraftClient.getInstance().setScreen(new MultiplayerScreen(new TitleScreen()));
                 } else {
                     // Cancel if we disconnect and are not auto-reconnecting.
-                    mod.cancelUserTask();
+                    AltoClef.INSTANCE.cancelUserTask();
                 }
             } else if (screen instanceof MultiplayerScreen && _reconnecting && _reconnectTimer.elapsed()) {
                 _reconnectTimer.reset();

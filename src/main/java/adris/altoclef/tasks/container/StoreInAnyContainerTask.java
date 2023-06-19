@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.container;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.DoToClosestBlockTask;
@@ -11,6 +10,7 @@ import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
@@ -42,44 +42,43 @@ public class StoreInAnyContainerTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBlockTracker().trackBlock(TO_SCAN);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(TO_SCAN);
         _storedItems.startTracking();
         _dungeonChests.clear();
         _nonDungeonChests.clear();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-
+    protected Task onTick() {
         // Get more if we don't have & "get if not present" is true.
         if (_getIfNotPresent) {
             for (ItemTarget target : _toStore) {
                 int inventoryNeed = target.getTargetCount() - _storedItems.getStoredCount(target.getMatches());
-                if (inventoryNeed > mod.getItemStorage().getItemCount(target)) {
+                if (inventoryNeed > AltoClef.INSTANCE.getItemStorage().getItemCount(target)) {
                     return TaskCatalogue.getItemTask(new ItemTarget(target, inventoryNeed));
                 }
             }
         }
 
         // ItemTargets we haven't stored yet
-        ItemTarget[] notStored = _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore);
+        ItemTarget[] notStored = _storedItems.getUnstoredItemTargetsYouCanStore(AltoClef.INSTANCE, _toStore);
 
         Predicate<BlockPos> validContainer = containerPos -> {
 
             // If it's a chest and the block above can't be broken, we can't open this one.
-            boolean isChest = WorldHelper.isChest(mod, containerPos);
-            if (isChest && WorldHelper.isSolid(mod, containerPos.up()) && !WorldHelper.canBreak(mod, containerPos.up()))
+            boolean isChest = WorldHelper.isChest(AltoClef.INSTANCE, containerPos);
+            if (isChest && WorldHelper.isSolid(AltoClef.INSTANCE, containerPos.up()) && !WorldHelper.canBreak(AltoClef.INSTANCE, containerPos.up()))
                 return false;
 
-            //if (!_acceptableContainer.test(containerPos))
+            // if (!_acceptableContainer.test(containerPos))
             //    return false;
 
-            Optional<ContainerCache> data = mod.getItemStorage().getContainerAtPosition(containerPos);
+            Optional<ContainerCache> data = AltoClef.INSTANCE.getItemStorage().getContainerAtPosition(containerPos);
 
             if (data.isPresent() && data.get().isFull()) return false;
 
-            if (isChest && mod.getModSettings().shouldAvoidSearchingForDungeonChests()) {
+            if (isChest && AltoClef.INSTANCE.getModSettings().shouldAvoidSearchingForDungeonChests()) {
                 boolean cachedDungeon = _dungeonChests.contains(containerPos) && !_nonDungeonChests.contains(containerPos);
                 if (cachedDungeon) {
                     return false;
@@ -89,7 +88,7 @@ public class StoreInAnyContainerTask extends Task {
                 for (int dx = -range; dx <= range; ++dx) {
                     for (int dz = -range; dz <= range; ++dz) {
                         BlockPos offset = containerPos.add(dx, 0, dz);
-                        if (mod.getWorld().getBlockState(offset).getBlock() == Blocks.SPAWNER) {
+                        if (AltoClef.INSTANCE.getWorld().getBlockState(offset).getBlock() == Blocks.SPAWNER) {
                             _dungeonChests.add(containerPos);
                             return false;
                         }
@@ -100,13 +99,13 @@ public class StoreInAnyContainerTask extends Task {
             return true;
         };
 
-        if (mod.getBlockTracker().anyFound(validContainer, TO_SCAN)) {
+        if (AltoClef.INSTANCE.getBlockTracker().anyFound(validContainer, TO_SCAN)) {
 
             setDebugState("Going to container and depositing items");
 
-            if (!_progressChecker.check(mod) && _currentChestTry != null) {
+            if (!_progressChecker.check(AltoClef.INSTANCE) && _currentChestTry != null) {
                 Debug.logMessage("Failed to open container. Suggesting it may be unreachable.");
-                mod.getBlockTracker().requestBlockUnreachable(_currentChestTry, 2);
+                AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(_currentChestTry, 2);
                 _currentChestTry = null;
                 _progressChecker.reset();
             }
@@ -126,12 +125,12 @@ public class StoreInAnyContainerTask extends Task {
         _progressChecker.reset();
         // Craft + place chest nearby
         for (Block couldPlace : TO_SCAN) {
-            if (mod.getItemStorage().hasItem(couldPlace.asItem())) {
+            if (AltoClef.INSTANCE.getItemStorage().hasItem(couldPlace.asItem())) {
                 setDebugState("Placing container nearby");
                 return new PlaceBlockNearbyTask(canPlace -> {
                     // For chests, above must be air OR breakable.
                     if (WorldHelper.isChest(couldPlace)) {
-                        return WorldHelper.isAir(mod, canPlace.up()) || WorldHelper.canBreak(mod, canPlace.up());
+                        return WorldHelper.isAir(AltoClef.INSTANCE, canPlace.up()) || WorldHelper.canBreak(AltoClef.INSTANCE, canPlace.up());
                     }
                     return true;
                 }, couldPlace);
@@ -142,15 +141,15 @@ public class StoreInAnyContainerTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         // We've stored all items
-        return _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore).length == 0;
+        return _storedItems.getUnstoredItemTargetsYouCanStore(AltoClef.INSTANCE, _toStore).length == 0;
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
         _storedItems.stopTracking();
-        mod.getBlockTracker().stopTracking(TO_SCAN);
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(TO_SCAN);
     }
 
     @Override

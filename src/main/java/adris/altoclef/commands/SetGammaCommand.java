@@ -1,6 +1,5 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.commandsystem.Arg;
 import adris.altoclef.commandsystem.ArgParser;
@@ -15,7 +14,7 @@ public class SetGammaCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(ArgParser parser) throws CommandException {
         double gammaValue = parser.get(Double.class);
         Debug.logMessage("Gamma set to " + gammaValue);
         MinecraftClient.getInstance().options.getGamma().setValue(gammaValue);

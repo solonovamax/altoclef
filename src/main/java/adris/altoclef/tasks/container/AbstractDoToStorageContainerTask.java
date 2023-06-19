@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.container;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.construction.DestroyBlockTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
@@ -8,6 +7,7 @@ import adris.altoclef.tasksystem.Task;
 import adris.altoclef.trackers.storage.ContainerCache;
 import adris.altoclef.trackers.storage.ContainerType;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 
@@ -21,19 +21,19 @@ public abstract class AbstractDoToStorageContainerTask extends Task {
     private ContainerType _currentContainerType = null;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         Optional<BlockPos> containerTarget = getContainerTarget();
 
         // No container found
         if (containerTarget.isEmpty()) {
             setDebugState("Wandering");
             _currentContainerType = null;
-            return onSearchWander(mod);
+            return onSearchWander(AltoClef.INSTANCE);
         }
 
         BlockPos targetPos = containerTarget.get();
@@ -42,20 +42,20 @@ public abstract class AbstractDoToStorageContainerTask extends Task {
         if (_currentContainerType != null && ContainerType.screenHandlerMatches(_currentContainerType)) {
 
             // Optional<BlockPos> lastInteracted = mod.getItemStorage().getLastBlockPosInteraction();
-            //if (lastInteracted.isPresent() && lastInteracted.get().equals(targetPos)) {
-            Optional<ContainerCache> cache = mod.getItemStorage().getContainerAtPosition(targetPos);
+            // if (lastInteracted.isPresent() && lastInteracted.get().equals(targetPos)) {
+            Optional<ContainerCache> cache = AltoClef.INSTANCE.getItemStorage().getContainerAtPosition(targetPos);
             if (cache.isPresent()) {
-                return onContainerOpenSubtask(mod, cache.get());
+                return onContainerOpenSubtask(AltoClef.INSTANCE, cache.get());
             }
             //}
         }
 
         // Get to the container
-        if (mod.getChunkTracker().isChunkLoaded(targetPos)) {
-            Block type = mod.getWorld().getBlockState(targetPos).getBlock();
+        if (AltoClef.INSTANCE.getChunkTracker().isChunkLoaded(targetPos)) {
+            Block type = AltoClef.INSTANCE.getWorld().getBlockState(targetPos).getBlock();
             _currentContainerType = ContainerType.getFromBlock(type);
         }
-        if (WorldHelper.isChest(mod, targetPos) && WorldHelper.isSolid(mod, targetPos.up()) && WorldHelper.canBreak(mod, targetPos.up())) {
+        if (WorldHelper.isChest(AltoClef.INSTANCE, targetPos) && WorldHelper.isSolid(AltoClef.INSTANCE, targetPos.up()) && WorldHelper.canBreak(AltoClef.INSTANCE, targetPos.up())) {
             setDebugState("Clearing block above chest");
             return new DestroyBlockTask(targetPos.up());
         }
@@ -64,7 +64,7 @@ public abstract class AbstractDoToStorageContainerTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

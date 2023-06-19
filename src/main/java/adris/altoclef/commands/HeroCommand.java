@@ -1,10 +1,10 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 import adris.altoclef.commandsystem.CommandException;
 import adris.altoclef.tasks.entity.HeroTask;
+import gay.solonovamax.altoclef.AltoClef;
 
 public class HeroCommand extends Command {
     public HeroCommand() {
@@ -12,7 +12,7 @@ public class HeroCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
-        mod.runUserTask(new HeroTask(), this::finish);
+    protected void call(ArgParser parser) throws CommandException {
+        AltoClef.INSTANCE.runUserTask(new HeroTask(), this::finish);
     }
 }

@@ -1,6 +1,5 @@
 package adris.altoclef.chains;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.TaskChain;
 import adris.altoclef.tasksystem.TaskRunner;
@@ -12,6 +11,7 @@ import adris.altoclef.util.slots.Slot;
 import adris.altoclef.util.time.TimerGame;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -40,30 +40,30 @@ public class PlayerInteractionFixChain extends TaskChain {
     }
 
     @Override
-    protected void onStop(AltoClef mod) {
+    protected void onStop() {
 
     }
 
     @Override
-    public void onInterrupt(AltoClef mod, TaskChain other) {
+    public void onInterrupt(TaskChain other) {
 
     }
 
     @Override
-    protected void onTick(AltoClef mod) {
+    protected void onTick() {
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
+    public float getPriority() {
 
         if (!AltoClef.inGame()) return Float.NEGATIVE_INFINITY;
 
-        if (mod.getUserTaskChain().isActive() && _betterToolTimer.elapsed()) {
+        if (AltoClef.INSTANCE.getUserTaskChain().isActive() && _betterToolTimer.elapsed()) {
             // Equip the right tool for the job if we're not using one.
             _betterToolTimer.reset();
-            if (mod.getControllerExtras().isBreakingBlock()) {
-                BlockState state = mod.getWorld().getBlockState(mod.getControllerExtras().getBreakingBlockPos());
-                Optional<Slot> bestToolSlot = StorageHelper.getBestToolSlot(mod, state);
+            if (AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                BlockState state = AltoClef.INSTANCE.getWorld().getBlockState(AltoClef.INSTANCE.getControllerExtras().getBreakingBlockPos());
+                Optional<Slot> bestToolSlot = StorageHelper.getBestToolSlot(AltoClef.INSTANCE, state);
                 Slot currentEquipped = PlayerSlot.getEquipSlot();
 
                 // if baritone is running, only accept tools OUTSIDE OF HOTBAR!
@@ -71,13 +71,13 @@ public class PlayerInteractionFixChain extends TaskChain {
                 if (bestToolSlot.isPresent() && !bestToolSlot.get().equals(currentEquipped)) {
                     // ONLY equip if the item class is STRICTLY different (otherwise we swap around a lot)
                     if (StorageHelper.getItemStackInSlot(currentEquipped).getItem() != StorageHelper.getItemStackInSlot(bestToolSlot.get()).getItem()) {
-                        boolean isAllowedToManage = (!mod.getClientBaritone().getPathingBehavior().isPathing() ||
-                                bestToolSlot.get().getInventorySlot() >= 9) && !mod.getFoodChain().isTryingToEat();
+                        boolean isAllowedToManage = (!AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing() ||
+                                bestToolSlot.get().getInventorySlot() >= 9) && !AltoClef.INSTANCE.getFoodChain().isTryingToEat();
                         if (isAllowedToManage) {
                             Debug.logMessage("Found better tool in inventory, equipping.");
                             ItemStack bestToolItemStack = StorageHelper.getItemStackInSlot(bestToolSlot.get());
                             Item bestToolItem = bestToolItemStack.getItem();
-                            mod.getSlotHandler().forceEquipItem(bestToolItem);
+                            AltoClef.INSTANCE.getSlotHandler().forceEquipItem(bestToolItem);
                         }
                     }
                 }
@@ -85,9 +85,9 @@ public class PlayerInteractionFixChain extends TaskChain {
         }
 
         // Unpress shift (it gets stuck for some reason???)
-        if (mod.getInputControls().isHeldDown(Input.SNEAK)) {
+        if (AltoClef.INSTANCE.getInputControls().isHeldDown(Input.SNEAK)) {
             if (_shiftDepressTimeout.elapsed()) {
-                mod.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
             }
         } else {
             _shiftDepressTimeout.reset();
@@ -95,9 +95,9 @@ public class PlayerInteractionFixChain extends TaskChain {
 
         // Refresh inventory
         if (_generalDuctTapeSwapTimeout.elapsed()) {
-            if (!mod.getControllerExtras().isBreakingBlock()) {
+            if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
                 Debug.logMessage("Refreshed inventory...");
-                mod.getSlotHandler().refreshInventory();
+                AltoClef.INSTANCE.getSlotHandler().refreshInventory();
                 _generalDuctTapeSwapTimeout.reset();
                 return Float.NEGATIVE_INFINITY;
             }
@@ -119,45 +119,45 @@ public class PlayerInteractionFixChain extends TaskChain {
 
         // If we have something in our hand for a period of time...
         if (_lastHandStack != null && _stackHeldTimeout.elapsed()) {
-            Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(_lastHandStack, false);
+            Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(_lastHandStack, false);
             if (moveTo.isPresent()) {
-                mod.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
                 return Float.NEGATIVE_INFINITY;
             }
-            if (ItemHelper.canThrowAwayStack(mod, StorageHelper.getItemStackInCursorSlot())) {
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, StorageHelper.getItemStackInCursorSlot())) {
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                 return Float.NEGATIVE_INFINITY;
             }
-            Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+            Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
             // Try throwing away cursor slot if it's garbage
             if (garbage.isPresent()) {
-                mod.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
                 return Float.NEGATIVE_INFINITY;
             }
-            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             return Float.NEGATIVE_INFINITY;
         }
 
-        if (shouldCloseOpenScreen(mod)) {
-            //Debug.logMessage("Closed screen since we changed our look.");
+        if (shouldCloseOpenScreen(AltoClef.INSTANCE)) {
+            // Debug.logMessage("Closed screen since we changed our look.");
             ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
             if (!cursorStack.isEmpty()) {
-                Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+                Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
                 if (moveTo.isPresent()) {
-                    mod.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
                     return Float.NEGATIVE_INFINITY;
                 }
-                if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                    mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                     return Float.NEGATIVE_INFINITY;
                 }
-                Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+                Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
                 // Try throwing away cursor slot if it's garbage
                 if (garbage.isPresent()) {
-                    mod.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
                     return Float.NEGATIVE_INFINITY;
                 }
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             } else {
                 StorageHelper.closeScreen();
             }

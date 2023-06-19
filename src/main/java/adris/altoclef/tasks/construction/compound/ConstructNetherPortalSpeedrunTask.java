@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.construction.compound;
 
-import gay.solonovamax.altoclef.AltoClef;
+import adris.altoclef.BotBehaviour;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.InteractWithBlockTask;
@@ -9,8 +9,11 @@ import adris.altoclef.tasks.construction.DestroyBlockTask;
 import adris.altoclef.tasks.construction.PlaceStructureBlockTask;
 import adris.altoclef.tasks.movement.GetToBlockTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
+import adris.altoclef.tasksystem.Task;
+import adris.altoclef.trackers.BlockTracker;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -109,14 +112,17 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
     private boolean _firstSearch = false;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
+        BotBehaviour behaviour = AltoClef.INSTANCE.getBehaviour();
+        BlockTracker blockTracker = AltoClef.INSTANCE.getBlockTracker();
+
         _isPlacingLiquid = false;
         _portalFrameBuilt = false;
-        mod.getBlockTracker().trackBlock(Blocks.LAVA);
-        mod.getBehaviour().push();
-        //mod.getConfigState().setAllowWalkThroughFlowingWater(true);
+        blockTracker.trackBlock(Blocks.LAVA);
+        behaviour.push();
+        // mod.getConfigState().setAllowWalkThroughFlowingWater(true);
         // Avoid breaking frame.
-        mod.getBehaviour().avoidBlockBreaking((block) -> {
+        behaviour.avoidBlockBreaking((block) -> {
             if (_portalOrigin != null) {
 
                 for (Vec3i framePosRelative : PORTAL_CONSTRUCTION_FRAME) {
@@ -138,26 +144,25 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
     }
 
     @Override
-    protected adris.altoclef.tasksystem.Task onTick(AltoClef mod) {
-
+    protected Task onTick() {
         // Pre-affirmed thing
-        mod.getBehaviour().setAllowWalkThroughFlowingWater(false);
+        AltoClef.INSTANCE.getBehaviour().setAllowWalkThroughFlowingWater(false);
 
         // Get bucket if we don't have one.
-        if (!mod.getItemStorage().hasItem(Items.BUCKET) && !mod.getItemStorage().hasItem(Items.WATER_BUCKET) && !mod.getItemStorage().hasItem(Items.LAVA_BUCKET)) {
+        if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.BUCKET) && !AltoClef.INSTANCE.getItemStorage().hasItem(Items.WATER_BUCKET) && !AltoClef.INSTANCE.getItemStorage().hasItem(Items.LAVA_BUCKET)) {
             setDebugState("Getting bucket");
             return TaskCatalogue.getItemTask(Items.BUCKET, 1);
         }
 
         // Get flint & steel if we don't have one
-        if (!mod.getItemStorage().hasItem(Items.FLINT_AND_STEEL)) {
+        if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.FLINT_AND_STEEL)) {
             setDebugState("Getting flint & steel");
             return TaskCatalogue.getItemTask(Items.FLINT_AND_STEEL, 1);
         }
 
         boolean needsToLookForPortal = _portalOrigin == null;
         if (needsToLookForPortal) {
-            if (!mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
+            if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.WATER_BUCKET)) {
                 setDebugState("Getting water");
                 return TaskCatalogue.getItemTask(Items.WATER_BUCKET, 1);
             }
@@ -168,10 +173,10 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
                 _firstSearch = false;
                 _lavaSearchTimer.reset();
                 Debug.logMessage("(Searching for lava lake with portalable spot nearby...)");
-                BlockPos lavaPos = findLavaLake(mod, mod.getPlayer().getBlockPos());
+                BlockPos lavaPos = findLavaLake(AltoClef.INSTANCE, AltoClef.INSTANCE.getPlayer().getBlockPos());
                 if (lavaPos != null) {
                     // We have a lava lake, set our portal origin!
-                    BlockPos foundPortalRegion = getPortalableRegion(lavaPos, mod.getPlayer().getBlockPos(), new Vec3i(-1, 0, 0), PORTALABLE_REGION_SIZE, 20);
+                    BlockPos foundPortalRegion = getPortalableRegion(lavaPos, AltoClef.INSTANCE.getPlayer().getBlockPos(), new Vec3i(-1, 0, 0), PORTALABLE_REGION_SIZE, 20);
                     if (foundPortalRegion == null) {
                         Debug.logWarning("Failed to find portalable region nearby. Consider increasing the search timeout range");
                     } else {
@@ -206,7 +211,7 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
                 setDebugState("Clearing Portal Region");
                 _placeLavaWeCanBreakAgainTimer.reset();
                 _destroyTarget = toDestroy;
-                return new DestroyBlockTask(toDestroy);//new ClearRegionTask(getPortalRegionCorner(), getPortalRegionCorner().add(PORTALABLE_REGION_SIZE));
+                return new DestroyBlockTask(toDestroy);// new ClearRegionTask(getPortalRegionCorner(), getPortalRegionCorner().add(PORTALABLE_REGION_SIZE));
             }
         }
 
@@ -214,7 +219,7 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
         if (!_portalFrameBuilt) {
             BlockPos waterSourcePos = _portalOrigin.add(WATER_SOURCE_ORIGIN);
             if (MinecraftClient.getInstance().world.getBlockState(waterSourcePos).getBlock() != Blocks.WATER) {
-                if (!mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
+                if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.WATER_BUCKET)) {
                     setDebugState("Getting water");
                     return TaskCatalogue.getItemTask(Items.WATER_BUCKET, 1);
                 }
@@ -231,11 +236,11 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
 
         // Place lava
         for (LavaTarget lavaTarget : PORTAL_FRAME_LAVA) {
-            //mod.getConfigState().setAllowWalkThroughFlowingWater(true);
+            // mod.getConfigState().setAllowWalkThroughFlowingWater(true);
             if (!lavaTarget.isSatisfied(_portalOrigin)) {
 
                 // Get lava if we don't have it.
-                if (!mod.getItemStorage().hasItem(Items.LAVA_BUCKET)) {
+                if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.LAVA_BUCKET)) {
                     setDebugState("Getting Lava");
                     _isPlacingLiquid = true;
                     return _collectLavaTask;
@@ -247,13 +252,13 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
                 }
                 _portalFrameBuilt = false;
                 // Walk through water to get to the bottom, we have to get there to further guarantee placement.
-                mod.getBehaviour().setAllowWalkThroughFlowingWater(lavaTarget.isBelow());
+                AltoClef.INSTANCE.getBehaviour().setAllowWalkThroughFlowingWater(lavaTarget.isBelow());
 
                 // Special case: Get close enough to our base if we're placing in the bad zone
                 if (lavaTarget.isBelow()) {
                     BlockPos posClose = _portalOrigin.add(lavaTarget.where).add(-1, 1, 0);
                     // If we're not right at that point and we're registered to keep fighting for it, go for it.
-                    if (!mod.getPlayer().getBlockPos().equals(posClose)) {
+                    if (!AltoClef.INSTANCE.getPlayer().getBlockPos().equals(posClose)) {
                         if (!_specialBottomCaseCloserTimer.elapsed()) {
                             setDebugState("Special Case: Getting near bottom lava to place it.");
                             _specialBottomCaseCloserTimerForcePlace.reset();
@@ -271,7 +276,7 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
                 return lavaTarget.placeTask(_portalOrigin, lavaTarget.isBelow());
             }
         }
-        mod.getBehaviour().setAllowWalkThroughFlowingWater(false);
+        AltoClef.INSTANCE.getBehaviour().setAllowWalkThroughFlowingWater(false);
 
         _portalFrameBuilt = true;
 
@@ -318,9 +323,9 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
     }
 
     @Override
-    protected void onStop(AltoClef mod, adris.altoclef.tasksystem.Task interruptTask) {
-        mod.getBlockTracker().stopTracking(Blocks.LAVA);
-        mod.getBehaviour().pop();
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.LAVA);
+        AltoClef.INSTANCE.getBehaviour().pop();
     }
 
     @Override
@@ -370,7 +375,7 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
             // We may not be a full lava block
             if (!s.getFluidState().isStill()) return 0;
             int level = s.getFluidState().getLevel();
-            //Debug.logMessage("TEST LEVEL: " + level + ", " + height);
+            // Debug.logMessage("TEST LEVEL: " + level + ", " + height);
             // Only accept FULL SOURCE BLOCKS
             if (level != 8) return 0;
         }
@@ -473,7 +478,7 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
         if (block == Blocks.WATER) return false;
 
         // If we're supposed to have structures here, ignore.
-        Vec3i relativeToOrigin = toCheck.subtract(_portalOrigin);//new Vec3i(dx - PORTAL_ORIGIN_RELATIVE_TO_REGION.getX(), dy  - PORTAL_ORIGIN_RELATIVE_TO_REGION.getY(), dz - PORTAL_ORIGIN_RELATIVE_TO_REGION.getZ());
+        Vec3i relativeToOrigin = toCheck.subtract(_portalOrigin);// new Vec3i(dx - PORTAL_ORIGIN_RELATIVE_TO_REGION.getX(), dy  - PORTAL_ORIGIN_RELATIVE_TO_REGION.getY(), dz - PORTAL_ORIGIN_RELATIVE_TO_REGION.getZ());
         boolean foundFrame = false;
         for (Vec3i framePos : PORTAL_CONSTRUCTION_FRAME) {
             if (framePos.equals(relativeToOrigin)) {

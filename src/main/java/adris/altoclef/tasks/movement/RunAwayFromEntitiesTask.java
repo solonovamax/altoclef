@@ -1,8 +1,8 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.util.baritone.GoalRunAwayFromEntities;
 import baritone.api.pathing.goals.Goal;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.entity.Entity;
 
 import java.util.List;
@@ -42,7 +42,7 @@ public abstract class RunAwayFromEntitiesTask extends CustomBaritoneGoalTask {
         }
 
         @Override
-        protected List<net.minecraft.entity.Entity> getEntities(AltoClef mod) {
+        protected List<Entity> getEntities(AltoClef mod) {
             return _runAwaySupplier.get();
         }
     }

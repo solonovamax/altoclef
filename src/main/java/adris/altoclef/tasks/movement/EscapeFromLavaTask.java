@@ -1,11 +1,11 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.utils.input.Input;
 import baritone.pathing.movement.MovementHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
@@ -23,33 +23,33 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
-        mod.getClientBaritone().getExploreProcess().onLostControl();
-        mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-        mod.getBehaviour().allowSwimThroughLava(true);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
+        AltoClef.INSTANCE.getClientBaritone().getExploreProcess().onLostControl();
+        AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
+        AltoClef.INSTANCE.getBehaviour().allowSwimThroughLava(true);
         // Encourage placing of all blocks!
-        mod.getBehaviour().setBlockPlacePenalty(0);
-        mod.getBehaviour().setBlockBreakAdditionalPenalty(0); // Normally 2
+        AltoClef.INSTANCE.getBehaviour().setBlockPlacePenalty(0);
+        AltoClef.INSTANCE.getBehaviour().setBlockBreakAdditionalPenalty(0); // Normally 2
         // do NOT ever wander
         _checker = new MovementProgressChecker((int) Float.POSITIVE_INFINITY);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         // Sprint through lava + jump, it's faster
-        if (mod.getPlayer().isInLava() || mod.getWorld().getBlockState(mod.getPlayer().getBlockPos().down()).getBlock() == Blocks.LAVA) {
-            mod.getInputControls().hold(Input.JUMP);
-            mod.getInputControls().hold(Input.SPRINT);
+        if (AltoClef.INSTANCE.getPlayer().isInLava() || AltoClef.INSTANCE.getWorld().getBlockState(AltoClef.INSTANCE.getPlayer().getBlockPos().down()).getBlock() == Blocks.LAVA) {
+            AltoClef.INSTANCE.getInputControls().hold(Input.JUMP);
+            AltoClef.INSTANCE.getInputControls().hold(Input.SPRINT);
         }
-        return super.onTick(mod);
+        return super.onTick();
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBehaviour().pop();
-        mod.getInputControls().release(Input.JUMP);
-        mod.getInputControls().release(Input.SPRINT);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBehaviour().pop();
+        AltoClef.INSTANCE.getInputControls().release(Input.JUMP);
+        AltoClef.INSTANCE.getInputControls().release(Input.SPRINT);
     }
 
     @Override
@@ -63,8 +63,8 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return !mod.getPlayer().isInLava() && !mod.getPlayer().isOnFire();
+    public boolean isFinished() {
+        return !AltoClef.INSTANCE.getPlayer().isInLava() && !AltoClef.INSTANCE.getPlayer().isOnFire();
     }
 
     @Override

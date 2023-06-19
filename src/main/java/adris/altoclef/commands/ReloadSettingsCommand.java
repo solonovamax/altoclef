@@ -1,9 +1,9 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 import adris.altoclef.util.helpers.ConfigHelper;
+import gay.solonovamax.altoclef.AltoClef;
 
 public class ReloadSettingsCommand extends Command {
     public ReloadSettingsCommand() {
@@ -11,9 +11,9 @@ public class ReloadSettingsCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) {
+    protected void call(ArgParser parser) {
         ConfigHelper.reloadAllConfigs();
-        mod.log("Reload successful!");
+        AltoClef.INSTANCE.log("Reload successful!");
         finish();
     }
 }

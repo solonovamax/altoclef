@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.entity.KillEntitiesTask;
 import adris.altoclef.tasks.speedrun.MarvionBeatMinecraftTask;
@@ -13,7 +12,13 @@ import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import adris.altoclef.util.slots.Slot;
 import adris.altoclef.util.time.TimerGame;
 import baritone.api.utils.input.Input;
-import net.minecraft.block.*;
+import gay.solonovamax.altoclef.AltoClef;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.DoorBlock;
+import net.minecraft.block.FenceBlock;
+import net.minecraft.block.FenceGateBlock;
+import net.minecraft.block.FlowerBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.MobEntity;
@@ -129,70 +134,70 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _timer.reset();
-        mod.getClientBaritone().getPathingBehavior().forceCancel();
-        _origin = mod.getPlayer().getPos();
+        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
+        _origin = AltoClef.INSTANCE.getPlayer().getPos();
         _progressChecker.reset();
         stuckCheck.reset();
         _failCounter = 0;
         ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
         if (!cursorStack.isEmpty()) {
-            Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
-            moveTo.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+            moveTo.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             }
-            Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+            Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
             // Try throwing away cursor slot if it's garbage
-            garbage.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            garbage.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
         } else {
             StorageHelper.closeScreen();
         }
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
+    protected Task onTick() {
+        if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
             _progressChecker.reset();
         }
-        if (WorldHelper.isInNetherPortal(mod)) {
-            if (!mod.getClientBaritone().getPathingBehavior().isPathing()) {
+        if (WorldHelper.isInNetherPortal(AltoClef.INSTANCE)) {
+            if (!AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
                 setDebugState("Getting out from nether portal");
-                mod.getInputControls().hold(Input.SNEAK);
-                mod.getInputControls().hold(Input.MOVE_FORWARD);
+                AltoClef.INSTANCE.getInputControls().hold(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().hold(Input.MOVE_FORWARD);
                 return null;
             } else {
-                mod.getInputControls().release(Input.SNEAK);
-                mod.getInputControls().release(Input.MOVE_BACK);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             }
         } else {
-            if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
-                mod.getInputControls().release(Input.SNEAK);
-                mod.getInputControls().release(Input.MOVE_BACK);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
+            if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             }
         }
-        if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished(mod) && stuckInBlock(mod) != null) {
+        if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished() && stuckInBlock(AltoClef.INSTANCE) != null) {
             setDebugState("Getting unstuck from block.");
             stuckCheck.reset();
             // Stop other tasks, we are JUST shimmying
-            mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-            mod.getClientBaritone().getExploreProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getExploreProcess().onLostControl();
             return _unstuckTask;
         }
-        if (!_progressChecker.check(mod) || !stuckCheck.check(mod)) {
-            List<Entity> closeEntities = mod.getEntityTracker().getCloseEntities();
+        if (!_progressChecker.check(AltoClef.INSTANCE) || !stuckCheck.check(AltoClef.INSTANCE)) {
+            List<Entity> closeEntities = AltoClef.INSTANCE.getEntityTracker().getCloseEntities();
             for (Entity CloseEntities : closeEntities) {
                 if (CloseEntities instanceof MobEntity &&
-                        CloseEntities.getPos().isInRange(mod.getPlayer().getPos(), 1)) {
+                        CloseEntities.getPos().isInRange(AltoClef.INSTANCE.getPlayer().getPos(), 1)) {
                     setDebugState("Killing annoying entity.");
                     return new KillEntitiesTask(CloseEntities.getClass());
                 }
             }
-            BlockPos blockStuck = stuckInBlock(mod);
+            BlockPos blockStuck = stuckInBlock(AltoClef.INSTANCE);
             if (blockStuck != null) {
                 _failCounter++;
                 _unstuckTask = getFenceUnstuckTask();
@@ -227,10 +232,10 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
                 }
             }
         }
-        if (!mod.getClientBaritone().getExploreProcess().isActive()) {
-            mod.getClientBaritone().getExploreProcess().explore((int) _origin.getX(), (int) _origin.getZ());
+        if (!AltoClef.INSTANCE.getClientBaritone().getExploreProcess().isActive()) {
+            AltoClef.INSTANCE.getClientBaritone().getExploreProcess().explore((int) _origin.getX(), (int) _origin.getZ());
         }
-        if (!_progressChecker.check(mod)) {
+        if (!_progressChecker.check(AltoClef.INSTANCE)) {
             _progressChecker.reset();
             if (!_forceExplore) {
                 _failCounter++;
@@ -241,9 +246,9 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getClientBaritone().getPathingBehavior().forceCancel();
-        if (isFinished(mod)) {
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
+        if (isFinished()) {
             if (_increaseRange) {
                 _wanderDistanceExtension += _distanceToWander;
                 Debug.logMessage("Increased wander range");
@@ -252,9 +257,9 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         // Why the heck did I add this in?
-        //if (_origin == null) return true;
+        // if (_origin == null) return true;
 
         if (Float.isInfinite(_distanceToWander)) return false;
 
@@ -263,9 +268,9 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
             return true;
         }
 
-        if (mod.getPlayer() != null && mod.getPlayer().getPos() != null && (mod.getPlayer().isOnGround() ||
-                mod.getPlayer().isTouchingWater())) {
-            double sqDist = mod.getPlayer().getPos().squaredDistanceTo(_origin);
+        if (AltoClef.INSTANCE.getPlayer() != null && AltoClef.INSTANCE.getPlayer().getPos() != null && (AltoClef.INSTANCE.getPlayer().isOnGround() ||
+                AltoClef.INSTANCE.getPlayer().isTouchingWater())) {
+            double sqDist = AltoClef.INSTANCE.getPlayer().getPos().squaredDistanceTo(_origin);
             double toWander = _distanceToWander + _wanderDistanceExtension;
             return sqDist > toWander * toWander;
         } else {

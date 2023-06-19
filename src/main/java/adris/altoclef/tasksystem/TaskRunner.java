@@ -8,13 +8,11 @@ import java.util.ArrayList;
 public class TaskRunner {
 
     private final ArrayList<TaskChain> _chains = new ArrayList<>();
-    private final AltoClef _mod;
     private boolean _active;
 
     private TaskChain _cachedCurrentTaskChain = null;
 
-    public TaskRunner(AltoClef mod) {
-        _mod = mod;
+    public TaskRunner() {
         _active = false;
     }
 
@@ -25,18 +23,18 @@ public class TaskRunner {
         float maxPriority = Float.NEGATIVE_INFINITY;
         for (TaskChain chain : _chains) {
             if (!chain.isActive()) continue;
-            float priority = chain.getPriority(_mod);
+            float priority = chain.getPriority();
             if (priority > maxPriority) {
                 maxPriority = priority;
                 maxChain = chain;
             }
         }
         if (_cachedCurrentTaskChain != null && maxChain != _cachedCurrentTaskChain) {
-            _cachedCurrentTaskChain.onInterrupt(_mod, maxChain);
+            _cachedCurrentTaskChain.onInterrupt(maxChain);
         }
         _cachedCurrentTaskChain = maxChain;
         if (maxChain != null) {
-            maxChain.tick(_mod);
+            maxChain.tick();
         }
     }
 
@@ -46,18 +44,18 @@ public class TaskRunner {
 
     public void enable() {
         if (!_active) {
-            _mod.getBehaviour().push();
-            _mod.getBehaviour().setPauseOnLostFocus(false);
+            AltoClef.INSTANCE.getBehaviour().push();
+            AltoClef.INSTANCE.getBehaviour().setPauseOnLostFocus(false);
         }
         _active = true;
     }
 
     public void disable() {
         if (_active) {
-            _mod.getBehaviour().pop();
+            AltoClef.INSTANCE.getBehaviour().pop();
         }
         for (TaskChain chain : _chains) {
-            chain.stop(_mod);
+            chain.stop();
         }
         _active = false;
 
@@ -70,6 +68,6 @@ public class TaskRunner {
 
     // Kinda jank ngl
     public AltoClef getMod() {
-        return _mod;
+        return AltoClef.INSTANCE;
     }
 }

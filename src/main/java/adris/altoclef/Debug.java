@@ -6,9 +6,6 @@ import net.minecraft.text.Text;
 
 // TODO: Debug library or use Minecraft's built in debugger
 public class Debug {
-
-    public static AltoClef jankModInstance;
-
     public static void logInternal(String message) {
         System.out.println("ALTO CLEF: " + message);
     }
@@ -18,10 +15,7 @@ public class Debug {
     }
 
     private static String getLogPrefix() {
-        if (jankModInstance != null) {
-            return jankModInstance.getModSettings().getChatLogPrefix();
-        }
-        return "[Alto Clef] ";
+        return AltoClef.INSTANCE.getModSettings().getChatLogPrefix();
     }
 
     public static void logMessage(String message, boolean prefix) {
@@ -30,7 +24,7 @@ public class Debug {
                 message = "\u00A72\u00A7l\u00A7o" + getLogPrefix() + "\u00A7r" + message;
             }
             MinecraftClient.getInstance().player.sendMessage(Text.of(message), false);
-            //MinecraftClient.getInstance().player.sendChatMessage(msg);
+            // MinecraftClient.getInstance().player.sendChatMessage(msg);
         } else {
             logInternal(message);
         }
@@ -46,11 +40,11 @@ public class Debug {
 
     public static void logWarning(String message) {
         logInternal("WARNING: " + message);
-        if (jankModInstance != null && !jankModInstance.getModSettings().shouldHideAllWarningLogs()) {
+        if (!AltoClef.INSTANCE.getModSettings().shouldHideAllWarningLogs()) {
             if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null) {
                 String msg = "\u00A72\u00A7l\u00A7o" + getLogPrefix() + "\u00A7c" + message + "\u00A7r";
                 MinecraftClient.getInstance().player.sendMessage(Text.of(msg), false);
-                //MinecraftClient.getInstance().player.sendChatMessage(msg);
+                // MinecraftClient.getInstance().player.sendChatMessage(msg);
             }
         }
     }

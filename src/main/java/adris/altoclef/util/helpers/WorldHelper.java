@@ -317,10 +317,10 @@ public interface WorldHelper {
     static Iterable<BlockPos> getBlocksTouchingBox(AltoClef mod, Box box) {
         BlockPos min = new BlockPos((int) box.minX, (int) box.minY, (int) box.minZ);
         BlockPos max = new BlockPos((int) box.maxX, (int) box.maxY, (int) box.maxZ);
-        return scanRegion(mod, min, max);
+        return scanRegion(min, max);
     }
 
-    static Iterable<BlockPos> scanRegion(AltoClef mod, BlockPos start, BlockPos end) {
+    static Iterable<BlockPos> scanRegion(BlockPos start, BlockPos end) {
         return () -> new Iterator<>() {
             int x = start.getX(), y = start.getY(), z = start.getZ();
 
@@ -398,8 +398,8 @@ public interface WorldHelper {
         return b instanceof ChestBlock || b instanceof EnderChestBlock;
     }
 
-    static boolean isBlock(AltoClef mod, BlockPos pos, Block block) {
-        return mod.getWorld().getBlockState(pos).getBlock() == block;
+    static boolean isBlock(BlockPos pos, Block block) {
+        return AltoClef.INSTANCE.getWorld().getBlockState(pos).getBlock() == block;
     }
 
     static boolean canSleep() {

@@ -1,13 +1,18 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.ITaskRequiresGrounded;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.baritone.GoalFollowEntity;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import baritone.api.utils.input.Input;
-import net.minecraft.block.*;
+import gay.solonovamax.altoclef.AltoClef;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.DoorBlock;
+import net.minecraft.block.FenceBlock;
+import net.minecraft.block.FenceGateBlock;
+import net.minecraft.block.FlowerBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 
@@ -95,67 +100,67 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getClientBaritone().getPathingBehavior().forceCancel();
+    protected void onStart() {
+        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
         _progress.reset();
         stuckCheck.reset();
         _wanderTask.resetWander();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
+    protected Task onTick() {
+        if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
             _progress.reset();
         }
-        if (WorldHelper.isInNetherPortal(mod)) {
-            if (!mod.getClientBaritone().getPathingBehavior().isPathing()) {
+        if (WorldHelper.isInNetherPortal(AltoClef.INSTANCE)) {
+            if (!AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
                 setDebugState("Getting out from nether portal");
-                mod.getInputControls().hold(Input.SNEAK);
-                mod.getInputControls().hold(Input.MOVE_FORWARD);
+                AltoClef.INSTANCE.getInputControls().hold(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().hold(Input.MOVE_FORWARD);
                 return null;
             } else {
-                mod.getInputControls().release(Input.SNEAK);
-                mod.getInputControls().release(Input.MOVE_BACK);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             }
         } else {
-            if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
-                mod.getInputControls().release(Input.SNEAK);
-                mod.getInputControls().release(Input.MOVE_BACK);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
+            if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             }
         }
-        if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished(mod) && stuckInBlock(mod) != null) {
+        if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished() && stuckInBlock(AltoClef.INSTANCE) != null) {
             setDebugState("Getting unstuck from block.");
             stuckCheck.reset();
             // Stop other tasks, we are JUST shimmying
-            mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-            mod.getClientBaritone().getExploreProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getExploreProcess().onLostControl();
             return _unstuckTask;
         }
-        if (!_progress.check(mod) || !stuckCheck.check(mod)) {
-            BlockPos blockStuck = stuckInBlock(mod);
+        if (!_progress.check(AltoClef.INSTANCE) || !stuckCheck.check(AltoClef.INSTANCE)) {
+            BlockPos blockStuck = stuckInBlock(AltoClef.INSTANCE);
             if (blockStuck != null) {
                 _unstuckTask = getFenceUnstuckTask();
                 return _unstuckTask;
             }
             stuckCheck.reset();
         }
-        if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
+        if (_wanderTask.isActive() && !_wanderTask.isFinished()) {
             _progress.reset();
             setDebugState("Failed to get to target, wandering for a bit.");
             return _wanderTask;
         }
 
-        if (!mod.getClientBaritone().getCustomGoalProcess().isActive()) {
-            mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(new GoalFollowEntity(_entity, _closeEnoughDistance));
+        if (!AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().isActive()) {
+            AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().setGoalAndPath(new GoalFollowEntity(_entity, _closeEnoughDistance));
         }
 
-        if (mod.getPlayer().isInRange(_entity, _closeEnoughDistance)) {
+        if (AltoClef.INSTANCE.getPlayer().isInRange(_entity, _closeEnoughDistance)) {
             _progress.reset();
         }
 
-        if (!_progress.check(mod)) {
+        if (!_progress.check(AltoClef.INSTANCE)) {
             return _wanderTask;
         }
 
@@ -164,8 +169,8 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getClientBaritone().getPathingBehavior().forceCancel();
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
     }
 
     @Override

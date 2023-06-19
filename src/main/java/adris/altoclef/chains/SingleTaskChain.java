@@ -1,14 +1,13 @@
 package adris.altoclef.chains;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.tasksystem.TaskChain;
 import adris.altoclef.tasksystem.TaskRunner;
 import adris.altoclef.util.time.Stopwatch;
+import gay.solonovamax.altoclef.AltoClef;
 
 public abstract class SingleTaskChain extends TaskChain {
-
     private final Stopwatch _taskStopwatch = new Stopwatch();
     protected Task _mainTask = null;
     private boolean _interrupted = false;
@@ -21,7 +20,7 @@ public abstract class SingleTaskChain extends TaskChain {
     }
 
     @Override
-    protected void onTick(AltoClef mod) {
+    protected void onTick() {
         if (!isActive()) return;
 
         if (_interrupted) {
@@ -32,17 +31,17 @@ public abstract class SingleTaskChain extends TaskChain {
         }
 
         if (_mainTask != null) {
-            if ((_mainTask.isFinished(mod)) || _mainTask.stopped()) {
-                onTaskFinish(mod);
+            if ((_mainTask.isFinished()) || _mainTask.stopped()) {
+                onTaskFinish();
             } else {
-                _mainTask.tick(mod, this);
+                _mainTask.tick(this);
             }
         }
     }
 
-    protected void onStop(AltoClef mod) {
+    protected void onStop() {
         if (isActive() && _mainTask != null) {
-            _mainTask.stop(mod);
+            _mainTask.stop();
             _mainTask = null;
         }
     }
@@ -50,7 +49,7 @@ public abstract class SingleTaskChain extends TaskChain {
     public void setTask(Task task) {
         if (_mainTask == null || !_mainTask.equals(task)) {
             if (_mainTask != null) {
-                _mainTask.stop(_mod, task);
+                _mainTask.stop(task);
             }
             _mainTask = task;
             if (task != null) task.reset();
@@ -63,22 +62,22 @@ public abstract class SingleTaskChain extends TaskChain {
         return _mainTask != null;
     }
 
-    protected abstract void onTaskFinish(AltoClef mod);
+    protected abstract void onTaskFinish();
 
     @Override
-    public void onInterrupt(AltoClef mod, TaskChain other) {
+    public void onInterrupt(TaskChain other) {
         if (other != null) {
             Debug.logInternal("Chain Interrupted: " + this + " by " + other);
         }
         // Stop our task. When we're started up again, let our task know we need to run.
         _interrupted = true;
         if (_mainTask != null && _mainTask.isActive()) {
-            _mainTask.interrupt(mod, null);
+            _mainTask.interrupt(null);
         }
     }
 
     protected boolean isCurrentlyRunning(AltoClef mod) {
-        return !_interrupted && _mainTask.isActive() && !_mainTask.isFinished(mod);
+        return !_interrupted && _mainTask.isActive() && !_mainTask.isFinished();
     }
 
     public Task getCurrentTask() {

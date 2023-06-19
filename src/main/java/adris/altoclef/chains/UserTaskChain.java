@@ -1,12 +1,12 @@
 package adris.altoclef.chains;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.events.TaskFinishedEvent;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.tasksystem.TaskRunner;
 import adris.altoclef.util.time.Stopwatch;
+import gay.solonovamax.altoclef.AltoClef;
 
 // A task chain that runs a user defined task at the same priority.
 // This basically replaces our old Task Runner.
@@ -46,23 +46,23 @@ public class UserTaskChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onTick(AltoClef mod) {
+    protected void onTick() {
 
         // Pause if we're not loaded into a world.
-        if (!mod.inGame()) return;
+        if (!AltoClef.INSTANCE.inGame()) return;
 
-        super.onTick(mod);
+        super.onTick();
     }
 
-    public void cancel(AltoClef mod) {
+    public void cancel() {
         if (_mainTask != null && _mainTask.isActive()) {
-            stop(mod);
-            onTaskFinish(mod);
+            stop();
+            onTaskFinish();
         }
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
+    public float getPriority() {
         return 50;
     }
 
@@ -71,7 +71,7 @@ public class UserTaskChain extends SingleTaskChain {
         return "User Tasks";
     }
 
-    public void runTask(AltoClef mod, Task task, Runnable onFinish) {
+    public void runTask(Task task, Runnable onFinish) {
         _runningIdleTask = _nextTaskIdleFlag;
         _nextTaskIdleFlag = false;
 
@@ -80,24 +80,24 @@ public class UserTaskChain extends SingleTaskChain {
         if (!_runningIdleTask) {
             Debug.logMessage("User Task Set: " + task.toString());
         }
-        mod.getTaskRunner().enable();
+        AltoClef.INSTANCE.getTaskRunner().enable();
         _taskStopwatch.begin();
         setTask(task);
 
-        if (mod.getModSettings().failedToLoad()) {
+        if (AltoClef.INSTANCE.getModSettings().failedToLoad()) {
             Debug.logWarning("Settings file failed to load at some point. Check logs for more info, or delete the" +
                     " file to re-load working settings.");
         }
     }
 
     @Override
-    protected void onTaskFinish(AltoClef mod) {
-        boolean shouldIdle = mod.getModSettings().shouldRunIdleCommandWhenNotActive();
+    protected void onTaskFinish() {
+        boolean shouldIdle = AltoClef.INSTANCE.getModSettings().shouldRunIdleCommandWhenNotActive();
         if (!shouldIdle) {
             // Stop.
-            mod.getTaskRunner().disable();
+            AltoClef.INSTANCE.getTaskRunner().disable();
             // Extra reset. Sometimes baritone is laggy and doesn't properly reset our press
-            mod.getClientBaritone().getInputOverrideHandler().clearAllKeys();
+            AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().clearAllKeys();
         }
         double seconds = _taskStopwatch.time();
         Task oldTask = _mainTask;
@@ -114,7 +114,7 @@ public class UserTaskChain extends SingleTaskChain {
                 EventBus.publish(new TaskFinishedEvent(seconds, oldTask));
             }
             if (shouldIdle) {
-                AltoClef.getCommandExecutor().executeWithPrefix(mod.getModSettings().getIdleCommand());
+                AltoClef.INSTANCE.getCommandExecutor().executeWithPrefix(AltoClef.INSTANCE.getModSettings().getIdleCommand());
                 signalNextTaskToBeIdleTask();
                 _runningIdleTask = true;
             }

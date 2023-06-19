@@ -1,9 +1,9 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 import adris.altoclef.tasks.movement.IdleTask;
+import gay.solonovamax.altoclef.AltoClef;
 
 public class IdleCommand extends Command {
     public IdleCommand() {
@@ -11,7 +11,7 @@ public class IdleCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) {
-        mod.runUserTask(new IdleTask(), this::finish);
+    protected void call(ArgParser parser) {
+        AltoClef.INSTANCE.runUserTask(new IdleTask(), this::finish);
     }
 }

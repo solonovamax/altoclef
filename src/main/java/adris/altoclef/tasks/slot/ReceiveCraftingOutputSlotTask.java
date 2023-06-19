@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.slot;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.ITaskUsesCraftingGrid;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.ItemHelper;
@@ -8,6 +7,7 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.CraftingTableSlot;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 
@@ -42,33 +42,33 @@ public class ReceiveCraftingOutputSlotTask extends Task implements ITaskUsesCraf
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         ItemStack inOutput = StorageHelper.getItemStackInSlot(_slot);
         ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
         boolean cursorSlotFree = cursor.isEmpty();
         if (!cursorSlotFree && !ItemHelper.canStackTogether(inOutput, cursor)) {
             return new EnsureFreeCursorSlotTask();
         }
-        int craftCount = inOutput.getCount() * getCraftMultipleCount(mod);
-        int weWantToAddToInventory = _toTake - mod.getItemStorage().getItemCountInventoryOnly(inOutput.getItem());
+        int craftCount = inOutput.getCount() * getCraftMultipleCount(AltoClef.INSTANCE);
+        int weWantToAddToInventory = _toTake - AltoClef.INSTANCE.getItemStorage().getItemCountInventoryOnly(inOutput.getItem());
         boolean takeAll = weWantToAddToInventory >= craftCount;
-        if (takeAll && mod.getItemStorage().getSlotThatCanFitInPlayerInventory(inOutput, true).isPresent()) {
+        if (takeAll && AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(inOutput, true).isPresent()) {
             setDebugState("Quick moving output");
-            mod.getSlotHandler().clickSlot(_slot, 0, SlotActionType.QUICK_MOVE);
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(_slot, 0, SlotActionType.QUICK_MOVE);
             return null;
         }
         setDebugState("Picking up output");
-        mod.getSlotHandler().clickSlot(_slot, 0, SlotActionType.PICKUP);
+        AltoClef.INSTANCE.getSlotHandler().clickSlot(_slot, 0, SlotActionType.PICKUP);
         return null;
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
     }
 
     @Override

@@ -23,12 +23,9 @@ import java.util.stream.Collectors;
  */
 public class SimpleChunkTracker {
 
-    private final AltoClef _mod;
     private final Set<ChunkPos> _loaded = new HashSet<>();
 
-    public SimpleChunkTracker(AltoClef mod) {
-        _mod = mod;
-
+    public SimpleChunkTracker() {
         // When chunks load...
         EventBus.subscribe(ChunkLoadEvent.class, evt -> onLoad(evt.chunk.getPos()));
         EventBus.subscribe(ChunkUnloadEvent.class, evt -> onUnload(evt.chunkPos));
@@ -45,7 +42,7 @@ public class SimpleChunkTracker {
     }
 
     public boolean isChunkLoaded(ChunkPos pos) {
-        return !(_mod.getWorld().getChunk(pos.x, pos.z) instanceof EmptyChunk);
+        return !(AltoClef.INSTANCE.getWorld().getChunk(pos.x, pos.z) instanceof EmptyChunk);
     }
 
     public boolean isChunkLoaded(BlockPos pos) {

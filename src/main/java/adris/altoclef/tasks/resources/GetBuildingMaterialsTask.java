@@ -1,10 +1,10 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.MiningRequirement;
 import adris.altoclef.util.helpers.StorageHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.Item;
 
 public class GetBuildingMaterialsTask extends Task {
@@ -15,18 +15,18 @@ public class GetBuildingMaterialsTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        Item[] throwaways = mod.getModSettings().getThrowawayItems(mod, true);
+    protected Task onTick() {
+        Item[] throwaways = AltoClef.INSTANCE.getModSettings().getThrowawayItems(true);
         return new MineAndCollectTask(new ItemTarget[]{new ItemTarget(throwaways, _count)}, MiningRequirement.WOOD);
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 
@@ -39,8 +39,8 @@ public class GetBuildingMaterialsTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return StorageHelper.getBuildingMaterialCount(mod) >= _count;
+    public boolean isFinished() {
+        return StorageHelper.getBuildingMaterialCount(AltoClef.INSTANCE) >= _count;
     }
 
     @Override

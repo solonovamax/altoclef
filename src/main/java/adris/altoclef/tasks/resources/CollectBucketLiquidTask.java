@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.DoToClosestBlockTask;
@@ -18,6 +17,7 @@ import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import adris.altoclef.util.time.TimerGame;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -37,7 +37,7 @@ public class CollectBucketLiquidTask extends ResourceTask {
     private final TimerGame _pickedUpTimer = new TimerGame(0.5);
     private final int _count;
 
-    //private IProgressChecker<Double> _checker = new LinearProgressChecker(5, 0.1);
+    // private IProgressChecker<Double> _checker = new LinearProgressChecker(5, 0.1);
     private final Item _target;
     private final Block _toCollect;
     private final String _liquidName;
@@ -77,8 +77,8 @@ public class CollectBucketLiquidTask extends ResourceTask {
 
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        Task result = super.onTick(mod);
+    protected Task onTick() {
+        Task result = super.onTick();
         // Reset our "first time" timeout/wander flag.
         if (!thisOrChildAreTimedOut()) {
             wasWandering = false;
@@ -97,8 +97,8 @@ public class CollectBucketLiquidTask extends ResourceTask {
             if (standingInside == _toCollect) {
                 setDebugState("Trying to collect (we are in it)");
                 mod.getInputControls().forceLook(0, 90);
-                //mod.getClientBaritone().getLookBehavior().updateTarget(new Rotation(0, 90), true);
-                //Debug.logMessage("Looking at " + _toCollect + ", picking up right away.");
+                // mod.getClientBaritone().getLookBehavior().updateTarget(new Rotation(0, 90), true);
+                // Debug.logMessage("Looking at " + _toCollect + ", picking up right away.");
                 _tryImmediatePickupTimer.reset();
                 if (mod.getSlotHandler().forceEquipItem(Items.BUCKET)) {
                     mod.getInputControls().tryPress(Input.CLICK_RIGHT);
@@ -140,7 +140,7 @@ public class CollectBucketLiquidTask extends ResourceTask {
         if (mod.getBlockTracker().anyFound(isSourceLiquid, _toCollect)) {
             // We want to MINIMIZE this distance to liquid.
             setDebugState("Trying to collect...");
-            //Debug.logMessage("TEST: " + RayTraceUtils.fluidHandling);
+            // Debug.logMessage("TEST: " + RayTraceUtils.fluidHandling);
 
             return new DoToClosestBlockTask(blockPos -> {
                 // Clear above if lava because we can't enter.
@@ -187,7 +187,7 @@ public class CollectBucketLiquidTask extends ResourceTask {
     protected void onResourceStop(AltoClef mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(_toCollect);
         mod.getBehaviour().pop();
-        //mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, false);
+        // mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, false);
         mod.getExtraBaritoneSettings().setInteractionPaused(false);
     }
 

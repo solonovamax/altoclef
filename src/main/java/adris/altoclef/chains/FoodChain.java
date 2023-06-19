@@ -1,13 +1,17 @@
 package adris.altoclef.chains;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Settings;
 import adris.altoclef.tasks.resources.CollectFoodTask;
 import adris.altoclef.tasks.speedrun.DragonBreathTracker;
 import adris.altoclef.tasksystem.TaskRunner;
-import adris.altoclef.util.helpers.*;
+import adris.altoclef.util.helpers.ConfigHelper;
+import adris.altoclef.util.helpers.ItemHelper;
+import adris.altoclef.util.helpers.LookHelper;
+import adris.altoclef.util.helpers.StorageHelper;
+import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.slots.PlayerSlot;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.effect.StatusEffects;
@@ -42,7 +46,7 @@ public class FoodChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onTaskFinish(AltoClef mod) {
+    protected void onTaskFinish() {
         // Nothing.
     }
 
@@ -78,30 +82,30 @@ public class FoodChain extends SingleTaskChain {
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
-        if (WorldHelper.isInNetherPortal(mod)) {
-            stopEat(mod);
+    public float getPriority() {
+        if (WorldHelper.isInNetherPortal(AltoClef.INSTANCE)) {
+            stopEat(AltoClef.INSTANCE);
             return Float.NEGATIVE_INFINITY;
         }
-        if (mod.getMobDefenseChain().isPuttingOutFire()) {
-            stopEat(mod);
+        if (AltoClef.INSTANCE.getMobDefenseChain().isPuttingOutFire()) {
+            stopEat(AltoClef.INSTANCE);
             return Float.NEGATIVE_INFINITY;
         }
-        _dragonBreathTracker.updateBreath(mod);
-        for (BlockPos playerIn : WorldHelper.getBlocksTouchingPlayer(mod)) {
+        _dragonBreathTracker.updateBreath(AltoClef.INSTANCE);
+        for (BlockPos playerIn : WorldHelper.getBlocksTouchingPlayer(AltoClef.INSTANCE)) {
             if (_dragonBreathTracker.isTouchingDragonBreath(playerIn)) {
-                stopEat(mod);
+                stopEat(AltoClef.INSTANCE);
                 return Float.NEGATIVE_INFINITY;
             }
         }
-        if (!mod.getModSettings().isAutoEat()) {
-            stopEat(mod);
+        if (!AltoClef.INSTANCE.getModSettings().isAutoEat()) {
+            stopEat(AltoClef.INSTANCE);
             return Float.NEGATIVE_INFINITY;
         }
 
         // do NOT eat while in lava if we are escaping it (spaghetti code dependencies go brrrr)
-        if (mod.getPlayer().isInLava()) {
-            stopEat(mod);
+        if (AltoClef.INSTANCE.getPlayer().isInLava()) {
+            stopEat(AltoClef.INSTANCE);
             return Float.NEGATIVE_INFINITY;
         }
 
@@ -113,12 +117,12 @@ public class FoodChain extends SingleTaskChain {
         - We're kind of hungry and have food that fits perfectly
          */
         // We're in danger, don't eat now!!
-        if (!mod.getMLGBucketChain().doneMLG() || mod.getMLGBucketChain().isFallingOhNo(mod) ||
-                mod.getPlayer().isBlocking() || shouldStop) {
-            stopEat(mod);
+        if (!AltoClef.INSTANCE.getMLGBucketChain().doneMLG() || AltoClef.INSTANCE.getMLGBucketChain().isFallingOhNo(AltoClef.INSTANCE) ||
+                AltoClef.INSTANCE.getPlayer().isBlocking() || shouldStop) {
+            stopEat(AltoClef.INSTANCE);
             return Float.NEGATIVE_INFINITY;
         }
-        Pair<Integer, Optional<Item>> calculation = calculateFood(mod);
+        Pair<Integer, Optional<Item>> calculation = calculateFood(AltoClef.INSTANCE);
         int _cachedFoodScore = calculation.getLeft();
         _cachedPerfectFood = calculation.getRight();
 
@@ -126,7 +130,7 @@ public class FoodChain extends SingleTaskChain {
         _hasFood = hasFood;
 
         // If we requested a fillup but we're full, stop.
-        if (_requestFillup && mod.getPlayer().getHungerManager().getFoodLevel() >= 20) {
+        if (_requestFillup && AltoClef.INSTANCE.getPlayer().getHungerManager().getFoodLevel() >= 20) {
             _requestFillup = false;
         }
         // If we no longer have food, we no longer can eat.
@@ -134,18 +138,18 @@ public class FoodChain extends SingleTaskChain {
             _requestFillup = false;
         }
         if (hasFood && (needsToEat() || _requestFillup) && _cachedPerfectFood.isPresent() &&
-                !mod.getMLGBucketChain().isChorusFruiting() && !mod.getPlayer().isBlocking()) {
+                !AltoClef.INSTANCE.getMLGBucketChain().isChorusFruiting() && !AltoClef.INSTANCE.getPlayer().isBlocking()) {
             Item toUse = _cachedPerfectFood.get();
             // Make sure we're not facing a container
-            if (!LookHelper.tryAvoidingInteractable(mod)) {
+            if (!LookHelper.tryAvoidingInteractable(AltoClef.INSTANCE)) {
                 return Float.NEGATIVE_INFINITY;
             }
-            startEat(mod, toUse);
+            startEat(AltoClef.INSTANCE, toUse);
         } else {
-            stopEat(mod);
+            stopEat(AltoClef.INSTANCE);
         }
 
-        Settings settings = mod.getModSettings();
+        Settings settings = AltoClef.INSTANCE.getModSettings();
 
         if (_needsFood || _cachedFoodScore < settings.getMinimumFoodAllowed()) {
             _needsFood = _cachedFoodScore < settings.getFoodUnitsToCollect();
@@ -175,9 +179,9 @@ public class FoodChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onStop(AltoClef mod) {
-        super.onStop(mod);
-        stopEat(mod);
+    protected void onStop() {
+        super.onStop();
+        stopEat(AltoClef.INSTANCE);
     }
 
     public boolean needsToEat() {

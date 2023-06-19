@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.construction;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.movement.GetToBlockTask;
@@ -14,6 +13,7 @@ import baritone.api.schematic.AbstractSchematic;
 import baritone.api.schematic.ISchematic;
 import baritone.api.utils.BlockOptionalMeta;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -62,51 +62,51 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _progressChecker.reset();
         // If we get interrupted by another task, this might cause problems...
         //_wanderTask.resetWander();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (WorldHelper.isInNetherPortal(mod)) {
-            if (!mod.getClientBaritone().getPathingBehavior().isPathing()) {
+    protected Task onTick() {
+        if (WorldHelper.isInNetherPortal(AltoClef.INSTANCE)) {
+            if (!AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
                 setDebugState("Getting out from nether portal");
-                mod.getInputControls().hold(Input.SNEAK);
-                mod.getInputControls().hold(Input.MOVE_FORWARD);
+                AltoClef.INSTANCE.getInputControls().hold(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().hold(Input.MOVE_FORWARD);
                 return null;
             } else {
-                mod.getInputControls().release(Input.SNEAK);
-                mod.getInputControls().release(Input.MOVE_BACK);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             }
         } else {
-            if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
-                mod.getInputControls().release(Input.SNEAK);
-                mod.getInputControls().release(Input.MOVE_BACK);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
+            if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             }
         }
         // Perform timeout wander
-        if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
+        if (_wanderTask.isActive() && !_wanderTask.isFinished()) {
             setDebugState("Wandering.");
             _progressChecker.reset();
             return _wanderTask;
         }
 
         if (_autoCollectStructureBlocks) {
-            if (_materialTask != null && _materialTask.isActive() && !_materialTask.isFinished(mod)) {
+            if (_materialTask != null && _materialTask.isActive() && !_materialTask.isFinished()) {
                 setDebugState("No structure items, collecting cobblestone + dirt as default.");
-                if (getMaterialCount(mod) < PREFERRED_MATERIALS) {
+                if (getMaterialCount(AltoClef.INSTANCE) < PREFERRED_MATERIALS) {
                     return _materialTask;
                 } else {
                     _materialTask = null;
                 }
             }
 
-            //Item[] items = Util.toArray(Item.class, mod.getClientBaritoneSettings().acceptableThrowawayItems.value);
-            if (getMaterialCount(mod) < MIN_MATERIALS) {
+            // Item[] items = Util.toArray(Item.class, mod.getClientBaritoneSettings().acceptableThrowawayItems.value);
+            if (getMaterialCount(AltoClef.INSTANCE) < MIN_MATERIALS) {
                 // TODO: Mine items, extract their resource key somehow.
                 _materialTask = getMaterialTask(PREFERRED_MATERIALS);
                 _progressChecker.reset();
@@ -116,7 +116,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
 
 
         // Check if we're approaching our point. If we fail, wander for a bit.
-        if (!_progressChecker.check(mod)) {
+        if (!_progressChecker.check(AltoClef.INSTANCE)) {
             _failCount++;
             if (!tryingAlternativeWay()) {
                 Debug.logMessage("Failed to place, wandering timeout.");
@@ -134,21 +134,21 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
         } else {
             setDebugState("Letting baritone place a block.");
             // Perform baritone placement
-            if (!mod.getClientBaritone().getBuilderProcess().isActive()) {
+            if (!AltoClef.INSTANCE.getClientBaritone().getBuilderProcess().isActive()) {
                 Debug.logInternal("Run Structure Build");
-                ISchematic schematic = new PlaceStructureSchematic(mod);
-                mod.getClientBaritone().getBuilderProcess().build("structure", schematic, _target);
+                ISchematic schematic = new PlaceStructureSchematic(AltoClef.INSTANCE);
+                AltoClef.INSTANCE.getClientBaritone().getBuilderProcess().build("structure", schematic, _target);
             }
         }
         return null;
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getClientBaritone().getBuilderProcess().onLostControl();
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getClientBaritone().getBuilderProcess().onLostControl();
     }
 
-    //TODO: Place structure where a leaf block was???? Might need to delete the block first if it's not empty/air/water.
+    // TODO: Place structure where a leaf block was???? Might need to delete the block first if it's not empty/air/water.
 
     @Override
     protected boolean isEqual(Task other) {
@@ -159,12 +159,12 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         assert MinecraftClient.getInstance().world != null;
         if (_useThrowaways) {
-            return WorldHelper.isSolid(mod, _target);
+            return WorldHelper.isSolid(AltoClef.INSTANCE, _target);
         }
-        BlockState state = mod.getWorld().getBlockState(_target);
+        BlockState state = AltoClef.INSTANCE.getWorld().getBlockState(_target);
         return ArrayUtils.contains(_toPlace, state.getBlock());
     }
 

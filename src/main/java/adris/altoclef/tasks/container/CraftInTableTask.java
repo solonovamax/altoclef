@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.container;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.CraftGenericManuallyTask;
 import adris.altoclef.tasks.CraftGenericWithRecipeBooksTask;
@@ -18,6 +17,7 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.slots.Slot;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -25,7 +25,11 @@ import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Crafts an item in a crafting table, obtaining and placing the table down if none was found.
@@ -137,21 +141,21 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        super.onStart(mod);
-        mod.getBehaviour().push();
+    protected void onStart() {
+        super.onStart();
+        AltoClef.INSTANCE.getBehaviour().push();
         _craftCount = 0;
         ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
         if (!cursorStack.isEmpty()) {
-            Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
-            moveTo.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+            moveTo.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             }
-            Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+            Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
             // Try throwing away cursor slot if it's garbage
-            garbage.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            garbage.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
         } else {
             StorageHelper.closeScreen();
         }
@@ -159,32 +163,32 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
         ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
         if (!cursorStack.isEmpty()) {
-            Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
-            moveTo.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+            moveTo.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             }
-            Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+            Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
             // Try throwing away cursor slot if it's garbage
-            garbage.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            garbage.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
         } else {
             StorageHelper.closeScreen();
         }
-        super.onStop(mod, interruptTask);
-        mod.getBehaviour().pop();
+        super.onStop(interruptTask);
+        AltoClef.INSTANCE.getBehaviour().pop();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        mod.getBehaviour().addProtectedItems(getMaterialsArray());
-        List<BlockPos> craftingTablePos = mod.getBlockTracker().getKnownLocations(Blocks.CRAFTING_TABLE);
+    protected Task onTick() {
+        AltoClef.INSTANCE.getBehaviour().addProtectedItems(getMaterialsArray());
+        List<BlockPos> craftingTablePos = AltoClef.INSTANCE.getBlockTracker().getKnownLocations(Blocks.CRAFTING_TABLE);
         if (!craftingTablePos.isEmpty()) {
             for (BlockPos CraftingTablePos : craftingTablePos) {
-                mod.getBehaviour().avoidBlockBreaking(CraftingTablePos);
+                AltoClef.INSTANCE.getBehaviour().avoidBlockBreaking(CraftingTablePos);
             }
         }
         // TODO: This shouldn't be here.
@@ -204,7 +208,7 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
             if (StorageHelper.getItemStackInCursorSlot().isEmpty()) {
                 Item outputItem = StorageHelper.getItemStackInSlot(PlayerSlot.CRAFT_OUTPUT_SLOT).getItem();
                 for (RecipeTarget target : _targets) {
-                    if (target.getOutputItem() == outputItem && mod.getItemStorage().getItemCount(target.getOutputItem()) < target.getTargetCount()) {
+                    if (target.getOutputItem() == outputItem && AltoClef.INSTANCE.getItemStorage().getItemCount(target.getOutputItem()) < target.getTargetCount()) {
                         return new ReceiveCraftingOutputSlotTask(PlayerSlot.CRAFT_OUTPUT_SLOT, target.getTargetCount());
                     }
                 }
@@ -212,16 +216,16 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
         }
 
         if (_collect) {
-            if (!_collectTask.isFinished(mod)) {
+            if (!_collectTask.isFinished()) {
 
-                if (!StorageHelper.hasRecipeMaterialsOrTarget(mod, _targets)) {
+                if (!StorageHelper.hasRecipeMaterialsOrTarget(AltoClef.INSTANCE, _targets)) {
                     setDebugState("craft does NOT have RECIPE MATERIALS: " + Arrays.toString(_targets));
                     return _collectTask;
                 }
             }
         }
 
-        if (!isContainerOpen(mod)) {
+        if (!isContainerOpen(AltoClef.INSTANCE)) {
             _craftResetTimer.reset();
         }
 
@@ -230,14 +234,14 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
             for (RecipeTarget target : _targets) {
                 for (int slot = 0; slot < target.getRecipe().getSlotCount(); ++slot) {
                     ItemTarget toCheck = target.getRecipe().getSlot(slot);
-                    if (StorageHelper.isItemInaccessibleToContainer(mod, toCheck)) {
+                    if (StorageHelper.isItemInaccessibleToContainer(AltoClef.INSTANCE, toCheck)) {
                         return new MoveInaccessibleItemToInventoryTask(toCheck);
                     }
                 }
             }
         }
 
-        return super.onTick(mod);
+        return super.onTick();
     }
 
     @Override
@@ -278,7 +282,7 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return _craftCount >= _targets.length;//_crafted;
     }
 

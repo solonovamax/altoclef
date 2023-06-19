@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.stupid;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.eventbus.EventBus;
@@ -12,6 +11,7 @@ import adris.altoclef.tasks.movement.TimeoutWanderTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.ItemHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
@@ -26,7 +26,6 @@ public class ReplaceBlocksTask extends Task {
 
     // We won't be asked to collect more materials than this at a single time.
     private static final int MAX_MATERIALS_NEEDED_AT_A_TIME = 64;
-
     private final Block[] _toFind;
     private final ItemTarget _toReplace;
 
@@ -49,13 +48,13 @@ public class ReplaceBlocksTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
-        mod.getBehaviour().addProtectedItems(_toReplace.getMatches());
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
+        AltoClef.INSTANCE.getBehaviour().addProtectedItems(_toReplace.getMatches());
         // TODO: Bug: We may want to replace a block that's considered a CONSTRUCTION block.
         // If that's the case, we are in trouble.
 
-        mod.getBlockTracker().trackBlock(_toFind);
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(_toFind);
 
         //_forceReplace.clear();
         _blockBrokenSubscription = EventBus.subscribe(BlockBrokenEvent.class, evt -> {
@@ -78,21 +77,21 @@ public class ReplaceBlocksTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
 
-        if (_collectMaterialsTask != null && _collectMaterialsTask.isActive() && !_collectMaterialsTask.isFinished(mod)) {
+        if (_collectMaterialsTask != null && _collectMaterialsTask.isActive() && !_collectMaterialsTask.isFinished()) {
             setDebugState("Collecting materials...");
             return _collectMaterialsTask;
         }
 
-        if (_replaceTask != null && _replaceTask.isActive() && !_replaceTask.isFinished(mod)) {
+        if (_replaceTask != null && _replaceTask.isActive() && !_replaceTask.isFinished()) {
             setDebugState("Replacing a block");
             return _replaceTask;
         }
 
         // Get to replace item
-        if (!mod.getItemStorage().hasItem(_toReplace.getMatches())) {
-            List<BlockPos> locations = mod.getBlockTracker().getKnownLocations(_toFind);
+        if (!AltoClef.INSTANCE.getItemStorage().hasItem(_toReplace.getMatches())) {
+            List<BlockPos> locations = AltoClef.INSTANCE.getBlockTracker().getKnownLocations(_toFind);
             int need = 0;
             if (!locations.isEmpty()) {
                 for (BlockPos loc : locations) if (isWithinRange(loc) && need < MAX_MATERIALS_NEEDED_AT_A_TIME) need++;
@@ -111,7 +110,7 @@ public class ReplaceBlocksTask extends Task {
         // If we are forced to replace something we broke, do it now.
         while (!_forceReplace.isEmpty()) {
             BlockPos toReplace = _forceReplace.pop();
-            if (!ArrayUtils.contains(blocksToPlace, mod.getWorld().getBlockState(toReplace).getBlock())) {
+            if (!ArrayUtils.contains(blocksToPlace, AltoClef.INSTANCE.getWorld().getBlockState(toReplace).getBlock())) {
                 _replaceTask = new PlaceBlockTask(toReplace, blocksToPlace);
                 return _replaceTask;
             }
@@ -129,9 +128,9 @@ public class ReplaceBlocksTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
         EventBus.unsubscribe(_blockBrokenSubscription);
-        mod.getBehaviour().pop();
+        AltoClef.INSTANCE.getBehaviour().pop();
     }
 
     @Override

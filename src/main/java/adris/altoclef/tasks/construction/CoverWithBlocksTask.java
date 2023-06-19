@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.construction;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
 import adris.altoclef.tasks.resources.MineAndCollectTask;
@@ -13,6 +12,7 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.slots.Slot;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.FallingBlock;
@@ -34,17 +34,17 @@ public class CoverWithBlocksTask extends Task {
     private BlockPos lavaPos;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         timer.reset();
-        mod.getBlockTracker().trackBlock(Blocks.LAVA);
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(Blocks.LAVA);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        Item[] throwAways = mod.getModSettings().getThrowawayItems(mod, true);
+    protected Task onTick() {
+        Item[] throwAways = AltoClef.INSTANCE.getModSettings().getThrowawayItems(true);
         Item[] throwAwaysToUse = Arrays.stream(throwAways).filter(item -> !(Block.getBlockFromItem(item) instanceof LeavesBlock) &&
                 !(Block.getBlockFromItem(item) instanceof FallingBlock) && item instanceof BlockItem).toArray(Item[]::new);
-        int throwAwayCount = mod.getItemStorage().getItemCount(throwAwaysToUse);
+        int throwAwayCount = AltoClef.INSTANCE.getItemStorage().getItemCount(throwAwaysToUse);
         if (getBlocks != null && throwAwayCount < 128) {
             setDebugState("Getting blocks to cover nether lava.");
             timer.reset();
@@ -53,13 +53,13 @@ public class CoverWithBlocksTask extends Task {
             getBlocks = null;
         }
         Block[] blocks = ItemHelper.itemsToBlocks(throwAwaysToUse);
-        if (!mod.getItemStorage().hasItem(throwAwaysToUse) && mod.getBlockTracker().anyFound(blocks)) {
+        if (!AltoClef.INSTANCE.getItemStorage().hasItem(throwAwaysToUse) && AltoClef.INSTANCE.getBlockTracker().anyFound(blocks)) {
             timer.reset();
             ItemTarget throwAwaysTarget = new ItemTarget(throwAwaysToUse);
             getBlocks = new MineAndCollectTask(throwAwaysTarget, blocks, MiningRequirement.STONE);
             return getBlocks;
         }
-        if (!mod.getItemStorage().hasItem(throwAwaysToUse) && !mod.getBlockTracker().anyFound(blocks)) {
+        if (!AltoClef.INSTANCE.getItemStorage().hasItem(throwAwaysToUse) && !AltoClef.INSTANCE.getBlockTracker().anyFound(blocks)) {
             timer.reset();
             if (WorldHelper.getCurrentDimension() == Dimension.OVERWORLD) {
                 setDebugState("Trying nether to search for blocks.");
@@ -75,27 +75,27 @@ public class CoverWithBlocksTask extends Task {
             timer.reset();
             return goToNether;
         }
-        if (coverLavaWithSand(mod) == null) {
+        if (coverLavaWithSand(AltoClef.INSTANCE) == null) {
             setDebugState("Searching valid lava.");
             timer.reset();
             return new TimeoutWanderTask();
         }
         setDebugState("Covering lava with blocks");
-        return coverLavaWithSand(mod);
+        return coverLavaWithSand(AltoClef.INSTANCE);
     }
 
     private Task coverLavaWithSand(AltoClef mod) {
         Predicate<BlockPos> validLava = blockPos ->
                 mod.getWorld().getBlockState(blockPos).getFluidState().isStill() &&
                         WorldHelper.isAir(mod, blockPos.up()) &&
-                        (!WorldHelper.isBlock(mod, blockPos.north(), Blocks.LAVA) ||
-                                !WorldHelper.isBlock(mod, blockPos.south(), Blocks.LAVA) ||
-                                !WorldHelper.isBlock(mod, blockPos.east(), Blocks.LAVA) ||
-                                !WorldHelper.isBlock(mod, blockPos.west(), Blocks.LAVA) ||
-                                !WorldHelper.isBlock(mod, blockPos.north().up(), Blocks.LAVA) ||
-                                !WorldHelper.isBlock(mod, blockPos.south().up(), Blocks.LAVA) ||
-                                !WorldHelper.isBlock(mod, blockPos.east().up(), Blocks.LAVA) ||
-                                !WorldHelper.isBlock(mod, blockPos.west().up(), Blocks.LAVA));
+                        (!WorldHelper.isBlock(blockPos.north(), Blocks.LAVA) ||
+                                !WorldHelper.isBlock(blockPos.south(), Blocks.LAVA) ||
+                                !WorldHelper.isBlock(blockPos.east(), Blocks.LAVA) ||
+                                !WorldHelper.isBlock(blockPos.west(), Blocks.LAVA) ||
+                                !WorldHelper.isBlock(blockPos.north().up(), Blocks.LAVA) ||
+                                !WorldHelper.isBlock(blockPos.south().up(), Blocks.LAVA) ||
+                                !WorldHelper.isBlock(blockPos.east().up(), Blocks.LAVA) ||
+                                !WorldHelper.isBlock(blockPos.west().up(), Blocks.LAVA));
         Optional<BlockPos> lava = mod.getBlockTracker().getNearestTracking(validLava, Blocks.LAVA);
         if (lava.isPresent()) {
             if (lavaPos == null) {
@@ -106,12 +106,12 @@ public class CoverWithBlocksTask extends Task {
                 lavaPos = lava.get();
                 timer.reset();
             }
-            if (!WorldHelper.isBlock(mod, lavaPos, Blocks.LAVA) || !WorldHelper.isAir(mod, lavaPos.up()) ||
+            if (!WorldHelper.isBlock(lavaPos, Blocks.LAVA) || !WorldHelper.isAir(mod, lavaPos.up()) ||
                     !mod.getWorld().getBlockState(lavaPos).getFluidState().isStill()) {
                 lavaPos = lava.get();
                 timer.reset();
             }
-            Item[] throwAways = mod.getModSettings().getThrowawayItems(mod, true);
+            Item[] throwAways = mod.getModSettings().getThrowawayItems(true);
             Item[] throwAwaysToUse = Arrays.stream(throwAways).filter(item -> !(Block.getBlockFromItem(item) instanceof LeavesBlock) &&
                     !(Block.getBlockFromItem(item) instanceof FallingBlock) && item instanceof BlockItem).toArray(Item[]::new);
             List<Slot> presentThrowAways = mod.getItemStorage().getSlotsWithItemPlayerInventory(true, throwAwaysToUse);
@@ -127,8 +127,8 @@ public class CoverWithBlocksTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBlockTracker().stopTracking(Blocks.LAVA);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.LAVA);
     }
 
     @Override

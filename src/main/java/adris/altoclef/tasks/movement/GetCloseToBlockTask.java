@@ -1,7 +1,7 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -23,23 +23,23 @@ public class GetCloseToBlockTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _currentRange = Integer.MAX_VALUE;
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         // Always bump the range down if we've met it.
         // We have a strictly decreasing range, which means we will eventualy get
         // as close as we can.
-        if (inRange(mod)) {
-            _currentRange = getCurrentDistance(mod) - 1;
+        if (inRange(AltoClef.INSTANCE)) {
+            _currentRange = getCurrentDistance(AltoClef.INSTANCE) - 1;
         }
         return new GetWithinRangeOfBlockTask(_toApproach, _currentRange);
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

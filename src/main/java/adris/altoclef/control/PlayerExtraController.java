@@ -1,22 +1,21 @@
 package adris.altoclef.control;
 
-import gay.solonovamax.altoclef.AltoClef;
+import adris.altoclef.Settings;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.events.BlockBreakingCancelEvent;
 import adris.altoclef.eventbus.events.BlockBreakingEvent;
+import gay.solonovamax.altoclef.AltoClef;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 
 public class PlayerExtraController {
-
-    private final AltoClef _mod;
     private BlockPos _blockBreakPos;
     private double _blockBreakProgress;
 
-    public PlayerExtraController(AltoClef mod) {
-        _mod = mod;
-
+    public PlayerExtraController() {
         EventBus.subscribe(BlockBreakingEvent.class, evt -> onBlockBreak(evt.blockPos, evt.progress));
         EventBus.subscribe(BlockBreakingCancelEvent.class, evt -> onBlockStopBreaking());
     }
@@ -44,13 +43,19 @@ public class PlayerExtraController {
     }
 
     public boolean inRange(Entity entity) {
-        return _mod.getPlayer().isInRange(entity, _mod.getModSettings().getEntityReachRange());
+        ClientPlayerEntity player = AltoClef.INSTANCE.getPlayer();
+        Settings modSettings = AltoClef.INSTANCE.getModSettings();
+
+        return player.isInRange(entity, modSettings.getEntityReachRange());
     }
 
     public void attack(Entity entity) {
         if (inRange(entity)) {
-            _mod.getController().attackEntity(_mod.getPlayer(), entity);
-            _mod.getPlayer().swingHand(Hand.MAIN_HAND);
+            ClientPlayerInteractionManager controller = AltoClef.INSTANCE.getController();
+            ClientPlayerEntity player = AltoClef.INSTANCE.getPlayer();
+
+            controller.attackEntity(player, entity);
+            player.swingHand(Hand.MAIN_HAND);
         }
     }
 }

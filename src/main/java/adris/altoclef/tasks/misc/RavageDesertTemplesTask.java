@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.misc;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.movement.SearchWithinBiomeTask;
 import adris.altoclef.tasks.squashed.CataloguedResourceTask;
 import adris.altoclef.tasksystem.Task;
@@ -8,6 +7,7 @@ import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.MiningRequirement;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -45,27 +45,27 @@ public class RavageDesertTemplesTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
-        mod.getBlockTracker().trackBlock(Blocks.STONE_PRESSURE_PLATE);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(Blocks.STONE_PRESSURE_PLATE);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (_pickaxeTask != null && !_pickaxeTask.isFinished(mod)) {
+    protected Task onTick() {
+        if (_pickaxeTask != null && !_pickaxeTask.isFinished()) {
             setDebugState("Need to get pickaxes first");
             return _pickaxeTask;
         }
-        if (_lootTask != null && !_lootTask.isFinished(mod)) {
+        if (_lootTask != null && !_lootTask.isFinished()) {
             setDebugState("Looting found temple");
             return _lootTask;
         }
-        if (StorageHelper.miningRequirementMetInventory(mod, MiningRequirement.WOOD)) {
+        if (StorageHelper.miningRequirementMetInventory(AltoClef.INSTANCE, MiningRequirement.WOOD)) {
             setDebugState("Need to get pickaxes first");
             _pickaxeTask = new CataloguedResourceTask(new ItemTarget(Items.WOODEN_PICKAXE, 2));
             return _pickaxeTask;
         }
-        _currentTemple = WorldHelper.getADesertTemple(mod);
+        _currentTemple = WorldHelper.getADesertTemple(AltoClef.INSTANCE);
         if (_currentTemple != null) {
             _lootTask = new LootDesertTempleTask(_currentTemple, List.of(LOOT));
             setDebugState("Looting found temple");
@@ -75,9 +75,9 @@ public class RavageDesertTemplesTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task task) {
-        mod.getBlockTracker().stopTracking(Blocks.STONE_PRESSURE_PLATE);
-        mod.getBehaviour().pop();
+    protected void onStop(Task task) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.STONE_PRESSURE_PLATE);
+        AltoClef.INSTANCE.getBehaviour().pop();
     }
 
     @Override
@@ -86,7 +86,7 @@ public class RavageDesertTemplesTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return false;
     }
 

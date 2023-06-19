@@ -1,11 +1,11 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 import adris.altoclef.commandsystem.CommandException;
 import adris.altoclef.ui.MessagePriority;
+import gay.solonovamax.altoclef.AltoClef;
 
 import java.util.Arrays;
 
@@ -15,9 +15,9 @@ public class ListCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
-        mod.log("#### LIST OF ALL OBTAINABLE ITEMS ####", MessagePriority.OPTIONAL);
-        mod.log(Arrays.toString(TaskCatalogue.resourceNames().toArray()), MessagePriority.OPTIONAL);
-        mod.log("############# END LIST ###############", MessagePriority.OPTIONAL);
+    protected void call(ArgParser parser) throws CommandException {
+        AltoClef.INSTANCE.log("#### LIST OF ALL OBTAINABLE ITEMS ####", MessagePriority.OPTIONAL);
+        AltoClef.INSTANCE.log(Arrays.toString(TaskCatalogue.resourceNames().toArray()), MessagePriority.OPTIONAL);
+        AltoClef.INSTANCE.log("############# END LIST ###############", MessagePriority.OPTIONAL);
     }
 }

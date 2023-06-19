@@ -64,12 +64,10 @@ public class BlockTracker extends Tracker {
     // Only perform scans at the END of our frame
     private final Semaphore _endOfFrameMutex = new Semaphore(1);
     //private Block _currentlyTracking = null;
-    private final AltoClef _mod;
     private boolean _scanning = false;
 
-    public BlockTracker(AltoClef mod, TrackerManager manager) {
+    public BlockTracker(TrackerManager manager) {
         super(manager);
-        _mod = mod;
         // First time, track immediately
         _timer.forceElapse();
         _forceElapseTimer.forceElapse();
@@ -197,7 +195,7 @@ public class BlockTracker extends Tracker {
 
     public Optional<BlockPos> getNearestTracking(Block... blocks) {
         // Add juuust a little, to prevent digging down all the time/bias towards blocks BELOW the player
-        return getNearestTracking(_mod.getPlayer().getPos().add(0, 0.6f, 0), blocks);
+        return getNearestTracking(AltoClef.INSTANCE.getPlayer().getPos().add(0, 0.6f, 0), blocks);
     }
 
     public Optional<BlockPos> getNearestTracking(Vec3d pos, Block... blocks) {
@@ -205,7 +203,7 @@ public class BlockTracker extends Tracker {
     }
 
     public Optional<BlockPos> getNearestTracking(Predicate<BlockPos> isValidTest, Block... blocks) {
-        return getNearestTracking(_mod.getPlayer().getPos().add(0, 0.6f, 0), isValidTest, blocks);
+        return getNearestTracking(AltoClef.INSTANCE.getPlayer().getPos().add(0, 0.6f, 0), isValidTest, blocks);
     }
 
     /**
@@ -228,7 +226,7 @@ public class BlockTracker extends Tracker {
         // Make sure we've scanned the first time if we need to.
         updateState();
         synchronized (_scanMutex) {
-            return currentCache().getNearest(_mod, pos, isValidTest, blocks);
+            return currentCache().getNearest(pos, isValidTest, blocks);
         }
     }
 
@@ -301,7 +299,7 @@ public class BlockTracker extends Tracker {
         // Perform a baritone scan
         _timer.reset();
         _timer.setInterval(_config.scanInterval);
-        CalculationContext ctx = new CalculationContext(_mod.getClientBaritone(), _config.scanAsynchronously);
+        CalculationContext ctx = new CalculationContext(AltoClef.INSTANCE.getClientBaritone(), _config.scanAsynchronously);
         if (_config.scanAsynchronously) {
             if (_scanning && _asyncForceResetScanFlag.elapsed()) {
                 Debug.logMessage("SCANNING TOOK TOO LONG! Will assume it ended mid way. Hopefully this won't break anything...");
@@ -377,7 +375,7 @@ public class BlockTracker extends Tracker {
                 }
 
                 // Purge if we have too many blocks tracked at once.
-                currentCache().smartPurge(_mod, _mod.getPlayer().getPos());
+                currentCache().smartPurge(AltoClef.INSTANCE.getPlayer().getPos());
             }
         }
     }
@@ -392,9 +390,9 @@ public class BlockTracker extends Tracker {
             }
         }
         // It might be OK to remove this. Will have to test.
-        if (!_mod.getChunkTracker().isChunkLoaded(pos)) {
-            //Debug.logInternal("(failed chunkcheck: " + new ChunkPos(pos) + ")");
-            //Debug.logStack();
+        if (!AltoClef.INSTANCE.getChunkTracker().isChunkLoaded(pos)) {
+            // Debug.logInternal("(failed chunkcheck: " + new ChunkPos(pos) + ")");
+            // Debug.logStack();
             return true;
         }
         // I'm bored
@@ -438,7 +436,7 @@ public class BlockTracker extends Tracker {
      */
     public void requestBlockUnreachable(BlockPos pos, int allowedFailures) {
         synchronized (_scanMutex) {
-            currentCache().blacklistBlockUnreachable(_mod, pos, allowedFailures);
+            currentCache().blacklistBlockUnreachable(pos, allowedFailures);
         }
     }
 
@@ -541,8 +539,8 @@ public class BlockTracker extends Tracker {
             return count;
         }
 
-        public void blacklistBlockUnreachable(AltoClef mod, BlockPos pos, int allowedFailures) {
-            _blacklist.blackListItem(mod, pos, allowedFailures);
+        public void blacklistBlockUnreachable(BlockPos pos, int allowedFailures) {
+            _blacklist.blackListItem(pos, allowedFailures);
         }
 
         public boolean blockUnreachable(BlockPos pos) {
@@ -550,9 +548,9 @@ public class BlockTracker extends Tracker {
         }
 
         // Gets nearest block. For now does linear search. In the future might optimize this a bit
-        public Optional<BlockPos> getNearest(AltoClef mod, Vec3d position, Predicate<BlockPos> isValid, Block... blocks) {
+        public Optional<BlockPos> getNearest(Vec3d position, Predicate<BlockPos> isValid, Block... blocks) {
             if (!anyFound(blocks)) {
-                //Debug.logInternal("(failed cataloguecheck for " + block.getTranslationKey() + ")");
+                // Debug.logInternal("(failed cataloguecheck for " + block.getTranslationKey() + ")");
                 return Optional.empty();
             }
 
@@ -567,7 +565,7 @@ public class BlockTracker extends Tracker {
             if (!blockList.isEmpty()) {
                 for (BlockPos pos : blockList) {
                     // If our current block isn't valid, fix it up. This cleans while we're iterating.
-                    if (!mod.getBlockTracker().blockIsValid(pos, blocks)) {
+                    if (!AltoClef.INSTANCE.getBlockTracker().blockIsValid(pos, blocks)) {
                         removeBlock(pos, blocks);
                         continue;
                     }
@@ -626,7 +624,7 @@ public class BlockTracker extends Tracker {
         /**
          * Purge enough blocks so our size is small enough
          */
-        public void smartPurge(AltoClef mod, Vec3d playerPos) {
+        public void smartPurge(Vec3d playerPos) {
 
             // Clear cached by position blocks, as they can be a handful.
             try {

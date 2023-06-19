@@ -1,6 +1,5 @@
 package adris.altoclef.trackers.storage;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.trackers.Tracker;
 import adris.altoclef.trackers.TrackerManager;
 import adris.altoclef.util.ItemTarget;
@@ -26,7 +25,7 @@ public class ItemStorageTracker extends Tracker {
     private final InventorySubTracker _inventory;
     private final ContainerSubTracker _containers;
 
-    public ItemStorageTracker(AltoClef mod, TrackerManager manager, ContainerSubTracker containerSubTracker) {
+    public ItemStorageTracker(TrackerManager manager, ContainerSubTracker containerSubTracker) {
         super(manager);
         _inventory = new InventorySubTracker(manager);
         _containers = containerSubTracker;

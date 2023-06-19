@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.container;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.DoToClosestBlockTask;
 import adris.altoclef.tasks.movement.GetToXZTask;
@@ -9,6 +8,7 @@ import adris.altoclef.trackers.storage.ContainerCache;
 import adris.altoclef.util.BlockRange;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.ItemHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -34,11 +34,11 @@ public class StoreInStashTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBlockTracker().trackBlock(TO_SCAN);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(TO_SCAN);
         if (_storedItems == null) {
             _storedItems = new ContainerStoredTracker(slot -> {
-                Optional<BlockPos> currentContainer = mod.getItemStorage().getLastBlockPosInteraction();
+                Optional<BlockPos> currentContainer = AltoClef.INSTANCE.getItemStorage().getLastBlockPosInteraction();
                 return currentContainer.isPresent() && _stashRange.contains(currentContainer.get());
             });
         }
@@ -46,12 +46,12 @@ public class StoreInStashTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         // Get more if we don't have & "get if not present" is true.
         if (_getIfNotPresent) {
             for (ItemTarget target : _toStore) {
                 int inventoryNeed = target.getTargetCount() - _storedItems.getStoredCount(target.getMatches());
-                if (inventoryNeed > mod.getItemStorage().getItemCount(target)) {
+                if (inventoryNeed > AltoClef.INSTANCE.getItemStorage().getItemCount(target)) {
                     return TaskCatalogue.getItemTask(new ItemTarget(target, inventoryNeed));
                 }
             }
@@ -60,16 +60,16 @@ public class StoreInStashTask extends Task {
         Predicate<BlockPos> validContainer = blockPos -> {
             if (!_stashRange.contains(blockPos))
                 return false;
-            Optional<ContainerCache> container = mod.getItemStorage().getContainerAtPosition(blockPos);
+            Optional<ContainerCache> container = AltoClef.INSTANCE.getItemStorage().getContainerAtPosition(blockPos);
             // We haven't opened this container OR it's opened and NOT full
             return container.isEmpty() || !container.get().isFull();
         };
 
         // Store in valid container
-        if (mod.getBlockTracker().anyFound(validContainer, TO_SCAN)) {
+        if (AltoClef.INSTANCE.getBlockTracker().anyFound(validContainer, TO_SCAN)) {
             setDebugState("Storing in closest stash container");
             return new DoToClosestBlockTask(
-                    (BlockPos bpos) -> new StoreInContainerTask(bpos, false, _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore)),
+                    (BlockPos bpos) -> new StoreInContainerTask(bpos, false, _storedItems.getUnstoredItemTargetsYouCanStore(AltoClef.INSTANCE, _toStore)),
                     validContainer,
                     TO_SCAN
             );
@@ -81,14 +81,14 @@ public class StoreInStashTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBlockTracker().stopTracking(TO_SCAN);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(TO_SCAN);
         _storedItems.stopTracking();
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return _storedItems != null && _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore).length == 0;
+    public boolean isFinished() {
+        return _storedItems != null && _storedItems.getUnstoredItemTargetsYouCanStore(AltoClef.INSTANCE, _toStore).length == 0;
     }
 
     @Override

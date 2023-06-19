@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.ResourceTask;
 import adris.altoclef.tasks.construction.PlaceObsidianBucketTask;
@@ -13,6 +12,7 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
@@ -50,7 +50,7 @@ public class CollectObsidianTask extends ResourceTask {
     private static BlockPos getGoodObsidianPosition(AltoClef mod) {
         BlockPos start = mod.getPlayer().getBlockPos().add(-3, -3, -3);
         BlockPos end = mod.getPlayer().getBlockPos().add(3, 3, 3);
-        for (BlockPos pos : WorldHelper.scanRegion(mod, start, end)) {
+        for (BlockPos pos : WorldHelper.scanRegion(start, end)) {
             if (!WorldHelper.canBreak(mod, pos) || !WorldHelper.canPlace(mod, pos)) {
                 return null;
             }
@@ -89,7 +89,7 @@ public class CollectObsidianTask extends ResourceTask {
     }
 
     @Override
-    protected adris.altoclef.tasksystem.Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(AltoClef mod) {
 
         // Clear the current waiting lava pos if it's no longer lava.
         if (_lavaWaitCurrentPos != null && mod.getChunkTracker().isChunkLoaded(_lavaWaitCurrentPos) && mod.getWorld().getBlockState(_lavaWaitCurrentPos).getBlock() != Blocks.LAVA) {
@@ -97,12 +97,12 @@ public class CollectObsidianTask extends ResourceTask {
         }
 
         // Get a diamond pickaxe FIRST
-        if (!StorageHelper.miningRequirementMet(mod, MiningRequirement.DIAMOND)) {
+        if (!StorageHelper.miningRequirementMet(MiningRequirement.DIAMOND)) {
             setDebugState("Getting diamond pickaxe first");
             return new SatisfyMiningRequirementTask(MiningRequirement.DIAMOND);
         }
 
-        if (_forceCompleteTask != null && _forceCompleteTask.isActive() && !_forceCompleteTask.isFinished(mod)) {
+        if (_forceCompleteTask != null && _forceCompleteTask.isActive() && !_forceCompleteTask.isFinished()) {
             return _forceCompleteTask;
         }
 
@@ -179,9 +179,9 @@ public class CollectObsidianTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, adris.altoclef.tasksystem.Task interruptTask) {
-        //mod.getBlockTracker().stopTracking(Blocks.LAVA);
-        //mod.getBlockTracker().stopTracking(Blocks.WATER);
+    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+        // mod.getBlockTracker().stopTracking(Blocks.LAVA);
+        // mod.getBlockTracker().stopTracking(Blocks.WATER);
         mod.getBlockTracker().stopTracking(Blocks.OBSIDIAN);
         mod.getBehaviour().pop();
     }

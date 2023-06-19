@@ -1,12 +1,12 @@
 package adris.altoclef.tasks.slot;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.StlHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
@@ -29,13 +29,13 @@ public class MoveItemToSlotTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (mod.getSlotHandler().canDoSlotAction()) {
+    protected Task onTick() {
+        if (AltoClef.INSTANCE.getSlotHandler().canDoSlotAction()) {
             // Rough plan
             // - If empty slot or wrong item
             //      Find best matching item (smallest count over target, or largest count if none over)
@@ -56,30 +56,30 @@ public class MoveItemToSlotTask extends Task {
                 Optional<Slot> toPlace;
                 if (currentHeld.isEmpty()) {
                     // Just pick up
-                    toPlace = getBestSlotToPickUp(mod, validItems);
+                    toPlace = getBestSlotToPickUp(AltoClef.INSTANCE, validItems);
                 } else {
                     // Try to fit the currently held item first.
-                    toPlace = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(currentHeld, true);
+                    toPlace = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(currentHeld, true);
                     if (toPlace.isEmpty()) {
                         // If all else fails, just swap it.
-                        toPlace = getBestSlotToPickUp(mod, validItems);
+                        toPlace = getBestSlotToPickUp(AltoClef.INSTANCE, validItems);
                     }
                 }
                 if (toPlace.isEmpty()) {
                     Debug.logError("Called MoveItemToSlotTask when item/not enough item is available! valid items: " + StlHelper.toString(validItems, Item::getTranslationKey));
                     return null;
                 }
-                mod.getSlotHandler().clickSlot(toPlace.get(), 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(toPlace.get(), 0, SlotActionType.PICKUP);
                 return null;
             }
 
             int currentlyPlaced = Arrays.asList(validItems).contains(atTarget.getItem()) ? atTarget.getCount() : 0;
             if (currentHeld.getCount() + currentlyPlaced <= _toMove.getTargetCount()) {
                 // Just place all of 'em
-                mod.getSlotHandler().clickSlot(_destination, 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(_destination, 0, SlotActionType.PICKUP);
             } else {
                 // Place one at a time.
-                mod.getSlotHandler().clickSlot(_destination, 1, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(_destination, 1, SlotActionType.PICKUP);
             }
             return null;
         }
@@ -87,12 +87,12 @@ public class MoveItemToSlotTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         ItemStack atDestination = StorageHelper.getItemStackInSlot(_destination);
         return (_toMove.matches(atDestination.getItem()) && atDestination.getCount() >= _toMove.getTargetCount());
     }

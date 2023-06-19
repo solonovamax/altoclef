@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasksystem.Task;
@@ -8,6 +7,7 @@ import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EyeOfEnderEntity;
@@ -51,7 +51,7 @@ public class LocateStrongholdCoordinatesTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
@@ -60,24 +60,24 @@ public class LocateStrongholdCoordinatesTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
             setDebugState("Going to overworld");
             return new DefaultGoToDimensionTask(Dimension.OVERWORLD);
         }
 
         // Pick up eye if we need to/want to.
-        if (mod.getItemStorage().getItemCount(Items.ENDER_EYE) < _targetEyes && mod.getEntityTracker().itemDropped(Items.ENDER_EYE) &&
-                !mod.getEntityTracker().entityFound(EyeOfEnderEntity.class)) {
+        if (AltoClef.INSTANCE.getItemStorage().getItemCount(Items.ENDER_EYE) < _targetEyes && AltoClef.INSTANCE.getEntityTracker().itemDropped(Items.ENDER_EYE) &&
+                !AltoClef.INSTANCE.getEntityTracker().entityFound(EyeOfEnderEntity.class)) {
             setDebugState("Picking up dropped ender eye.");
             return new PickupDroppedItemTask(Items.ENDER_EYE, _targetEyes);
         }
 
         // Handle thrown eye
-        if (mod.getEntityTracker().entityFound(EyeOfEnderEntity.class)) {
+        if (AltoClef.INSTANCE.getEntityTracker().entityFound(EyeOfEnderEntity.class)) {
             if (_currentThrownEye == null || !_currentThrownEye.isAlive()) {
                 Debug.logMessage("New eye direction");
-                List<EyeOfEnderEntity> enderEyes = mod.getEntityTracker().getTrackedEntities(EyeOfEnderEntity.class);
+                List<EyeOfEnderEntity> enderEyes = AltoClef.INSTANCE.getEntityTracker().getTrackedEntities(EyeOfEnderEntity.class);
                 if (!enderEyes.isEmpty()) {
                     for (EyeOfEnderEntity enderEye : enderEyes) {
                         _currentThrownEye = enderEye;
@@ -103,7 +103,7 @@ public class LocateStrongholdCoordinatesTask extends Task {
         }
 
         // Calculate stronghold position
-        if (_cachedEyeDirection2 != null && !mod.getEntityTracker().entityFound(EyeOfEnderEntity.class) && _strongholdEstimatePos == null) {
+        if (_cachedEyeDirection2 != null && !AltoClef.INSTANCE.getEntityTracker().entityFound(EyeOfEnderEntity.class) && _strongholdEstimatePos == null) {
             if (_cachedEyeDirection2.getAngle() >= _cachedEyeDirection.getAngle()) {
                 Debug.logMessage("2nd eye thrown at wrong position, or points to different stronghold. Rethrowing");
                 _cachedEyeDirection = _cachedEyeDirection2;
@@ -116,14 +116,14 @@ public class LocateStrongholdCoordinatesTask extends Task {
 
 
                 _strongholdEstimatePos = calculateIntersection(throwOrigin, throwDelta, throwOrigin2, throwDelta2); // stronghold estimate
-                Debug.logMessage("Stronghold is at " + (int) _strongholdEstimatePos.getX() + ", " + (int) _strongholdEstimatePos.getZ() + " (" + (int) mod.getPlayer().getPos().distanceTo(Vec3d.of(_strongholdEstimatePos)) + " blocks away)");
+                Debug.logMessage("Stronghold is at " + (int) _strongholdEstimatePos.getX() + ", " + (int) _strongholdEstimatePos.getZ() + " (" + (int) AltoClef.INSTANCE.getPlayer().getPos().distanceTo(Vec3d.of(_strongholdEstimatePos)) + " blocks away)");
             }
         }
 
 
         // Re-throw the eyes after reaching the estimation to get a more accurate estimate of where the stronghold is.
         if (_strongholdEstimatePos != null) {
-            if (((mod.getPlayer().getPos().distanceTo(Vec3d.of(_strongholdEstimatePos)) < EYE_RETHROW_DISTANCE) && WorldHelper.getCurrentDimension() == Dimension.OVERWORLD)) {
+            if (((AltoClef.INSTANCE.getPlayer().getPos().distanceTo(Vec3d.of(_strongholdEstimatePos)) < EYE_RETHROW_DISTANCE) && WorldHelper.getCurrentDimension() == Dimension.OVERWORLD)) {
                 _strongholdEstimatePos = null;
                 _cachedEyeDirection = null;
                 _cachedEyeDirection2 = null;
@@ -132,12 +132,12 @@ public class LocateStrongholdCoordinatesTask extends Task {
 
 
         // Throw the eye since we don't have any eye info.
-        if (!mod.getEntityTracker().entityFound(EyeOfEnderEntity.class) && _strongholdEstimatePos == null) {
+        if (!AltoClef.INSTANCE.getEntityTracker().entityFound(EyeOfEnderEntity.class) && _strongholdEstimatePos == null) {
             if (WorldHelper.getCurrentDimension() == Dimension.NETHER) {
                 setDebugState("Going to overworld.");
                 return new DefaultGoToDimensionTask(Dimension.OVERWORLD);
             }
-            if (!mod.getItemStorage().hasItem(Items.ENDER_EYE)) {
+            if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.ENDER_EYE)) {
                 setDebugState("Collecting eye of ender.");
                 return TaskCatalogue.getItemTask(Items.ENDER_EYE, 1);
             }
@@ -147,24 +147,24 @@ public class LocateStrongholdCoordinatesTask extends Task {
                 setDebugState("Throwing first eye.");
             } else {
                 setDebugState("Throwing second eye.");
-                double sqDist = mod.getPlayer().squaredDistanceTo(_cachedEyeDirection.getOrigin());
+                double sqDist = AltoClef.INSTANCE.getPlayer().squaredDistanceTo(_cachedEyeDirection.getOrigin());
                 // If first eye thrown, go perpendicular from eye direction until a good distance away
                 if (sqDist < SECOND_EYE_THROW_DISTANCE * SECOND_EYE_THROW_DISTANCE && _cachedEyeDirection != null) {
                     return new GoInDirectionXZTask(_cachedEyeDirection.getOrigin(), _cachedEyeDirection.getDelta().rotateY(MathHelper.PI / 2), 1);
                 }
             }
             // Throw it
-            if (mod.getSlotHandler().forceEquipItem(Items.ENDER_EYE)) {
+            if (AltoClef.INSTANCE.getSlotHandler().forceEquipItem(Items.ENDER_EYE)) {
                 assert MinecraftClient.getInstance().interactionManager != null;
                 if (_throwTimer.elapsed()) {
-                    if (LookHelper.tryAvoidingInteractable(mod)) {
-                        MinecraftClient.getInstance().interactionManager.interactItem(mod.getPlayer(), Hand.MAIN_HAND);
-                        //MinecraftClient.getInstance().options.keyUse.setPressed(true);
+                    if (LookHelper.tryAvoidingInteractable(AltoClef.INSTANCE)) {
+                        MinecraftClient.getInstance().interactionManager.interactItem(AltoClef.INSTANCE.getPlayer(), Hand.MAIN_HAND);
+                        // MinecraftClient.getInstance().options.keyUse.setPressed(true);
                         _throwTimer.reset();
                     }
                 } else {
-                    MinecraftClient.getInstance().interactionManager.stopUsingItem(mod.getPlayer());
-                    //MinecraftClient.getInstance().options.keyUse.setPressed(false);
+                    MinecraftClient.getInstance().interactionManager.stopUsingItem(AltoClef.INSTANCE.getPlayer());
+                    // MinecraftClient.getInstance().options.keyUse.setPressed(false);
                 }
             } else {
                 Debug.logWarning("Failed to equip eye of ender to throw.");
@@ -179,7 +179,7 @@ public class LocateStrongholdCoordinatesTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
     }
 
     public Optional<BlockPos> getStrongholdCoordinates() {
@@ -200,7 +200,7 @@ public class LocateStrongholdCoordinatesTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return _strongholdEstimatePos != null;
     }
 

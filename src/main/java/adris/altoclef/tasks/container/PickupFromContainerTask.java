@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.container;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.slot.EnsureFreeInventorySlotTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.trackers.storage.ContainerCache;
@@ -8,6 +7,7 @@ import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.FurnaceSlot;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.FurnaceScreenHandler;
 import net.minecraft.screen.SmokerScreenHandler;
@@ -32,7 +32,7 @@ public class PickupFromContainerTask extends AbstractDoToStorageContainerTask {
         _targetContainer = targetContainer;
     }
 
-    public static Optional<Slot> getBestSlotToTransfer(AltoClef mod, ItemTarget itemToMove, int currentItemQuantity, List<Slot> grabPotentials, Function<ItemStack, Boolean> canStackFit) {
+    public static Optional<Slot> getBestSlotToTransfer(ItemTarget itemToMove, int currentItemQuantity, List<Slot> grabPotentials, Function<ItemStack, Boolean> canStackFit) {
         Slot bestPotential = null;
         int leftNeeded = itemToMove.getTargetCount() - currentItemQuantity;
         for (Slot slot : grabPotentials) {
@@ -86,18 +86,18 @@ public class PickupFromContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         // Free inventory while we're doing it.
-        if (_freeInventoryTask.isActive() && !_freeInventoryTask.isFinished(mod) && !mod.getItemStorage().hasEmptyInventorySlot()) {
+        if (_freeInventoryTask.isActive() && !_freeInventoryTask.isFinished() && !AltoClef.INSTANCE.getItemStorage().hasEmptyInventorySlot()) {
             setDebugState("Freeing inventory.");
             return _freeInventoryTask;
         }
-        return super.onTick(mod);
+        return super.onTick();
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return Arrays.stream(_targets).allMatch(target -> mod.getItemStorage().getItemCountInventoryOnly(target.getMatches()) >= target.getTargetCount());
+    public boolean isFinished() {
+        return Arrays.stream(_targets).allMatch(target -> AltoClef.INSTANCE.getItemStorage().getItemCountInventoryOnly(target.getMatches()) >= target.getTargetCount());
     }
 
     @Override
@@ -113,7 +113,7 @@ public class PickupFromContainerTask extends AbstractDoToStorageContainerTask {
                 List<Slot> potentials = mod.getItemStorage().getSlotsWithItemContainer(target.getMatches());
 
                 // Pick the best slot to grab from.
-                Optional<Slot> bestPotential = getBestSlotToTransfer(mod, target, count, potentials, stack -> mod.getItemStorage().getSlotThatCanFitInPlayerInventory(stack, false).isPresent());
+                Optional<Slot> bestPotential = getBestSlotToTransfer(target, count, potentials, stack -> mod.getItemStorage().getSlotThatCanFitInPlayerInventory(stack, false).isPresent());
 
                 if (bestPotential.isPresent()) {
                     // Just pick it up, it's now ours.

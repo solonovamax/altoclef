@@ -1,11 +1,11 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.commandsystem.Arg;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 import adris.altoclef.commandsystem.CommandException;
 import adris.altoclef.tasks.entity.KillPlayerTask;
+import gay.solonovamax.altoclef.AltoClef;
 
 public class PunkCommand extends Command {
     public PunkCommand() throws CommandException {
@@ -13,8 +13,8 @@ public class PunkCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(ArgParser parser) throws CommandException {
         String playerName = parser.get(String.class);
-        mod.runUserTask(new KillPlayerTask(playerName), this::finish);
+        AltoClef.INSTANCE.runUserTask(new KillPlayerTask(playerName), this::finish);
     }
 }

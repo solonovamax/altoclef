@@ -9,9 +9,9 @@ import gay.solonovamax.altoclef.AltoClef;
  */
 public interface ITaskRequiresGrounded extends ITaskCanForce {
     @Override
-    default boolean shouldForce(AltoClef mod, Task interruptingCandidate) {
+    default boolean shouldForce(Task interruptingCandidate) {
         if (interruptingCandidate instanceof ITaskOverridesGrounded)
             return false;
-        return !(mod.getPlayer().isOnGround() || mod.getPlayer().isSwimming() || mod.getPlayer().isTouchingWater() || mod.getPlayer().isClimbing());
+        return !(AltoClef.INSTANCE.getPlayer().isOnGround() || AltoClef.INSTANCE.getPlayer().isSwimming() || AltoClef.INSTANCE.getPlayer().isTouchingWater() || AltoClef.INSTANCE.getPlayer().isClimbing());
     }
 }

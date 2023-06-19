@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.speedrun;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.DoToClosestBlockTask;
 import adris.altoclef.tasks.entity.AbstractKillEntityTask;
@@ -20,6 +19,7 @@ import baritone.api.pathing.goals.GoalGetToBlock;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.RotationUtils;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -66,18 +66,18 @@ public class KillEnderDragonTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
-        mod.getBlockTracker().trackBlock(Blocks.END_PORTAL);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(Blocks.END_PORTAL);
         // Don't forcefield endermen.
-        mod.getBehaviour().addForceFieldExclusion(entity -> entity instanceof EndermanEntity || entity instanceof EnderDragonEntity || entity instanceof EnderDragonPart);
-        mod.getBehaviour().setPreferredStairs(true);
+        AltoClef.INSTANCE.getBehaviour().addForceFieldExclusion(entity -> entity instanceof EndermanEntity || entity instanceof EnderDragonEntity || entity instanceof EnderDragonPart);
+        AltoClef.INSTANCE.getBehaviour().setPreferredStairs(true);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         if (_exitPortalTop == null) {
-            _exitPortalTop = locateExitPortalTop(mod);
+            _exitPortalTop = locateExitPortalTop(AltoClef.INSTANCE);
         }
 
         // Collect the following if dropped:
@@ -86,13 +86,13 @@ public class KillEnderDragonTask extends Task {
         // - Food (List)
 
         List<Item> toPickUp = new ArrayList<>(Arrays.asList(Items.DIAMOND_SWORD, Items.DIAMOND_BOOTS, Items.DIAMOND_LEGGINGS, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_HELMET));
-        if (StorageHelper.calculateInventoryFoodScore(mod) < 10) {
+        if (StorageHelper.calculateInventoryFoodScore(AltoClef.INSTANCE) < 10) {
             toPickUp.addAll(Arrays.asList(
                     Items.BREAD, Items.COOKED_BEEF, Items.COOKED_CHICKEN, Items.COOKED_MUTTON, Items.COOKED_RABBIT, Items.COOKED_PORKCHOP
             ));
         }
 
-        Task pickupDrops = getPickupTaskIfAny(mod, toPickUp.toArray(Item[]::new));
+        Task pickupDrops = getPickupTaskIfAny(AltoClef.INSTANCE, toPickUp.toArray(Item[]::new));
         if (pickupDrops != null) {
             setDebugState("Picking up drops in end.");
             return pickupDrops;
@@ -101,7 +101,7 @@ public class KillEnderDragonTask extends Task {
         // If not equipped diamond armor and we have any, equip it.
         for (Item armor : ItemHelper.DIAMOND_ARMORS) {
             try {
-                if (mod.getItemStorage().hasItem(armor) && !StorageHelper.isArmorEquipped(mod, armor)) {
+                if (AltoClef.INSTANCE.getItemStorage().hasItem(armor) && !StorageHelper.isArmorEquipped(AltoClef.INSTANCE, armor)) {
                     setDebugState("Equipping " + armor);
                     return new EquipArmorTask(armor);
                 }
@@ -112,15 +112,15 @@ public class KillEnderDragonTask extends Task {
             }
         }
 
-        if (!isRailingOnDragon() && _lookDownTimer.elapsed() && !mod.getControllerExtras().isBreakingBlock()) {
-            if (mod.getPlayer().isOnGround()) {
+        if (!isRailingOnDragon() && _lookDownTimer.elapsed() && !AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+            if (AltoClef.INSTANCE.getPlayer().isOnGround()) {
                 _lookDownTimer.reset();
-                mod.getClientBaritone().getLookBehavior().updateTarget(new Rotation(0f, 90f), true);
+                AltoClef.INSTANCE.getClientBaritone().getLookBehavior().updateTarget(new Rotation(0f, 90f), true);
             }
         }
 
         // If there is a portal, enter it.
-        if (mod.getBlockTracker().anyFound(Blocks.END_PORTAL)) {
+        if (AltoClef.INSTANCE.getBlockTracker().anyFound(Blocks.END_PORTAL)) {
             setDebugState("Entering portal to beat the game.");
             return new DoToClosestBlockTask(
                     blockPos -> new GetToBlockTask(blockPos.up(), false),
@@ -132,23 +132,23 @@ public class KillEnderDragonTask extends Task {
         // If there are crystals, suicide blow em up.
         // If there are no crystals, punk the dragon if it's close.
         int MINIMUM_BUILDING_BLOCKS = 1;
-        if (mod.getEntityTracker().entityFound(EndCrystalEntity.class) && mod.getItemStorage().getItemCount(Items.DIRT, Items.COBBLESTONE, Items.NETHERRACK, Items.END_STONE) < MINIMUM_BUILDING_BLOCKS || (_collectBuildMaterialsTask.isActive() && !_collectBuildMaterialsTask.isFinished(mod))) {
-            if (StorageHelper.miningRequirementMetInventory(mod, MiningRequirement.WOOD)) {
-                mod.getBehaviour().addProtectedItems(Items.END_STONE);
+        if (AltoClef.INSTANCE.getEntityTracker().entityFound(EndCrystalEntity.class) && AltoClef.INSTANCE.getItemStorage().getItemCount(Items.DIRT, Items.COBBLESTONE, Items.NETHERRACK, Items.END_STONE) < MINIMUM_BUILDING_BLOCKS || (_collectBuildMaterialsTask.isActive() && !_collectBuildMaterialsTask.isFinished())) {
+            if (StorageHelper.miningRequirementMetInventory(AltoClef.INSTANCE, MiningRequirement.WOOD)) {
+                AltoClef.INSTANCE.getBehaviour().addProtectedItems(Items.END_STONE);
                 setDebugState("Collecting building blocks to pillar to crystals");
                 return _collectBuildMaterialsTask;
             }
         } else {
-            mod.getBehaviour().removeProtectedItems(Items.END_STONE);
+            AltoClef.INSTANCE.getBehaviour().removeProtectedItems(Items.END_STONE);
         }
 
         // Blow up the nearest end crystal
-        if (mod.getEntityTracker().entityFound(EndCrystalEntity.class)) {
+        if (AltoClef.INSTANCE.getEntityTracker().entityFound(EndCrystalEntity.class)) {
             setDebugState("Kamakazeeing crystals");
             return new DoToClosestEntityTask(
                     (toDestroy) -> {
-                        if (toDestroy.isInRange(mod.getPlayer(), 7)) {
-                            mod.getControllerExtras().attack(toDestroy);
+                        if (toDestroy.isInRange(AltoClef.INSTANCE.getPlayer(), 7)) {
+                            AltoClef.INSTANCE.getControllerExtras().attack(toDestroy);
                         }
                         // Go next to the crystal, arbitrary where we just need to get close.
                         return new GetToBlockTask(toDestroy.getBlockPos().add(1, 0, 0), false);
@@ -158,7 +158,7 @@ public class KillEnderDragonTask extends Task {
         }
 
         // Punk dragon
-        if (mod.getEntityTracker().entityFound(EnderDragonEntity.class)) {
+        if (AltoClef.INSTANCE.getEntityTracker().entityFound(EnderDragonEntity.class)) {
             setDebugState("Punking dragon");
             return _punkTask;
         }
@@ -168,9 +168,9 @@ public class KillEnderDragonTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBehaviour().pop();
-        mod.getBlockTracker().stopTracking(Blocks.END_PORTAL);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBehaviour().pop();
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.END_PORTAL);
     }
 
     @Override
@@ -259,48 +259,48 @@ public class KillEnderDragonTask extends Task {
 
 
         @Override
-        protected void onStart(AltoClef mod) {
-            mod.getClientBaritone().getCustomGoalProcess().onLostControl();
+        protected void onStart() {
+            AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
         }
 
         @Override
-        protected Task onTick(AltoClef mod) {
-            if (!mod.getEntityTracker().entityFound(EnderDragonEntity.class)) {
+        protected Task onTick() {
+            if (!AltoClef.INSTANCE.getEntityTracker().entityFound(EnderDragonEntity.class)) {
                 setDebugState("No dragon found.");
                 return null;
             }
-            List<EnderDragonEntity> dragons = mod.getEntityTracker().getTrackedEntities(EnderDragonEntity.class);
+            List<EnderDragonEntity> dragons = AltoClef.INSTANCE.getEntityTracker().getTrackedEntities(EnderDragonEntity.class);
             if (!dragons.isEmpty()) {
                 for (EnderDragonEntity dragon : dragons) {
                     Phase dragonPhase = dragon.getPhaseManager().getCurrent();
-                    //Debug.logInternal("PHASE: " + dragonPhase);
+                    // Debug.logInternal("PHASE: " + dragonPhase);
                     boolean perchingOrGettingReady = dragonPhase.getType() == PhaseType.LANDING || dragonPhase.isSittingOrHovering();
                     switch (_mode) {
                         case RAILING -> {
                             if (!perchingOrGettingReady) {
                                 Debug.logMessage("Dragon no longer perching.");
-                                mod.getClientBaritone().getCustomGoalProcess().onLostControl();
+                                AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
                                 _mode = Mode.WAITING_FOR_PERCH;
                                 break;
                             }
                             //DamageSource.DRAGON_BREATH
                             Entity head = dragon.head;
                             // Go for the head
-                            if (head.isInRange(mod.getPlayer(), 7.5) && dragon.ticksSinceDeath <= 1) {
+                            if (head.isInRange(AltoClef.INSTANCE.getPlayer(), 7.5) && dragon.ticksSinceDeath <= 1) {
                                 // Equip weapon
-                                AbstractKillEntityTask.equipWeapon(mod);
+                                AbstractKillEntityTask.equipWeapon(AltoClef.INSTANCE);
                                 // Look torwards da dragon
                                 Vec3d targetLookPos = head.getPos().add(0, 3, 0);
-                                Rotation targetRotation = RotationUtils.calcRotationFromVec3d(mod.getClientBaritone().getPlayerContext().playerHead(), targetLookPos, mod.getClientBaritone().getPlayerContext().playerRotations());
-                                mod.getClientBaritone().getLookBehavior().updateTarget(targetRotation, true);
+                                Rotation targetRotation = RotationUtils.calcRotationFromVec3d(AltoClef.INSTANCE.getClientBaritone().getPlayerContext().playerHead(), targetLookPos, AltoClef.INSTANCE.getClientBaritone().getPlayerContext().playerRotations());
+                                AltoClef.INSTANCE.getClientBaritone().getLookBehavior().updateTarget(targetRotation, true);
                                 // Also look towards da dragon
                                 MinecraftClient.getInstance().options.getAutoJump().setValue(false);
-                                mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, true);
-                                hit(mod);
+                                AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, true);
+                                hit(AltoClef.INSTANCE);
                             } else {
-                                stopHitting(mod);
+                                stopHitting(AltoClef.INSTANCE);
                             }
-                            if (!mod.getClientBaritone().getCustomGoalProcess().isActive()) {
+                            if (!AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().isActive()) {
                                 // Set goal to closest block within the pillar that's by the head.
                                 if (_exitPortalTop != null) {
                                     int bottomYDelta = -3;
@@ -319,7 +319,7 @@ public class KillEnderDragonTask extends Task {
                                         }
                                     }
                                     if (closest != null) {
-                                        mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(
+                                        AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().setGoalAndPath(
                                                 new GoalGetToBlock(closest)
                                         );
                                     }
@@ -328,16 +328,16 @@ public class KillEnderDragonTask extends Task {
                             setDebugState("Railing on dragon");
                         }
                         case WAITING_FOR_PERCH -> {
-                            stopHitting(mod);
+                            stopHitting(AltoClef.INSTANCE);
                             if (perchingOrGettingReady) {
                                 // We're perching!!
-                                mod.getClientBaritone().getCustomGoalProcess().onLostControl();
+                                AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
                                 Debug.logMessage("Dragon perching detected. Dabar duosiu į snuki.");
                                 _mode = Mode.RAILING;
                                 break;
                             }
                             // Run around aimlessly, dodging dragon fire
-                            if (_randomWanderPos != null && WorldHelper.inRangeXZ(mod.getPlayer(), _randomWanderPos, 2)) {
+                            if (_randomWanderPos != null && WorldHelper.inRangeXZ(AltoClef.INSTANCE.getPlayer(), _randomWanderPos, 2)) {
                                 _randomWanderPos = null;
                             }
                             if (_randomWanderPos != null && _randomWanderChangeTimeout.elapsed()) {
@@ -345,12 +345,12 @@ public class KillEnderDragonTask extends Task {
                                 Debug.logMessage("Reset wander pos after timeout, oof");
                             }
                             if (_randomWanderPos == null) {
-                                _randomWanderPos = getRandomWanderPos(mod);
+                                _randomWanderPos = getRandomWanderPos(AltoClef.INSTANCE);
                                 _randomWanderChangeTimeout.reset();
-                                mod.getClientBaritone().getCustomGoalProcess().onLostControl();
+                                AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
                             }
-                            if (!mod.getClientBaritone().getCustomGoalProcess().isActive()) {
-                                mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(
+                            if (!AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().isActive()) {
+                                AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().setGoalAndPath(
                                         new GoalGetToBlock(_randomWanderPos)
                                 );
                             }
@@ -363,11 +363,11 @@ public class KillEnderDragonTask extends Task {
         }
 
         @Override
-        protected void onStop(AltoClef mod, Task interruptTask) {
-            mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-            mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, false);
-            //mod.getControllerExtras().mouseClickOverride(0, false);
-            mod.getExtraBaritoneSettings().setInteractionPaused(false);
+        protected void onStop(Task interruptTask) {
+            AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, false);
+            // mod.getControllerExtras().mouseClickOverride(0, false);
+            AltoClef.INSTANCE.getExtraBaritoneSettings().setInteractionPaused(false);
         }
 
         @Override

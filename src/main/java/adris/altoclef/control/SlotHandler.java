@@ -1,7 +1,8 @@
 package adris.altoclef.control;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
+import adris.altoclef.Settings;
+import adris.altoclef.trackers.storage.ItemStorageTracker;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.StorageHelper;
@@ -9,9 +10,23 @@ import adris.altoclef.util.slots.CursorSlot;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.slots.Slot;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.item.*;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.item.BucketItem;
+import net.minecraft.item.EmptyMapItem;
+import net.minecraft.item.EnderEyeItem;
+import net.minecraft.item.Equipment;
+import net.minecraft.item.FireworkRocketItem;
+import net.minecraft.item.FishingRodItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.OnAStickItem;
+import net.minecraft.item.PotionItem;
+import net.minecraft.item.SpawnEggItem;
+import net.minecraft.item.ToolItem;
 import net.minecraft.screen.slot.SlotActionType;
 
 import java.util.List;
@@ -21,15 +36,8 @@ import java.util.function.Predicate;
 
 
 public class SlotHandler {
-
-    private final AltoClef _mod;
-
     private final TimerGame _slotActionTimer = new TimerGame(0);
-    private boolean _overrideTimerOnce = false;
-
-    public SlotHandler(AltoClef mod) {
-        _mod = mod;
-    }
+    private boolean _overrideTimerOnce;
 
     private void forceAllowNextSlotAction() {
         _overrideTimerOnce = true;
@@ -40,12 +48,14 @@ public class SlotHandler {
             _overrideTimerOnce = false;
             return true;
         }
-        _slotActionTimer.setInterval(_mod.getModSettings().getContainerItemMoveDelay());
+        Settings modSettings = AltoClef.INSTANCE.getModSettings();
+
+        _slotActionTimer.setInterval(modSettings.getContainerItemMoveDelay());
         return _slotActionTimer.elapsed();
     }
 
     public void registerSlotAction() {
-        _mod.getItemStorage().registerSlotAction();
+        AltoClef.INSTANCE.getItemStorage().registerSlotAction();
         _slotActionTimer.reset();
     }
 
@@ -77,7 +87,9 @@ public class SlotHandler {
         int syncId = player.currentScreenHandler.syncId;
 
         try {
-            _mod.getController().clickSlot(syncId, windowSlot, mouseButton, type, player);
+            ClientPlayerInteractionManager controller = AltoClef.INSTANCE.getController();
+
+            controller.clickSlot(syncId, windowSlot, mouseButton, type, player);
         } catch (Exception e) {
             Debug.logWarning("Slot Click Error (ignored)");
             e.printStackTrace();
@@ -88,13 +100,17 @@ public class SlotHandler {
         if (StorageHelper.getItemStackInSlot(PlayerSlot.OFFHAND_SLOT).getItem() == toEquip) {
             return;
         }
-        List<Slot> currentItemSlot = _mod.getItemStorage().getSlotsWithItemPlayerInventory(false,
-                toEquip);
+
+        SlotHandler slotHandler = AltoClef.INSTANCE.getSlotHandler();
+        ItemStorageTracker itemStorage = AltoClef.INSTANCE.getItemStorage();
+
+        List<Slot> currentItemSlot = itemStorage.getSlotsWithItemPlayerInventory(false, toEquip);
+
         for (Slot CurrentItemSlot : currentItemSlot) {
             if (!Slot.isCursor(CurrentItemSlot)) {
-                _mod.getSlotHandler().clickSlot(CurrentItemSlot, 0, SlotActionType.PICKUP);
+                slotHandler.clickSlot(CurrentItemSlot, 0, SlotActionType.PICKUP);
             } else {
-                _mod.getSlotHandler().clickSlot(PlayerSlot.OFFHAND_SLOT, 0, SlotActionType.PICKUP);
+                slotHandler.clickSlot(PlayerSlot.OFFHAND_SLOT, 0, SlotActionType.PICKUP);
             }
         }
     }
@@ -102,15 +118,19 @@ public class SlotHandler {
     public boolean forceEquipItem(Item toEquip) {
 
         // Already equipped
-        if (StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot()).getItem() == toEquip) return true;
+        if (StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot()).getItem() == toEquip)
+            return true;
+
+        ItemStorageTracker itemStorage = AltoClef.INSTANCE.getItemStorage();
+        ClientPlayerEntity player = AltoClef.INSTANCE.getPlayer();
 
         // Always equip to the second slot. First + last is occupied by baritone.
-        _mod.getPlayer().getInventory().selectedSlot = 1;
+        player.getInventory().selectedSlot = 1;
 
         // If our item is in our cursor, simply move it to the hotbar.
         boolean inCursor = StorageHelper.getItemStackInSlot(CursorSlot.SLOT).getItem() == toEquip;
 
-        List<Slot> itemSlots = _mod.getItemStorage().getSlotsWithItemScreen(toEquip);
+        List<Slot> itemSlots = itemStorage.getSlotsWithItemScreen(toEquip);
         if (itemSlots.size() != 0) {
             for (Slot ItemSlots : itemSlots) {
                 int hotbar = 1;
@@ -166,7 +186,7 @@ public class SlotHandler {
         ItemStack cursor = StorageHelper.getItemStackInSlot(CursorSlot.SLOT);
         if (isBad.test(cursor)) {
             // Throw away cursor slot OR move
-            Optional<Slot> fittableSlots = _mod.getItemStorage().getSlotThatCanFitInPlayerInventory(equip, false);
+            Optional<Slot> fittableSlots = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(equip, false);
             if (fittableSlots.isEmpty()) {
                 // Try to swap items with the first non-bad slot.
                 for (Slot slot : Slot.getCurrentScreenSlots()) {
@@ -175,7 +195,7 @@ public class SlotHandler {
                         return false;
                     }
                 }
-                if (ItemHelper.canThrowAwayStack(_mod, cursor)) {
+                if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursor)) {
                     clickSlotForce(PlayerSlot.UNDEFINED, 0, SlotActionType.PICKUP);
                     return true;
                 }
@@ -212,8 +232,8 @@ public class SlotHandler {
         if (toEquip == null) return false;
 
         //If the bot try to eat
-        if (_mod.getFoodChain().needsToEat() && !unInterruptable) { //unless we really need to force equip the item
-            return false; //don't equip the item for now
+        if (AltoClef.INSTANCE.getFoodChain().needsToEat() && !unInterruptable) { // unless we really need to force equip the item
+            return false; // don't equip the item for now
         }
 
         Slot target = PlayerSlot.getEquipSlot();
@@ -221,7 +241,7 @@ public class SlotHandler {
         if (toEquip.matches(StorageHelper.getItemStackInSlot(target).getItem())) return true;
 
         for (Item item : toEquip.getMatches()) {
-            if (_mod.getItemStorage().hasItem(item)) {
+            if (AltoClef.INSTANCE.getItemStorage().hasItem(item)) {
                 if (forceEquipItem(item)) return true;
             }
         }

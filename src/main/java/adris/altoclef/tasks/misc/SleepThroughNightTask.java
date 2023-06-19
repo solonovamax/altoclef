@@ -1,22 +1,22 @@
 package adris.altoclef.tasks.misc;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
+import gay.solonovamax.altoclef.AltoClef;
 
 public class SleepThroughNightTask extends Task {
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         return new PlaceBedAndSetSpawnTask().stayInBed();
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 
@@ -31,9 +31,9 @@ public class SleepThroughNightTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         // We're in daytime
-        int time = (int) (mod.getWorld().getTimeOfDay() % 24000);
+        int time = (int) (AltoClef.INSTANCE.getWorld().getTimeOfDay() % 24000);
         return 0 <= time && time < 13000;
     }
 }

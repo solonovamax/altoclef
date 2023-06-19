@@ -1,11 +1,11 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.commandsystem.Arg;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 import adris.altoclef.commandsystem.CommandException;
 import adris.altoclef.tasks.resources.CollectFoodTask;
+import gay.solonovamax.altoclef.AltoClef;
 
 public class FoodCommand extends Command {
     public FoodCommand() throws CommandException {
@@ -13,7 +13,7 @@ public class FoodCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
-        mod.runUserTask(new CollectFoodTask(parser.get(Integer.class)), this::finish);
+    protected void call(ArgParser parser) throws CommandException {
+        AltoClef.INSTANCE.runUserTask(new CollectFoodTask(parser.get(Integer.class)), this::finish);
     }
 }

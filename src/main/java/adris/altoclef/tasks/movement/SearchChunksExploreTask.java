@@ -1,11 +1,11 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.Subscription;
 import adris.altoclef.eventbus.events.ChunkLoadEvent;
 import adris.altoclef.tasksystem.Task;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.HashSet;
@@ -24,7 +24,6 @@ public abstract class SearchChunksExploreTask extends Task {
     private final Object _searcherMutex = new Object();
     private final Set<ChunkPos> _alreadyExplored = new HashSet<>();
     private ChunkSearchTask _searcher;
-    private AltoClef _mod;
     private Subscription<ChunkLoadEvent> _chunkLoadedSubscription;
 
     // Virtual
@@ -33,25 +32,23 @@ public abstract class SearchChunksExploreTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        _mod = mod;
-
+    protected void onStart() {
         // Listen for chunk loading
         _chunkLoadedSubscription = EventBus.subscribe(ChunkLoadEvent.class, evt -> onChunkLoad(evt.chunk.getPos()));
 
-        resetSearch(mod);
+        resetSearch(AltoClef.INSTANCE);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         synchronized (_searcherMutex) {
             if (_searcher == null) {
                 setDebugState("Exploring/Searching for valid chunk");
                 // Explore
-                return getWanderTask(mod);
+                return getWanderTask();
             }
 
-            if (_searcher.isActive() && _searcher.isFinished(mod)) {
+            if (_searcher.isActive() && _searcher.isFinished()) {
                 Debug.logWarning("Target object search failed.");
                 _alreadyExplored.addAll(_searcher.getSearchedChunks());
                 _searcher = null;
@@ -61,14 +58,14 @@ public abstract class SearchChunksExploreTask extends Task {
                 _alreadyExplored.addAll(_searcher.getSearchedChunks());
                 _searcher = null;
             }
-            //Debug.logMessage("wtf: " + (_searcher == null? "(null)" :_searcher.finished()));
+            // Debug.logMessage("wtf: " + (_searcher == null? "(null)" :_searcher.finished()));
             setDebugState("Searching within chunks...");
             return _searcher;
         }
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
         EventBus.unsubscribe(_chunkLoadedSubscription);
     }
 
@@ -76,7 +73,7 @@ public abstract class SearchChunksExploreTask extends Task {
     private void onChunkLoad(ChunkPos pos) {
         if (_searcher != null) return;
         if (!this.isActive()) return;
-        if (isChunkWithinSearchSpace(_mod, pos)) {
+        if (isChunkWithinSearchSpace(AltoClef.INSTANCE, pos)) {
             synchronized (_searcherMutex) {
                 if (!_alreadyExplored.contains(pos)) {
                     Debug.logMessage("New searcher: " + pos);
@@ -86,7 +83,7 @@ public abstract class SearchChunksExploreTask extends Task {
         }
     }
 
-    protected Task getWanderTask(AltoClef mod) {
+    protected Task getWanderTask() {
         return new TimeoutWanderTask(true);
     }
 
@@ -97,7 +94,7 @@ public abstract class SearchChunksExploreTask extends Task {
     }
 
     public void resetSearch(AltoClef mod) {
-        //Debug.logMessage("Search reset");
+        // Debug.logMessage("Search reset");
         _searcher = null;
         _alreadyExplored.clear();
         // We want to search the currently loaded chunks too!!!
@@ -127,7 +124,7 @@ public abstract class SearchChunksExploreTask extends Task {
         @Override
         protected boolean isChunkSearchEqual(ChunkSearchTask other) {
             // Since we're keeping track of "_searcher", we expect the subchild routine to ALWAYS be consistent!
-            return other == this;//return other instanceof SearchSubTask;
+            return other == this;// return other instanceof SearchSubTask;
         }
 
         @Override

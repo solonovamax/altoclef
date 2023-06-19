@@ -57,7 +57,7 @@ import java.util.Scanner;
 @SuppressWarnings("EnhancedSwitchMigration")
 public class Playground {
 
-    public static void IDLE_TEST_INIT_FUNCTION(AltoClef mod) {
+    public static void IDLE_TEST_INIT_FUNCTION() {
         // Test code here
 
         // Print all uncatalogued resources as well as resources that don't have a corresponding item
@@ -116,8 +116,8 @@ public class Playground {
         // Test code here
     }
 
-    public static void TEMP_TEST_FUNCTION(AltoClef mod, String arg) {
-        //mod.runUserTask();
+    public static void TEMP_TEST_FUNCTION(String arg) {
+        // mod.runUserTask();
         Debug.logMessage("Running test...");
 
         switch (arg) {
@@ -126,29 +126,29 @@ public class Playground {
                 Debug.logWarning("Please specify a test (ex. stacked, bed, terminate)");
                 break;
             case "sign":
-                mod.runUserTask(new PlaceSignTask("Hello there!"));
+                AltoClef.INSTANCE.runUserTask(new PlaceSignTask("Hello there!"));
                 break;
             case "sign2":
-                mod.runUserTask(new PlaceSignTask(new BlockPos(10, 3, 10), "Hello there!"));
+                AltoClef.INSTANCE.runUserTask(new PlaceSignTask(new BlockPos(10, 3, 10), "Hello there!"));
                 break;
             case "pickup":
-                mod.runUserTask(new PickupDroppedItemTask(new ItemTarget(Items.IRON_ORE, 3), true));
+                AltoClef.INSTANCE.runUserTask(new PickupDroppedItemTask(new ItemTarget(Items.IRON_ORE, 3), true));
                 break;
             case "chunk": {
                 // We may have missed a chunk that's far away...
                 BlockPos p = new BlockPos(100000, 3, 100000);
-                Debug.logMessage("LOADED? " + (!(mod.getWorld().getChunk(p) instanceof EmptyChunk)));
+                Debug.logMessage("LOADED? " + (!(AltoClef.INSTANCE.getWorld().getChunk(p) instanceof EmptyChunk)));
                 break;
             }
             case "structure":
-                mod.runUserTask(new PlaceStructureBlockTask(new BlockPos(10, 6, 10)));
+                AltoClef.INSTANCE.runUserTask(new PlaceStructureBlockTask(new BlockPos(10, 6, 10)));
                 break;
             case "place": {
                 //BlockPos targetPos = new BlockPos(0, 6, 0);
                 //mod.runUserTask(new PlaceSignTask(targetPos, "Hello"));
                 //Direction direction = Direction.WEST;
                 //mod.runUserTask(new InteractItemWithBlockTask(TaskCatalogue.getItemTarget("lava_bucket", 1), direction, targetPos, false));
-                mod.runUserTask(new PlaceBlockNearbyTask(Blocks.CRAFTING_TABLE, Blocks.FURNACE));
+                AltoClef.INSTANCE.runUserTask(new PlaceBlockNearbyTask(Blocks.CRAFTING_TABLE, Blocks.FURNACE));
                 //mod.runUserTask(new PlaceStructureBlockTask(new BlockPos(472, 24, -324)));
                 break;
             }
@@ -156,7 +156,7 @@ public class Playground {
                 File file = new File("test.txt");
                 try {
                     FileReader reader = new FileReader(file);
-                    mod.runUserTask(new BeeMovieTask("bruh", mod.getPlayer().getBlockPos(), reader));
+                    AltoClef.INSTANCE.runUserTask(new BeeMovieTask("bruh", AltoClef.INSTANCE.getPlayer().getBlockPos(), reader));
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -177,46 +177,46 @@ public class Playground {
                         new ItemTarget("crafting_table", 1)
                 ));
                  */
-                mod.runUserTask(new EquipArmorTask(Items.DIAMOND_CHESTPLATE, Items.DIAMOND_LEGGINGS, Items.DIAMOND_HELMET, Items.DIAMOND_BOOTS));
+                AltoClef.INSTANCE.runUserTask(new EquipArmorTask(Items.DIAMOND_CHESTPLATE, Items.DIAMOND_LEGGINGS, Items.DIAMOND_HELMET, Items.DIAMOND_BOOTS));
                 break;
             case "stacked2":
-                mod.runUserTask(new EquipArmorTask(Items.DIAMOND_CHESTPLATE));
+                AltoClef.INSTANCE.runUserTask(new EquipArmorTask(Items.DIAMOND_CHESTPLATE));
                 break;
             case "ravage":
-                mod.runUserTask(new RavageRuinedPortalsTask());
+                AltoClef.INSTANCE.runUserTask(new RavageRuinedPortalsTask());
                 break;
             case "temples":
-                mod.runUserTask(new RavageDesertTemplesTask());
+                AltoClef.INSTANCE.runUserTask(new RavageDesertTemplesTask());
                 break;
             case "outer":
-                mod.runUserTask(new GetToOuterEndIslandsTask());
+                AltoClef.INSTANCE.runUserTask(new GetToOuterEndIslandsTask());
                 break;
             case "smelt":
                 ItemTarget target = new ItemTarget("iron_ingot", 4);
                 ItemTarget material = new ItemTarget("iron_ore", 4);
-                mod.runUserTask(new SmeltInFurnaceTask(new SmeltTarget(target, material)));
+                AltoClef.INSTANCE.runUserTask(new SmeltInFurnaceTask(new SmeltTarget(target, material)));
                 break;
             case "iron":
-                mod.runUserTask(new ConstructIronGolemTask());
+                AltoClef.INSTANCE.runUserTask(new ConstructIronGolemTask());
                 break;
             case "avoid":
                 // Test block break predicate
-                mod.getBehaviour().avoidBlockBreaking((BlockPos b) -> (-1000 < b.getX() && b.getX() < 1000)
+                AltoClef.INSTANCE.getBehaviour().avoidBlockBreaking((BlockPos b) -> (-1000 < b.getX() && b.getX() < 1000)
                         && (-1000 < b.getY() && b.getY() < 1000)
                         && (-1000 < b.getZ() && b.getZ() < 1000));
                 Debug.logMessage("Testing avoid from -1000, -1000, -1000 to 1000, 1000, 1000");
                 break;
             case "portal":
                 //mod.runUserTask(new EnterNetherPortalTask(new ConstructNetherPortalBucketTask(), Dimension.NETHER));
-                mod.runUserTask(new EnterNetherPortalTask(new ConstructNetherPortalObsidianTask(), WorldHelper.getCurrentDimension() == Dimension.OVERWORLD ? Dimension.NETHER : Dimension.OVERWORLD));
+                AltoClef.INSTANCE.runUserTask(new EnterNetherPortalTask(new ConstructNetherPortalObsidianTask(), WorldHelper.getCurrentDimension() == Dimension.OVERWORLD ? Dimension.NETHER : Dimension.OVERWORLD));
                 break;
             case "kill":
-                List<ZombieEntity> zombs = mod.getEntityTracker().getTrackedEntities(ZombieEntity.class);
+                List<ZombieEntity> zombs = AltoClef.INSTANCE.getEntityTracker().getTrackedEntities(ZombieEntity.class);
                 if (zombs.size() == 0) {
                     Debug.logWarning("No zombs found.");
                 } else {
                     LivingEntity entity = zombs.get(0);
-                    mod.runUserTask(new KillEntityTask(entity));
+                    AltoClef.INSTANCE.runUserTask(new KillEntityTask(entity));
                 }
                 break;
             case "craft":
@@ -231,7 +231,7 @@ public class Playground {
                     Item[] s = new Item[]{Items.STICK};
                     CraftingRecipe recipe = CraftingRecipe.newShapedRecipe("test pickaxe", new Item[][]{c, c, c, null, s, null, null, s, null}, 1);
 
-                    mod.runUserTask(new CraftGenericManuallyTask(new RecipeTarget(Items.STONE_PICKAXE, 1, recipe)));
+                    AltoClef.INSTANCE.runUserTask(new CraftGenericManuallyTask(new RecipeTarget(Items.STONE_PICKAXE, 1, recipe)));
                     /*
                     Item toEquip = Items.BUCKET;//Items.AIR;
                     Slot target = PlayerInventorySlot.getEquipSlot(EquipmentSlot.MAINHAND);
@@ -256,16 +256,16 @@ public class Playground {
                 //mod.getItemStorage().equipItem(Items.AIR);
                 break;
             case "food":
-                mod.runUserTask(new CollectFoodTask(20));
+                AltoClef.INSTANCE.runUserTask(new CollectFoodTask(20));
                 break;
             case "temple":
-                mod.runUserTask(new LocateDesertTempleTask());
+                AltoClef.INSTANCE.runUserTask(new LocateDesertTempleTask());
                 break;
             case "blaze":
-                mod.runUserTask(new CollectBlazeRodsTask(7));
+                AltoClef.INSTANCE.runUserTask(new CollectBlazeRodsTask(7));
                 break;
             case "flint":
-                mod.runUserTask(new CollectFlintTask(5));
+                AltoClef.INSTANCE.runUserTask(new CollectFlintTask(5));
                 break;
             case "unobtainable":
                 String fname = "unobtainables.txt";
@@ -290,45 +290,45 @@ public class Playground {
                 }
                 break;
             case "piglin":
-                mod.runUserTask(new TradeWithPiglinsTask(32, new ItemTarget(Items.ENDER_PEARL, 12)));
+                AltoClef.INSTANCE.runUserTask(new TradeWithPiglinsTask(32, new ItemTarget(Items.ENDER_PEARL, 12)));
                 break;
             case "stronghold":
-                mod.runUserTask(new GoToStrongholdPortalTask(12));
+                AltoClef.INSTANCE.runUserTask(new GoToStrongholdPortalTask(12));
                 break;
             case "terminate":
-                mod.runUserTask(new TerminatorTask(mod.getPlayer().getBlockPos(), 900));
+                AltoClef.INSTANCE.runUserTask(new TerminatorTask(AltoClef.INSTANCE.getPlayer().getBlockPos(), 900));
                 break;
             case "replace":
                 // Creates a mini valley of crafting tables.
-                BlockPos from = mod.getPlayer().getBlockPos().add(new Vec3i(-100, -20, -100));
-                BlockPos to = mod.getPlayer().getBlockPos().add(new Vec3i(100, 255, 100));
+                BlockPos from = AltoClef.INSTANCE.getPlayer().getBlockPos().add(new Vec3i(-100, -20, -100));
+                BlockPos to = AltoClef.INSTANCE.getPlayer().getBlockPos().add(new Vec3i(100, 255, 100));
                 Block[] toFind = new Block[]{Blocks.GRASS_BLOCK};// Blocks.COBBLESTONE};
                 ItemTarget toReplace = new ItemTarget("crafting_table");//"stone");
-                mod.runUserTask(new ReplaceBlocksTask(toReplace, from, to, toFind));
+                AltoClef.INSTANCE.runUserTask(new ReplaceBlocksTask(toReplace, from, to, toFind));
                 break;
             case "bed":
-                mod.runUserTask(new PlaceBedAndSetSpawnTask());
+                AltoClef.INSTANCE.runUserTask(new PlaceBedAndSetSpawnTask());
                 break;
             case "dragon":
-                mod.runUserTask(new KillEnderDragonWithBedsTask(new WaitForDragonAndPearlTask()));
+                AltoClef.INSTANCE.runUserTask(new KillEnderDragonWithBedsTask(new WaitForDragonAndPearlTask()));
                 break;
             case "dragon-pearl":
-                mod.runUserTask(new ThrowEnderPearlSimpleProjectileTask(new BlockPos(0, 60, 0)));
+                AltoClef.INSTANCE.runUserTask(new ThrowEnderPearlSimpleProjectileTask(new BlockPos(0, 60, 0)));
                 break;
             case "dragon-old":
-                mod.runUserTask(new KillEnderDragonTask());
+                AltoClef.INSTANCE.runUserTask(new KillEnderDragonTask());
                 break;
             case "chest":
-                mod.runUserTask(new StoreInAnyContainerTask(true, new ItemTarget(Items.DIAMOND, 3)));
+                AltoClef.INSTANCE.runUserTask(new StoreInAnyContainerTask(true, new ItemTarget(Items.DIAMOND, 3)));
                 break;
             case "173":
-                mod.runUserTask(new SCP173Task());
+                AltoClef.INSTANCE.runUserTask(new SCP173Task());
                 break;
             case "example":
-                mod.runUserTask(new ExampleTask2());
+                AltoClef.INSTANCE.runUserTask(new ExampleTask2());
                 break;
             case "netherite":
-                mod.runUserTask(TaskCatalogue.getSquashedItemTask(
+                AltoClef.INSTANCE.runUserTask(TaskCatalogue.getSquashedItemTask(
                         new ItemTarget("netherite_pickaxe", 1),
                         new ItemTarget("netherite_sword", 1),
                         new ItemTarget("netherite_helmet", 1),
@@ -352,7 +352,7 @@ public class Playground {
                 break;
             }
             default:
-                mod.logWarning("Test not found: \"" + arg + "\".");
+                AltoClef.INSTANCE.logWarning("Test not found: \"" + arg + "\".");
                 break;
         }
     }

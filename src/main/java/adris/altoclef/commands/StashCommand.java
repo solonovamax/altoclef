@@ -1,11 +1,15 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
-import adris.altoclef.commandsystem.*;
+import adris.altoclef.commandsystem.Arg;
+import adris.altoclef.commandsystem.ArgParser;
+import adris.altoclef.commandsystem.Command;
+import adris.altoclef.commandsystem.CommandException;
+import adris.altoclef.commandsystem.ItemList;
 import adris.altoclef.tasks.container.StoreInStashTask;
 import adris.altoclef.util.BlockRange;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.util.math.BlockPos;
 
 public class StashCommand extends Command {
@@ -22,7 +26,7 @@ public class StashCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(ArgParser parser) throws CommandException {
         BlockPos start = new BlockPos(
                 parser.get(Integer.class),
                 parser.get(Integer.class),
@@ -37,12 +41,12 @@ public class StashCommand extends Command {
         ItemList itemList = parser.get(ItemList.class);
         ItemTarget[] items;
         if (itemList == null) {
-            items = DepositCommand.getAllNonEquippedOrToolItemsAsTarget(mod);
+            items = DepositCommand.getAllNonEquippedOrToolItemsAsTarget();
         } else {
             items = itemList.items;
         }
 
 
-        mod.runUserTask(new StoreInStashTask(true, new BlockRange(start, end, WorldHelper.getCurrentDimension()), items), this::finish);
+        AltoClef.INSTANCE.runUserTask(new StoreInStashTask(true, new BlockRange(start, end, WorldHelper.getCurrentDimension()), items), this::finish);
     }
 }

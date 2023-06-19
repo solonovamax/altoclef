@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.misc;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.slot.MoveItemToSlotFromInventoryTask;
 import adris.altoclef.tasks.squashed.CataloguedResourceTask;
@@ -10,8 +9,13 @@ import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.*;
+import net.minecraft.item.ArmorItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.ShieldItem;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 import org.apache.commons.lang3.ArrayUtils;
@@ -34,13 +38,13 @@ public class EquipArmorTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        ItemTarget[] armorsNotEquipped = Arrays.stream(_toEquip).filter(target -> !StorageHelper.itemTargetsMetInventory(mod, target) && !StorageHelper.isArmorEquipped(mod, target.getMatches())).toArray(ItemTarget[]::new);
+    protected Task onTick() {
+        ItemTarget[] armorsNotEquipped = Arrays.stream(_toEquip).filter(target -> !StorageHelper.itemTargetsMetInventory(target) && !StorageHelper.isArmorEquipped(AltoClef.INSTANCE, target.getMatches())).toArray(ItemTarget[]::new);
         boolean armorMet = armorsNotEquipped.length == 0;
         if (!armorMet) {
             setDebugState("Obtaining armor");
@@ -57,26 +61,26 @@ public class EquipArmorTask extends Task {
                 if (shield == null) {
                     Debug.logWarning("Item " + targetArmor + " is not armor! Will not equip.");
                 } else {
-                    if (!StorageHelper.isArmorEquipped(mod, shield)) {
-                        if (!(mod.getPlayer().currentScreenHandler instanceof PlayerScreenHandler)) {
+                    if (!StorageHelper.isArmorEquipped(AltoClef.INSTANCE, shield)) {
+                        if (!(AltoClef.INSTANCE.getPlayer().currentScreenHandler instanceof PlayerScreenHandler)) {
                             ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
                             if (!cursorStack.isEmpty()) {
-                                Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+                                Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
                                 if (moveTo.isPresent()) {
-                                    mod.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
+                                    AltoClef.INSTANCE.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
                                     return null;
                                 }
-                                if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                                    mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                                if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                                    AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                                     return null;
                                 }
-                                Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+                                Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
                                 // Try throwing away cursor slot if it's garbage
                                 if (garbage.isPresent()) {
-                                    mod.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
+                                    AltoClef.INSTANCE.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
                                     return null;
                                 }
-                                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                             } else {
                                 StorageHelper.closeScreen();
                             }
@@ -93,26 +97,26 @@ public class EquipArmorTask extends Task {
                 if (item == null) {
                     Debug.logWarning("Item " + targetArmor + " is not armor! Will not equip.");
                 } else {
-                    if (!StorageHelper.isArmorEquipped(mod, item)) {
-                        if (!(mod.getPlayer().currentScreenHandler instanceof PlayerScreenHandler)) {
+                    if (!StorageHelper.isArmorEquipped(AltoClef.INSTANCE, item)) {
+                        if (!(AltoClef.INSTANCE.getPlayer().currentScreenHandler instanceof PlayerScreenHandler)) {
                             ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
                             if (!cursorStack.isEmpty()) {
-                                Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+                                Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
                                 if (moveTo.isPresent()) {
-                                    mod.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
+                                    AltoClef.INSTANCE.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
                                     return null;
                                 }
-                                if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                                    mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                                if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                                    AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                                     return null;
                                 }
-                                Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+                                Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
                                 // Try throwing away cursor slot if it's garbage
                                 if (garbage.isPresent()) {
-                                    mod.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
+                                    AltoClef.INSTANCE.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
                                     return null;
                                 }
-                                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                             } else {
                                 StorageHelper.closeScreen();
                             }
@@ -131,12 +135,12 @@ public class EquipArmorTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return armorEquipped(mod);
+    public boolean isFinished() {
+        return armorEquipped(AltoClef.INSTANCE);
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

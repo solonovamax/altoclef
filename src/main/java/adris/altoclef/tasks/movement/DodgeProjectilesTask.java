@@ -1,9 +1,9 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.baritone.GoalDodgeProjectiles;
 import baritone.api.pathing.goals.Goal;
+import gay.solonovamax.altoclef.AltoClef;
 
 public class DodgeProjectilesTask extends CustomBaritoneGoalTask {
 
@@ -16,14 +16,14 @@ public class DodgeProjectilesTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         if (_cachedGoal != null) {
             // EntityTracker runs ensureUpdated automatically which calls updateState which locks the mutex,
             // so don't lock here.
             // Multithreading can be a hassle in more ways than one it seems.
             GoalDodgeProjectiles goal = (GoalDodgeProjectiles) _cachedGoal;
         }
-        return super.onTick(mod);
+        return super.onTick();
     }
 
     @SuppressWarnings("RedundantIfStatement")

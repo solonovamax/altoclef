@@ -1,10 +1,10 @@
 package adris.altoclef.tasks.slot;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 
@@ -12,23 +12,23 @@ import java.util.Optional;
 
 public class EnsureFreeInventorySlotTask extends Task {
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
-        Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+        Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
         if (cursorStack.isEmpty()) {
             if (garbage.isPresent()) {
-                mod.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
                 return null;
             }
         }
         if (!cursorStack.isEmpty()) {
-            LookHelper.randomOrientation(mod);
-            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            LookHelper.randomOrientation(AltoClef.INSTANCE);
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             return null;
         }
         setDebugState("All items are protected.");
@@ -36,7 +36,7 @@ public class EnsureFreeInventorySlotTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

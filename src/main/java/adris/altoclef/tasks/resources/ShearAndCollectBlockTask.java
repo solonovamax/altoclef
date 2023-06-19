@@ -1,11 +1,11 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.MiningRequirement;
 import adris.altoclef.util.helpers.ItemHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -25,18 +25,18 @@ public class ShearAndCollectBlockTask extends MineAndCollectTask {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
-        mod.getBehaviour().forceUseTool((blockState, itemStack) ->
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
+        AltoClef.INSTANCE.getBehaviour().forceUseTool((blockState, itemStack) ->
                 itemStack.getItem() == Items.SHEARS && ItemHelper.areShearsEffective(blockState.getBlock())
         );
-        super.onStart(mod);
+        super.onStart();
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBehaviour().pop();
-        super.onStop(mod, interruptTask);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBehaviour().pop();
+        super.onStop(interruptTask);
     }
 
     @Override

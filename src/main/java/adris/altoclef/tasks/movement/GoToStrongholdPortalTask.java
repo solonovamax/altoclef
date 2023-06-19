@@ -1,9 +1,9 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
@@ -22,12 +22,12 @@ public class GoToStrongholdPortalTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBlockTracker().trackBlock(Blocks.END_PORTAL_FRAME);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(Blocks.END_PORTAL_FRAME);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         /*
             If we don't know where stronghold is, find out where stronghold is.
             If we do know where stronghold is, fast travel there
@@ -36,7 +36,7 @@ public class GoToStrongholdPortalTask extends Task {
         if (_strongholdCoordinates == null) {
             _strongholdCoordinates = _locateCoordsTask.getStrongholdCoordinates().orElse(null);
             if (_strongholdCoordinates == null) {
-                if (mod.getItemStorage().getItemCount(Items.ENDER_EYE) < _targetEyes && mod.getEntityTracker().itemDropped(Items.ENDER_EYE)) {
+                if (AltoClef.INSTANCE.getItemStorage().getItemCount(Items.ENDER_EYE) < _targetEyes && AltoClef.INSTANCE.getEntityTracker().itemDropped(Items.ENDER_EYE)) {
                     setDebugState("Picking up dropped eye");
                     return new PickupDroppedItemTask(Items.ENDER_EYE, _targetEyes);
                 }
@@ -48,23 +48,23 @@ public class GoToStrongholdPortalTask extends Task {
         setDebugState("Searching for Stronghold...");
         return new SearchChunkForBlockTask(Blocks.STONE_BRICKS) {
             @Override
-            protected Task onTick(AltoClef mod) {
+            protected Task onTick() {
                 if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
-                    return getWanderTask(mod);
+                    return getWanderTask();
                 }
-                return super.onTick(mod);
+                return super.onTick();
             }
 
             @Override
-            protected Task getWanderTask(AltoClef mod) {
+            protected Task getWanderTask() {
                 return new FastTravelTask(_strongholdCoordinates, 300, true);
             }
         };
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBlockTracker().stopTracking(Blocks.END_PORTAL_FRAME);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.END_PORTAL_FRAME);
     }
 
     @Override

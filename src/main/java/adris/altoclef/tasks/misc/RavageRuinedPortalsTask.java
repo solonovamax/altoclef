@@ -1,11 +1,11 @@
 package adris.altoclef.tasks.misc;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.container.LootContainerTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -51,17 +51,17 @@ public class RavageRuinedPortalsTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
-        mod.getBlockTracker().trackBlock(Blocks.CHEST);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(Blocks.CHEST);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (_lootTask != null && _lootTask.isActive() && !_lootTask.isFinished(mod)) {
+    protected Task onTick() {
+        if (_lootTask != null && _lootTask.isActive() && !_lootTask.isFinished()) {
             return _lootTask;
         }
-        Optional<BlockPos> closest = locateClosestUnopenedRuinedPortalChest(mod);
+        Optional<BlockPos> closest = locateClosestUnopenedRuinedPortalChest();
         if (closest.isPresent()) {
             _lootTask = new LootContainerTask(closest.get(), List.of(LOOT));
             return _lootTask;
@@ -70,9 +70,9 @@ public class RavageRuinedPortalsTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task task) {
-        mod.getBlockTracker().stopTracking(Blocks.CHEST);
-        mod.getBehaviour().pop();
+    protected void onStop(Task task) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.CHEST);
+        AltoClef.INSTANCE.getBehaviour().pop();
     }
 
     @Override
@@ -81,7 +81,7 @@ public class RavageRuinedPortalsTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return false;
     }
 
@@ -90,12 +90,12 @@ public class RavageRuinedPortalsTask extends Task {
         return "Ravaging Ruined Portals";
     }
 
-    private boolean canBeLootablePortalChest(AltoClef mod, BlockPos blockPos) {
-        if (mod.getWorld().getBlockState(blockPos.up(1)).getBlock() == Blocks.WATER || blockPos.getY() < 50) {
+    private boolean canBeLootablePortalChest(BlockPos blockPos) {
+        if (AltoClef.INSTANCE.getWorld().getBlockState(blockPos.up(1)).getBlock() == Blocks.WATER || blockPos.getY() < 50) {
             return false;
         }
-        for (BlockPos check : WorldHelper.scanRegion(mod, blockPos.add(-4, -2, -4), blockPos.add(4, 2, 4))) {
-            if (mod.getWorld().getBlockState(check).getBlock() == Blocks.NETHERRACK) {
+        for (BlockPos check : WorldHelper.scanRegion(blockPos.add(-4, -2, -4), blockPos.add(4, 2, 4))) {
+            if (AltoClef.INSTANCE.getWorld().getBlockState(check).getBlock() == Blocks.NETHERRACK) {
                 return true;
             }
         }
@@ -103,10 +103,10 @@ public class RavageRuinedPortalsTask extends Task {
         return false;
     }
 
-    private Optional<BlockPos> locateClosestUnopenedRuinedPortalChest(AltoClef mod) {
+    private Optional<BlockPos> locateClosestUnopenedRuinedPortalChest() {
         if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
             return Optional.empty();
         }
-        return mod.getBlockTracker().getNearestTracking(blockPos -> !_notRuinedPortalChests.contains(blockPos) && WorldHelper.isUnopenedChest(mod, blockPos) && canBeLootablePortalChest(mod, blockPos), Blocks.CHEST);
+        return AltoClef.INSTANCE.getBlockTracker().getNearestTracking(blockPos -> !_notRuinedPortalChests.contains(blockPos) && WorldHelper.isUnopenedChest(AltoClef.INSTANCE, blockPos) && canBeLootablePortalChest(blockPos), Blocks.CHEST);
     }
 }

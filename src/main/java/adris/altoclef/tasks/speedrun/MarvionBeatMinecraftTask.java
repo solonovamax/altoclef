@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.speedrun;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.DoToClosestBlockTask;
@@ -13,16 +12,31 @@ import adris.altoclef.tasks.misc.EquipArmorTask;
 import adris.altoclef.tasks.misc.LootDesertTempleTask;
 import adris.altoclef.tasks.misc.PlaceBedAndSetSpawnTask;
 import adris.altoclef.tasks.misc.SleepThroughNightTask;
-import adris.altoclef.tasks.movement.*;
-import adris.altoclef.tasks.resources.*;
+import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
+import adris.altoclef.tasks.movement.GetToBlockTask;
+import adris.altoclef.tasks.movement.GetToXZTask;
+import adris.altoclef.tasks.movement.GoToStrongholdPortalTask;
+import adris.altoclef.tasks.movement.PickupDroppedItemTask;
+import adris.altoclef.tasks.movement.SearchWithinBiomeTask;
+import adris.altoclef.tasks.resources.CollectBlazeRodsTask;
+import adris.altoclef.tasks.resources.CollectFoodTask;
+import adris.altoclef.tasks.resources.GetBuildingMaterialsTask;
+import adris.altoclef.tasks.resources.KillAndLootTask;
+import adris.altoclef.tasks.resources.MineAndCollectTask;
+import adris.altoclef.tasks.resources.TradeWithPiglinsTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.Dimension;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.MiningRequirement;
 import adris.altoclef.util.SmeltTarget;
-import adris.altoclef.util.helpers.*;
+import adris.altoclef.util.helpers.ConfigHelper;
+import adris.altoclef.util.helpers.ItemHelper;
+import adris.altoclef.util.helpers.LookHelper;
+import adris.altoclef.util.helpers.StorageHelper;
+import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.slots.Slot;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -32,7 +46,11 @@ import net.minecraft.client.gui.screen.CreditsScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
-import net.minecraft.entity.mob.*;
+import net.minecraft.entity.mob.EndermanEntity;
+import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.mob.PillagerEntity;
+import net.minecraft.entity.mob.SilverfishEntity;
+import net.minecraft.entity.mob.WitchEntity;
 import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -45,7 +63,11 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.biome.BiomeKeys;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -215,11 +237,11 @@ public class MarvionBeatMinecraftTask extends Task {
 
     // Just a helpful utility to reduce reuse recycle.
     private static boolean shouldForce(AltoClef mod, Task task) {
-        return task != null && task.isActive() && !task.isFinished(mod);
+        return task != null && task.isActive() && !task.isFinished();
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return getInstance().currentScreen instanceof CreditsScreen ||
                 (WorldHelper.getCurrentDimension() == Dimension.OVERWORLD && _dragonIsDead);
     }
@@ -280,7 +302,7 @@ public class MarvionBeatMinecraftTask extends Task {
         if (!mod.getItemStorage().hasItemInventoryOnly(Items.BUCKET) && !mod.getItemStorage().hasItemInventoryOnly(Items.WATER_BUCKET)) {
             lootable.add(Items.IRON_INGOT);
         }
-        if (!StorageHelper.itemTargetsMetInventory(mod, COLLECT_EYE_GEAR_MIN)) {
+        if (!StorageHelper.itemTargetsMetInventory(COLLECT_EYE_GEAR_MIN)) {
             lootable.add(Items.DIAMOND);
         }
         if (!mod.getItemStorage().hasItemInventoryOnly(Items.FLINT)) {
@@ -290,11 +312,11 @@ public class MarvionBeatMinecraftTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getExtraBaritoneSettings().canWalkOnEndPortal(false);
-        mod.getBehaviour().pop();
-        mod.getBlockTracker().stopTracking(ItemHelper.itemsToBlocks(ItemHelper.BED));
-        mod.getBlockTracker().stopTracking(TRACK_BLOCKS);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getExtraBaritoneSettings().canWalkOnEndPortal(false);
+        AltoClef.INSTANCE.getBehaviour().pop();
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(ItemHelper.itemsToBlocks(ItemHelper.BED));
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(TRACK_BLOCKS);
     }
 
     @Override
@@ -333,53 +355,53 @@ public class MarvionBeatMinecraftTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _timer1.reset();
         _timer2.reset();
         _timer3.reset();
-        mod.getBehaviour().push();
+        AltoClef.INSTANCE.getBehaviour().push();
         // Add a warning to make sure the user at least knows to change the settings.
         String settingsWarningTail = "in \".minecraft/altoclef_settings.json\". @gamer may break if you don't add this! (sorry!)";
-        if (!ArrayUtils.contains(mod.getModSettings().getThrowawayItems(mod), Items.END_STONE)) {
+        if (!ArrayUtils.contains(AltoClef.INSTANCE.getModSettings().getThrowawayItems(), Items.END_STONE)) {
             Debug.logWarning("\"end_stone\" is not part of your \"throwawayItems\" list " + settingsWarningTail);
         }
-        if (!mod.getModSettings().shouldThrowawayUnusedItems()) {
+        if (!AltoClef.INSTANCE.getModSettings().shouldThrowawayUnusedItems()) {
             Debug.logWarning("\"throwawayUnusedItems\" is not set to true " + settingsWarningTail);
         }
 
-        mod.getBlockTracker().trackBlock(ItemHelper.itemsToBlocks(ItemHelper.BED));
-        mod.getBlockTracker().trackBlock(TRACK_BLOCKS);
-        mod.getBehaviour().addProtectedItems(Items.ENDER_EYE, Items.BLAZE_ROD, Items.ENDER_PEARL, Items.CRAFTING_TABLE,
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(ItemHelper.itemsToBlocks(ItemHelper.BED));
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(TRACK_BLOCKS);
+        AltoClef.INSTANCE.getBehaviour().addProtectedItems(Items.ENDER_EYE, Items.BLAZE_ROD, Items.ENDER_PEARL, Items.CRAFTING_TABLE,
                 Items.IRON_INGOT, Items.WATER_BUCKET, Items.FLINT_AND_STEEL, Items.SHIELD, Items.SHEARS, Items.BUCKET,
                 Items.GOLDEN_BOOTS, Items.SMOKER, Items.FURNACE, Items.BLAST_FURNACE);
-        mod.getBehaviour().addProtectedItems(ItemHelper.BED);
-        mod.getBehaviour().addProtectedItems(ItemHelper.IRON_ARMORS);
-        mod.getBehaviour().addProtectedItems(ItemHelper.LOG);
+        AltoClef.INSTANCE.getBehaviour().addProtectedItems(ItemHelper.BED);
+        AltoClef.INSTANCE.getBehaviour().addProtectedItems(ItemHelper.IRON_ARMORS);
+        AltoClef.INSTANCE.getBehaviour().addProtectedItems(ItemHelper.LOG);
         // Allow walking on end portal
-        mod.getBehaviour().allowWalkingOn(blockPos -> _enterindEndPortal && mod.getChunkTracker().isChunkLoaded(blockPos) && mod.getWorld().getBlockState(blockPos).getBlock() == Blocks.END_PORTAL);
+        AltoClef.INSTANCE.getBehaviour().allowWalkingOn(blockPos -> _enterindEndPortal && AltoClef.INSTANCE.getChunkTracker().isChunkLoaded(blockPos) && AltoClef.INSTANCE.getWorld().getBlockState(blockPos).getBlock() == Blocks.END_PORTAL);
 
         // Avoid dragon breath
-        mod.getBehaviour().avoidWalkingThrough(blockPos -> {
+        AltoClef.INSTANCE.getBehaviour().avoidWalkingThrough(blockPos -> {
             return WorldHelper.getCurrentDimension() == Dimension.END && !_escapingDragonsBreath && _dragonBreathTracker.isTouchingDragonBreath(blockPos);
         });
 
         // Don't break the bed we placed near the end portal
-        mod.getBehaviour().avoidBlockBreaking(blockPos -> {
+        AltoClef.INSTANCE.getBehaviour().avoidBlockBreaking(blockPos -> {
             if (_bedSpawnLocation != null) {
-                return blockPos.equals(WorldHelper.getBedHead(mod, _bedSpawnLocation)) || blockPos.equals(WorldHelper.getBedFoot(mod, _bedSpawnLocation));
+                return blockPos.equals(WorldHelper.getBedHead(AltoClef.INSTANCE, _bedSpawnLocation)) || blockPos.equals(WorldHelper.getBedFoot(AltoClef.INSTANCE, _bedSpawnLocation));
             }
             return false;
         });
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        boolean eyeGearSatisfied = StorageHelper.isArmorEquippedAll(mod, COLLECT_EYE_ARMOR);
-        boolean ironGearSatisfied = StorageHelper.isArmorEquippedAll(mod, COLLECT_IRON_ARMOR);
-        if (mod.getItemStorage().hasItem(Items.DIAMOND_PICKAXE)) {
-            mod.getBehaviour().setBlockBreakAdditionalPenalty(0);
+    protected Task onTick() {
+        boolean eyeGearSatisfied = StorageHelper.isArmorEquippedAll(AltoClef.INSTANCE, COLLECT_EYE_ARMOR);
+        boolean ironGearSatisfied = StorageHelper.isArmorEquippedAll(AltoClef.INSTANCE, COLLECT_IRON_ARMOR);
+        if (AltoClef.INSTANCE.getItemStorage().hasItem(Items.DIAMOND_PICKAXE)) {
+            AltoClef.INSTANCE.getBehaviour().setBlockBreakAdditionalPenalty(0);
         } else {
-            mod.getBehaviour().setBlockBreakAdditionalPenalty(mod.getClientBaritoneSettings().blockBreakAdditionalPenalty.defaultValue);
+            AltoClef.INSTANCE.getBehaviour().setBlockBreakAdditionalPenalty(AltoClef.INSTANCE.getClientBaritoneSettings().blockBreakAdditionalPenalty.defaultValue);
         }
         Predicate<Task> isCraftingTableTask = task -> {
             if (task instanceof DoStuffInContainerTask cont) {
@@ -387,105 +409,105 @@ public class MarvionBeatMinecraftTask extends Task {
             }
             return false;
         };
-        List<BlockPos> craftingTables = mod.getBlockTracker().getKnownLocations(Blocks.CRAFTING_TABLE);
+        List<BlockPos> craftingTables = AltoClef.INSTANCE.getBlockTracker().getKnownLocations(Blocks.CRAFTING_TABLE);
         if (!craftingTables.isEmpty()) {
             for (BlockPos craftingTable : craftingTables) {
-                if (mod.getItemStorage().hasItem(Items.CRAFTING_TABLE) && !thisOrChildSatisfies(isCraftingTableTask)) {
-                    if (!mod.getBlockTracker().unreachable(craftingTable)) {
+                if (AltoClef.INSTANCE.getItemStorage().hasItem(Items.CRAFTING_TABLE) && !thisOrChildSatisfies(isCraftingTableTask)) {
+                    if (!AltoClef.INSTANCE.getBlockTracker().unreachable(craftingTable)) {
                         Debug.logMessage("Blacklisting extra crafting table.");
-                        mod.getBlockTracker().requestBlockUnreachable(craftingTable, 0);
+                        AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(craftingTable, 0);
                     }
                 }
-                if (!mod.getBlockTracker().unreachable(craftingTable)) {
-                    BlockState craftingTablePosUp = mod.getWorld().getBlockState(craftingTable.up(2));
-                    if (mod.getEntityTracker().entityFound(WitchEntity.class)) {
-                        Optional<Entity> witch = mod.getEntityTracker().getClosestEntity(WitchEntity.class);
+                if (!AltoClef.INSTANCE.getBlockTracker().unreachable(craftingTable)) {
+                    BlockState craftingTablePosUp = AltoClef.INSTANCE.getWorld().getBlockState(craftingTable.up(2));
+                    if (AltoClef.INSTANCE.getEntityTracker().entityFound(WitchEntity.class)) {
+                        Optional<Entity> witch = AltoClef.INSTANCE.getEntityTracker().getClosestEntity(WitchEntity.class);
                         if (witch.isPresent()) {
                             if (craftingTable.isWithinDistance(witch.get().getPos(), 15)) {
                                 Debug.logMessage("Blacklisting witch crafting table.");
-                                mod.getBlockTracker().requestBlockUnreachable(craftingTable, 0);
+                                AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(craftingTable, 0);
                             }
                         }
                     }
                     if (craftingTablePosUp.getBlock() == Blocks.WHITE_WOOL) {
                         Debug.logMessage("Blacklisting pillage crafting table.");
-                        mod.getBlockTracker().requestBlockUnreachable(craftingTable, 0);
+                        AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(craftingTable, 0);
                     }
                 }
             }
         }
-        List<BlockPos> smokers = mod.getBlockTracker().getKnownLocations(Blocks.SMOKER);
+        List<BlockPos> smokers = AltoClef.INSTANCE.getBlockTracker().getKnownLocations(Blocks.SMOKER);
         if (!smokers.isEmpty()) {
             for (BlockPos smoker : smokers) {
-                if (mod.getItemStorage().hasItem(Items.SMOKER) && _smeltTask == null && _foodTask == null) {
-                    if (!mod.getBlockTracker().unreachable(smoker)) {
+                if (AltoClef.INSTANCE.getItemStorage().hasItem(Items.SMOKER) && _smeltTask == null && _foodTask == null) {
+                    if (!AltoClef.INSTANCE.getBlockTracker().unreachable(smoker)) {
                         Debug.logMessage("Blacklisting extra smoker.");
-                        mod.getBlockTracker().requestBlockUnreachable(smoker, 0);
+                        AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(smoker, 0);
                     }
                 }
             }
         }
-        List<BlockPos> furnaces = mod.getBlockTracker().getKnownLocations(Blocks.FURNACE);
+        List<BlockPos> furnaces = AltoClef.INSTANCE.getBlockTracker().getKnownLocations(Blocks.FURNACE);
         if (!furnaces.isEmpty()) {
             for (BlockPos furnace : furnaces) {
-                if ((mod.getItemStorage().hasItem(Items.FURNACE) || mod.getItemStorage().hasItem(Items.BLAST_FURNACE)) &&
+                if ((AltoClef.INSTANCE.getItemStorage().hasItem(Items.FURNACE) || AltoClef.INSTANCE.getItemStorage().hasItem(Items.BLAST_FURNACE)) &&
                         _starterGearTask == null && _shieldTask == null && _ironGearTask == null && _gearTask == null &&
                         !_goToNetherTask.isActive() && !_ranStrongholdLocator) {
-                    if (!mod.getBlockTracker().unreachable(furnace)) {
+                    if (!AltoClef.INSTANCE.getBlockTracker().unreachable(furnace)) {
                         Debug.logMessage("Blacklisting extra furnace.");
-                        mod.getBlockTracker().requestBlockUnreachable(furnace, 0);
+                        AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(furnace, 0);
                     }
                 }
             }
         }
-        List<BlockPos> blastFurnaces = mod.getBlockTracker().getKnownLocations(Blocks.BLAST_FURNACE);
+        List<BlockPos> blastFurnaces = AltoClef.INSTANCE.getBlockTracker().getKnownLocations(Blocks.BLAST_FURNACE);
         if (!blastFurnaces.isEmpty()) {
             for (BlockPos blastFurnace : blastFurnaces) {
-                if (mod.getItemStorage().hasItem(Items.BLAST_FURNACE) && _starterGearTask == null && _shieldTask == null &&
+                if (AltoClef.INSTANCE.getItemStorage().hasItem(Items.BLAST_FURNACE) && _starterGearTask == null && _shieldTask == null &&
                         _ironGearTask == null && _gearTask == null && !_goToNetherTask.isActive() && !_ranStrongholdLocator) {
-                    if (!mod.getBlockTracker().unreachable(blastFurnace)) {
+                    if (!AltoClef.INSTANCE.getBlockTracker().unreachable(blastFurnace)) {
                         Debug.logMessage("Blacklisting extra blast furnace.");
-                        mod.getBlockTracker().requestBlockUnreachable(blastFurnace, 0);
+                        AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(blastFurnace, 0);
                     }
                 }
             }
         }
-        List<BlockPos> logs = mod.getBlockTracker().getKnownLocations(ItemHelper.itemsToBlocks(ItemHelper.LOG));
+        List<BlockPos> logs = AltoClef.INSTANCE.getBlockTracker().getKnownLocations(ItemHelper.itemsToBlocks(ItemHelper.LOG));
         if (!logs.isEmpty()) {
             for (BlockPos log : logs) {
-                Iterable<Entity> entities = mod.getWorld().getEntities();
+                Iterable<Entity> entities = AltoClef.INSTANCE.getWorld().getEntities();
                 for (Entity entity : entities) {
                     if (entity instanceof PillagerEntity) {
-                        if (!mod.getBlockTracker().unreachable(log)) {
+                        if (!AltoClef.INSTANCE.getBlockTracker().unreachable(log)) {
                             if (log.isWithinDistance(entity.getPos(), 40)) {
                                 Debug.logMessage("Blacklisting pillage log.");
-                                mod.getBlockTracker().requestBlockUnreachable(log, 0);
+                                AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(log, 0);
                             }
                         }
                     }
                 }
                 if (log.getY() < 62) {
-                    if (!mod.getBlockTracker().unreachable(log)) {
+                    if (!AltoClef.INSTANCE.getBlockTracker().unreachable(log)) {
                         if (!ironGearSatisfied && !eyeGearSatisfied) {
                             Debug.logMessage("Blacklisting dangerous log.");
-                            mod.getBlockTracker().requestBlockUnreachable(log, 0);
+                            AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(log, 0);
                         }
                     }
                 }
             }
         }
-        if (mod.getBlockTracker().isTracking(Blocks.DEEPSLATE_COAL_ORE)) {
-            Optional<BlockPos> deepslateCoalOre = mod.getBlockTracker().getNearestTracking(Blocks.DEEPSLATE_COAL_ORE);
+        if (AltoClef.INSTANCE.getBlockTracker().isTracking(Blocks.DEEPSLATE_COAL_ORE)) {
+            Optional<BlockPos> deepslateCoalOre = AltoClef.INSTANCE.getBlockTracker().getNearestTracking(Blocks.DEEPSLATE_COAL_ORE);
             if (deepslateCoalOre.isPresent()) {
-                Iterable<Entity> entities = mod.getWorld().getEntities();
+                Iterable<Entity> entities = AltoClef.INSTANCE.getWorld().getEntities();
                 for (Entity entity : entities) {
                     if (entity instanceof HostileEntity) {
-                        if (!mod.getBlockTracker().unreachable(deepslateCoalOre.get())) {
-                            if (mod.getPlayer().squaredDistanceTo(entity.getPos()) < 150 &&
+                        if (!AltoClef.INSTANCE.getBlockTracker().unreachable(deepslateCoalOre.get())) {
+                            if (AltoClef.INSTANCE.getPlayer().squaredDistanceTo(entity.getPos()) < 150 &&
                                     deepslateCoalOre.get().isWithinDistance(entity.getPos(), 30)) {
                                 if (!ironGearSatisfied && !eyeGearSatisfied) {
                                     Debug.logMessage("Blacklisting dangerous coal ore.");
-                                    mod.getBlockTracker().requestBlockUnreachable(deepslateCoalOre.get(), 0);
+                                    AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(deepslateCoalOre.get(), 0);
                                 }
                             }
                         }
@@ -493,18 +515,18 @@ public class MarvionBeatMinecraftTask extends Task {
                 }
             }
         }
-        if (mod.getBlockTracker().isTracking(Blocks.COAL_ORE)) {
-            Optional<BlockPos> coalOrePos = mod.getBlockTracker().getNearestTracking(Blocks.COAL_ORE);
+        if (AltoClef.INSTANCE.getBlockTracker().isTracking(Blocks.COAL_ORE)) {
+            Optional<BlockPos> coalOrePos = AltoClef.INSTANCE.getBlockTracker().getNearestTracking(Blocks.COAL_ORE);
             if (coalOrePos.isPresent()) {
-                Iterable<Entity> entities = mod.getWorld().getEntities();
+                Iterable<Entity> entities = AltoClef.INSTANCE.getWorld().getEntities();
                 for (Entity entity : entities) {
                     if (entity instanceof HostileEntity) {
-                        if (!mod.getBlockTracker().unreachable(coalOrePos.get())) {
-                            if (mod.getPlayer().squaredDistanceTo(entity.getPos()) < 150 &&
+                        if (!AltoClef.INSTANCE.getBlockTracker().unreachable(coalOrePos.get())) {
+                            if (AltoClef.INSTANCE.getPlayer().squaredDistanceTo(entity.getPos()) < 150 &&
                                     coalOrePos.get().isWithinDistance(entity.getPos(), 30)) {
                                 if (!ironGearSatisfied && !eyeGearSatisfied) {
                                     Debug.logMessage("Blacklisting dangerous coal ore.");
-                                    mod.getBlockTracker().requestBlockUnreachable(coalOrePos.get(), 0);
+                                    AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(coalOrePos.get(), 0);
                                 }
                             }
                         }
@@ -512,18 +534,18 @@ public class MarvionBeatMinecraftTask extends Task {
                 }
             }
         }
-        if (mod.getBlockTracker().isTracking(Blocks.DEEPSLATE_IRON_ORE)) {
-            Optional<BlockPos> deepslateIronOrePos = mod.getBlockTracker().getNearestTracking(Blocks.DEEPSLATE_IRON_ORE);
+        if (AltoClef.INSTANCE.getBlockTracker().isTracking(Blocks.DEEPSLATE_IRON_ORE)) {
+            Optional<BlockPos> deepslateIronOrePos = AltoClef.INSTANCE.getBlockTracker().getNearestTracking(Blocks.DEEPSLATE_IRON_ORE);
             if (deepslateIronOrePos.isPresent()) {
-                Iterable<Entity> entities = mod.getWorld().getEntities();
+                Iterable<Entity> entities = AltoClef.INSTANCE.getWorld().getEntities();
                 for (Entity entity : entities) {
                     if (entity instanceof HostileEntity) {
-                        if (!mod.getBlockTracker().unreachable(deepslateIronOrePos.get())) {
-                            if (mod.getPlayer().squaredDistanceTo(entity.getPos()) < 150 &&
+                        if (!AltoClef.INSTANCE.getBlockTracker().unreachable(deepslateIronOrePos.get())) {
+                            if (AltoClef.INSTANCE.getPlayer().squaredDistanceTo(entity.getPos()) < 150 &&
                                     deepslateIronOrePos.get().isWithinDistance(entity.getPos(), 30)) {
                                 if (!ironGearSatisfied && !eyeGearSatisfied) {
                                     Debug.logMessage("Blacklisting dangerous iron ore.");
-                                    mod.getBlockTracker().requestBlockUnreachable(deepslateIronOrePos.get(), 0);
+                                    AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(deepslateIronOrePos.get(), 0);
                                 }
                             }
                         }
@@ -531,18 +553,18 @@ public class MarvionBeatMinecraftTask extends Task {
                 }
             }
         }
-        if (mod.getBlockTracker().isTracking(Blocks.IRON_ORE)) {
-            Optional<BlockPos> ironOrePos = mod.getBlockTracker().getNearestTracking(Blocks.IRON_ORE);
+        if (AltoClef.INSTANCE.getBlockTracker().isTracking(Blocks.IRON_ORE)) {
+            Optional<BlockPos> ironOrePos = AltoClef.INSTANCE.getBlockTracker().getNearestTracking(Blocks.IRON_ORE);
             if (ironOrePos.isPresent()) {
-                Iterable<Entity> entities = mod.getWorld().getEntities();
+                Iterable<Entity> entities = AltoClef.INSTANCE.getWorld().getEntities();
                 for (Entity entity : entities) {
                     if (entity instanceof HostileEntity) {
-                        if (!mod.getBlockTracker().unreachable(ironOrePos.get())) {
-                            if (mod.getPlayer().squaredDistanceTo(entity.getPos()) < 150 &&
+                        if (!AltoClef.INSTANCE.getBlockTracker().unreachable(ironOrePos.get())) {
+                            if (AltoClef.INSTANCE.getPlayer().squaredDistanceTo(entity.getPos()) < 150 &&
                                     ironOrePos.get().isWithinDistance(entity.getPos(), 30)) {
                                 if (!ironGearSatisfied && !eyeGearSatisfied) {
                                     Debug.logMessage("Blacklisting dangerous iron ore.");
-                                    mod.getBlockTracker().requestBlockUnreachable(ironOrePos.get(), 0);
+                                    AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(ironOrePos.get(), 0);
                                 }
                             }
                         }
@@ -550,7 +572,7 @@ public class MarvionBeatMinecraftTask extends Task {
                 }
             }
         }
-        if (!mod.getItemStorage().hasItem(Items.NETHERRACK) &&
+        if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.NETHERRACK) &&
                 WorldHelper.getCurrentDimension() == Dimension.NETHER && !isGettingBlazeRods &&
                 !isGettingEnderPearls) {
             setDebugState("Getting netherrack.");
@@ -558,7 +580,7 @@ public class MarvionBeatMinecraftTask extends Task {
         }
         if (_locateStrongholdTask.isActive()) {
             if (WorldHelper.getCurrentDimension() == Dimension.OVERWORLD) {
-                if (!mod.getClientBaritone().getExploreProcess().isActive()) {
+                if (!AltoClef.INSTANCE.getClientBaritone().getExploreProcess().isActive()) {
                     if (_timer1.elapsed()) {
                         if (_config.renderDistanceManipulation) {
                             getInstance().options.getViewDistance().setValue(12);
@@ -569,9 +591,9 @@ public class MarvionBeatMinecraftTask extends Task {
             }
         }
         if ((_logsTask != null || _foodTask != null || _getOneBedTask.isActive() || _stoneGearTask != null ||
-                (_sleepThroughNightTask.isActive() && !mod.getItemStorage().hasItem(ItemHelper.BED))) &&
+                (_sleepThroughNightTask.isActive() && !AltoClef.INSTANCE.getItemStorage().hasItem(ItemHelper.BED))) &&
                 getBedTask == null) {
-            if (!mod.getClientBaritone().getExploreProcess().isActive()) {
+            if (!AltoClef.INSTANCE.getClientBaritone().getExploreProcess().isActive()) {
                 if (_timer3.getDuration() >= 30) {
                     if (_config.renderDistanceManipulation) {
                         getInstance().options.getViewDistance().setValue(12);
@@ -591,7 +613,7 @@ public class MarvionBeatMinecraftTask extends Task {
                 && !_locateStrongholdTask.isActive() && _logsTask == null && _stoneGearTask == null &&
                 _getPorkchopTask == null && searchBiomeTask == null && _config.renderDistanceManipulation &&
                 !_ranStrongholdLocator && getBedTask == null && !_sleepThroughNightTask.isActive()) {
-            if (!mod.getClientBaritone().getExploreProcess().isActive()) {
+            if (!AltoClef.INSTANCE.getClientBaritone().getExploreProcess().isActive()) {
                 if (_timer1.elapsed()) {
                     if (_config.renderDistanceManipulation) {
                         getInstance().options.getViewDistance().setValue(2);
@@ -602,7 +624,7 @@ public class MarvionBeatMinecraftTask extends Task {
             }
         }
         if (WorldHelper.getCurrentDimension() == Dimension.NETHER) {
-            if (!mod.getClientBaritone().getExploreProcess().isActive() && !_locateStrongholdTask.isActive() &&
+            if (!AltoClef.INSTANCE.getClientBaritone().getExploreProcess().isActive() && !_locateStrongholdTask.isActive() &&
                     _config.renderDistanceManipulation) {
                 if (_timer1.elapsed()) {
                     if (_config.renderDistanceManipulation) {
@@ -613,71 +635,71 @@ public class MarvionBeatMinecraftTask extends Task {
                 }
             }
         }
-        List<Slot> torches = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+        List<Slot> torches = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                 Items.TORCH);
-        List<Slot> beds = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+        List<Slot> beds = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                 ItemHelper.BED);
-        List<Slot> excessWaterBuckets = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+        List<Slot> excessWaterBuckets = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                 Items.WATER_BUCKET);
-        List<Slot> excessLighters = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+        List<Slot> excessLighters = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                 Items.FLINT_AND_STEEL);
-        List<Slot> sands = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+        List<Slot> sands = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                 Items.SAND);
-        List<Slot> gravels = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+        List<Slot> gravels = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                 Items.GRAVEL);
-        List<Slot> furnaceSlots = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+        List<Slot> furnaceSlots = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                 Items.FURNACE);
-        List<Slot> shears = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+        List<Slot> shears = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                 Items.SHEARS);
         if (!StorageHelper.isBigCraftingOpen() && !StorageHelper.isFurnaceOpen() &&
                 !StorageHelper.isSmokerOpen() && !StorageHelper.isBlastFurnaceOpen()) {
-            if (!shears.isEmpty() && !needsBeds(mod)) {
+            if (!shears.isEmpty() && !needsBeds(AltoClef.INSTANCE)) {
                 for (Slot shear : shears) {
                     if (Slot.isCursor(shear)) {
-                        if (!mod.getControllerExtras().isBreakingBlock()) {
-                            LookHelper.randomOrientation(mod);
+                        if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                            LookHelper.randomOrientation(AltoClef.INSTANCE);
                         }
-                        mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                        AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                     } else {
-                        mod.getSlotHandler().clickSlot(shear, 0, SlotActionType.PICKUP);
+                        AltoClef.INSTANCE.getSlotHandler().clickSlot(shear, 0, SlotActionType.PICKUP);
                     }
                 }
             }
-            if (!furnaceSlots.isEmpty() && mod.getItemStorage().hasItem(Items.SMOKER) &&
-                    mod.getItemStorage().hasItem(Items.BLAST_FURNACE) && mod.getModSettings().shouldUseBlastFurnace()) {
+            if (!furnaceSlots.isEmpty() && AltoClef.INSTANCE.getItemStorage().hasItem(Items.SMOKER) &&
+                    AltoClef.INSTANCE.getItemStorage().hasItem(Items.BLAST_FURNACE) && AltoClef.INSTANCE.getModSettings().shouldUseBlastFurnace()) {
                 for (Slot furnace : furnaceSlots) {
                     if (Slot.isCursor(furnace)) {
-                        if (!mod.getControllerExtras().isBreakingBlock()) {
-                            LookHelper.randomOrientation(mod);
+                        if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                            LookHelper.randomOrientation(AltoClef.INSTANCE);
                         }
-                        mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                        AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                     } else {
-                        mod.getSlotHandler().clickSlot(furnace, 0, SlotActionType.PICKUP);
+                        AltoClef.INSTANCE.getSlotHandler().clickSlot(furnace, 0, SlotActionType.PICKUP);
                     }
                 }
             }
             if (!sands.isEmpty()) {
                 for (Slot sand : sands) {
                     if (Slot.isCursor(sand)) {
-                        if (!mod.getControllerExtras().isBreakingBlock()) {
-                            LookHelper.randomOrientation(mod);
+                        if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                            LookHelper.randomOrientation(AltoClef.INSTANCE);
                         }
-                        mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                        AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                     } else {
-                        mod.getSlotHandler().clickSlot(sand, 0, SlotActionType.PICKUP);
+                        AltoClef.INSTANCE.getSlotHandler().clickSlot(sand, 0, SlotActionType.PICKUP);
                     }
                 }
             }
-            if (mod.getItemStorage().hasItem(Items.FLINT) || mod.getItemStorage().hasItem(Items.FLINT_AND_STEEL)) {
+            if (AltoClef.INSTANCE.getItemStorage().hasItem(Items.FLINT) || AltoClef.INSTANCE.getItemStorage().hasItem(Items.FLINT_AND_STEEL)) {
                 if (!gravels.isEmpty()) {
                     for (Slot gravel : gravels) {
                         if (Slot.isCursor(gravel)) {
-                            if (!mod.getControllerExtras().isBreakingBlock()) {
-                                LookHelper.randomOrientation(mod);
+                            if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                                LookHelper.randomOrientation(AltoClef.INSTANCE);
                             }
-                            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                         } else {
-                            mod.getSlotHandler().clickSlot(gravel, 0, SlotActionType.PICKUP);
+                            AltoClef.INSTANCE.getSlotHandler().clickSlot(gravel, 0, SlotActionType.PICKUP);
                         }
                     }
                 }
@@ -685,54 +707,54 @@ public class MarvionBeatMinecraftTask extends Task {
             if (!torches.isEmpty()) {
                 for (Slot torch : torches) {
                     if (Slot.isCursor(torch)) {
-                        if (!mod.getControllerExtras().isBreakingBlock()) {
-                            LookHelper.randomOrientation(mod);
+                        if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                            LookHelper.randomOrientation(AltoClef.INSTANCE);
                         }
-                        mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                        AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                     } else {
-                        mod.getSlotHandler().clickSlot(torch, 0, SlotActionType.PICKUP);
+                        AltoClef.INSTANCE.getSlotHandler().clickSlot(torch, 0, SlotActionType.PICKUP);
                     }
                 }
             }
-            if (mod.getItemStorage().getItemCount(Items.WATER_BUCKET) > 1) {
+            if (AltoClef.INSTANCE.getItemStorage().getItemCount(Items.WATER_BUCKET) > 1) {
                 if (!excessWaterBuckets.isEmpty()) {
                     for (Slot excessWaterBucket : excessWaterBuckets) {
                         if (Slot.isCursor(excessWaterBucket)) {
-                            if (!mod.getControllerExtras().isBreakingBlock()) {
-                                LookHelper.randomOrientation(mod);
+                            if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                                LookHelper.randomOrientation(AltoClef.INSTANCE);
                             }
-                            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                         } else {
-                            mod.getSlotHandler().clickSlot(excessWaterBucket, 0, SlotActionType.PICKUP);
+                            AltoClef.INSTANCE.getSlotHandler().clickSlot(excessWaterBucket, 0, SlotActionType.PICKUP);
                         }
                     }
                 }
             }
-            if (mod.getItemStorage().getItemCount(Items.FLINT_AND_STEEL) > 1) {
+            if (AltoClef.INSTANCE.getItemStorage().getItemCount(Items.FLINT_AND_STEEL) > 1) {
                 if (!excessLighters.isEmpty()) {
                     for (Slot excessLighter : excessLighters) {
                         if (Slot.isCursor(excessLighter)) {
-                            if (!mod.getControllerExtras().isBreakingBlock()) {
-                                LookHelper.randomOrientation(mod);
+                            if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                                LookHelper.randomOrientation(AltoClef.INSTANCE);
                             }
-                            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                         } else {
-                            mod.getSlotHandler().clickSlot(excessLighter, 0, SlotActionType.PICKUP);
+                            AltoClef.INSTANCE.getSlotHandler().clickSlot(excessLighter, 0, SlotActionType.PICKUP);
                         }
                     }
                 }
             }
-            if (mod.getItemStorage().getItemCount(ItemHelper.BED) > getTargetBeds(mod) &&
-                    !endPortalFound(mod, _endPortalCenterLocation) && WorldHelper.getCurrentDimension() != Dimension.END) {
+            if (AltoClef.INSTANCE.getItemStorage().getItemCount(ItemHelper.BED) > getTargetBeds(AltoClef.INSTANCE) &&
+                    !endPortalFound(AltoClef.INSTANCE, _endPortalCenterLocation) && WorldHelper.getCurrentDimension() != Dimension.END) {
                 if (!beds.isEmpty()) {
                     for (Slot bed : beds) {
                         if (Slot.isCursor(bed)) {
-                            if (!mod.getControllerExtras().isBreakingBlock()) {
-                                LookHelper.randomOrientation(mod);
+                            if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                                LookHelper.randomOrientation(AltoClef.INSTANCE);
                             }
-                            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                         } else {
-                            mod.getSlotHandler().clickSlot(bed, 0, SlotActionType.PICKUP);
+                            AltoClef.INSTANCE.getSlotHandler().clickSlot(bed, 0, SlotActionType.PICKUP);
                         }
                     }
                 }
@@ -778,40 +800,40 @@ public class MarvionBeatMinecraftTask extends Task {
                 getInstance().options.getEntityDistanceScaling().setValue(1.0);
             }
             // If we have bed, do bed strats, otherwise punk normally.
-            updateCachedEndItems(mod);
+            updateCachedEndItems(AltoClef.INSTANCE);
             // Grab beds
-            if (mod.getEntityTracker().itemDropped(ItemHelper.BED) && (needsBeds(mod) ||
+            if (AltoClef.INSTANCE.getEntityTracker().itemDropped(ItemHelper.BED) && (needsBeds(AltoClef.INSTANCE) ||
                     WorldHelper.getCurrentDimension() == Dimension.END))
                 return new PickupDroppedItemTask(new ItemTarget(ItemHelper.BED), true);
             // Grab tools
-            if (!mod.getItemStorage().hasItem(Items.IRON_PICKAXE, Items.DIAMOND_PICKAXE)) {
-                if (mod.getEntityTracker().itemDropped(Items.IRON_PICKAXE))
+            if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.IRON_PICKAXE, Items.DIAMOND_PICKAXE)) {
+                if (AltoClef.INSTANCE.getEntityTracker().itemDropped(Items.IRON_PICKAXE))
                     return new PickupDroppedItemTask(Items.IRON_PICKAXE, 1);
-                if (mod.getEntityTracker().itemDropped(Items.DIAMOND_PICKAXE))
+                if (AltoClef.INSTANCE.getEntityTracker().itemDropped(Items.DIAMOND_PICKAXE))
                     return new PickupDroppedItemTask(Items.DIAMOND_PICKAXE, 1);
             }
-            if (!mod.getItemStorage().hasItem(Items.WATER_BUCKET) && mod.getEntityTracker().itemDropped(Items.WATER_BUCKET))
+            if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.WATER_BUCKET) && AltoClef.INSTANCE.getEntityTracker().itemDropped(Items.WATER_BUCKET))
                 return new PickupDroppedItemTask(Items.WATER_BUCKET, 1);
             // Grab armor
             for (Item armorCheck : COLLECT_EYE_ARMOR_END) {
-                if (!StorageHelper.isArmorEquipped(mod, armorCheck)) {
-                    if (mod.getItemStorage().hasItem(armorCheck)) {
+                if (!StorageHelper.isArmorEquipped(AltoClef.INSTANCE, armorCheck)) {
+                    if (AltoClef.INSTANCE.getItemStorage().hasItem(armorCheck)) {
                         setDebugState("Equipping armor.");
                         return new EquipArmorTask(armorCheck);
                     }
-                    if (mod.getEntityTracker().itemDropped(armorCheck)) {
+                    if (AltoClef.INSTANCE.getEntityTracker().itemDropped(armorCheck)) {
                         return new PickupDroppedItemTask(armorCheck, 1);
                     }
                 }
             }
-            if (!mod.getEntityTracker().entityFound(EnderDragonEntity.class)) {
-                if (mod.getPlayer().getBlockPos().getX() == 0 && mod.getPlayer().getBlockPos().getZ() == 0) {
+            if (!AltoClef.INSTANCE.getEntityTracker().entityFound(EnderDragonEntity.class)) {
+                if (AltoClef.INSTANCE.getPlayer().getBlockPos().getX() == 0 && AltoClef.INSTANCE.getPlayer().getBlockPos().getZ() == 0) {
                     getInstance().player.setPitch(-90);
                 }
             }
             // Dragons breath avoidance
-            _dragonBreathTracker.updateBreath(mod);
-            for (BlockPos playerIn : WorldHelper.getBlocksTouchingPlayer(mod)) {
+            _dragonBreathTracker.updateBreath(AltoClef.INSTANCE);
+            for (BlockPos playerIn : WorldHelper.getBlocksTouchingPlayer(AltoClef.INSTANCE)) {
                 if (_dragonBreathTracker.isTouchingDragonBreath(playerIn)) {
                     setDebugState("ESCAPE dragons breath");
                     _escapingDragonsBreath = true;
@@ -821,20 +843,20 @@ public class MarvionBeatMinecraftTask extends Task {
             _escapingDragonsBreath = false;
 
             // If we find an ender portal, just GO to it!!!
-            if (mod.getBlockTracker().anyFound(Blocks.END_PORTAL)) {
+            if (AltoClef.INSTANCE.getBlockTracker().anyFound(Blocks.END_PORTAL)) {
                 setDebugState("WOOHOO");
                 _dragonIsDead = true;
                 _enterindEndPortal = true;
-                if (!mod.getExtraBaritoneSettings().isCanWalkOnEndPortal()) {
-                    mod.getExtraBaritoneSettings().canWalkOnEndPortal(true);
+                if (!AltoClef.INSTANCE.getExtraBaritoneSettings().isCanWalkOnEndPortal()) {
+                    AltoClef.INSTANCE.getExtraBaritoneSettings().canWalkOnEndPortal(true);
                 }
                 return new DoToClosestBlockTask(
                         blockPos -> new GetToBlockTask(blockPos.up()),
                         Blocks.END_PORTAL
                 );
             }
-            if (mod.getItemStorage().hasItem(ItemHelper.BED) ||
-                    mod.getBlockTracker().anyFound(ItemHelper.itemsToBlocks(ItemHelper.BED))) {
+            if (AltoClef.INSTANCE.getItemStorage().hasItem(ItemHelper.BED) ||
+                    AltoClef.INSTANCE.getBlockTracker().anyFound(ItemHelper.itemsToBlocks(ItemHelper.BED))) {
                 setDebugState("Bed strats");
                 return _killDragonBedStratsTask;
             }
@@ -846,14 +868,14 @@ public class MarvionBeatMinecraftTask extends Task {
         }
 
         // Check for end portals. Always.
-        if (!endPortalOpened(mod, _endPortalCenterLocation) && WorldHelper.getCurrentDimension() == Dimension.OVERWORLD) {
-            Optional<BlockPos> endPortal = mod.getBlockTracker().getNearestTracking(Blocks.END_PORTAL);
+        if (!endPortalOpened(AltoClef.INSTANCE, _endPortalCenterLocation) && WorldHelper.getCurrentDimension() == Dimension.OVERWORLD) {
+            Optional<BlockPos> endPortal = AltoClef.INSTANCE.getBlockTracker().getNearestTracking(Blocks.END_PORTAL);
             if (endPortal.isPresent()) {
                 _endPortalCenterLocation = endPortal.get();
                 _endPortalOpened = true;
             } else {
                 // TODO: Test that this works, for some reason the bot gets stuck near the stronghold and it keeps "Searching" for the portal
-                _endPortalCenterLocation = doSimpleSearchForEndPortal(mod);
+                _endPortalCenterLocation = doSimpleSearchForEndPortal(AltoClef.INSTANCE);
             }
         }
         if (getBedTask != null) {
@@ -869,39 +891,39 @@ public class MarvionBeatMinecraftTask extends Task {
         // Portable crafting table.
         // If we're NOT using our crafting table right now and there's one nearby, grab it.
         if (!_endPortalOpened && WorldHelper.getCurrentDimension() != Dimension.END && _config.rePickupCraftingTable &&
-                !mod.getItemStorage().hasItem(Items.CRAFTING_TABLE) && !thisOrChildSatisfies(isCraftingTableTask)
-                && (mod.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(mod, blockPos) &&
-                WorldHelper.canReach(mod, blockPos), Blocks.CRAFTING_TABLE) ||
-                mod.getEntityTracker().itemDropped(Items.CRAFTING_TABLE))) {
+                !AltoClef.INSTANCE.getItemStorage().hasItem(Items.CRAFTING_TABLE) && !thisOrChildSatisfies(isCraftingTableTask)
+                && (AltoClef.INSTANCE.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(AltoClef.INSTANCE, blockPos) &&
+                WorldHelper.canReach(AltoClef.INSTANCE, blockPos), Blocks.CRAFTING_TABLE) ||
+                AltoClef.INSTANCE.getEntityTracker().itemDropped(Items.CRAFTING_TABLE))) {
             setDebugState("Picking up the crafting table while we are at it.");
             return new MineAndCollectTask(Items.CRAFTING_TABLE, 1, new Block[]{Blocks.CRAFTING_TABLE}, MiningRequirement.HAND);
         }
         if (_config.rePickupSmoker && !_endPortalOpened && WorldHelper.getCurrentDimension() != Dimension.END &&
-                !mod.getItemStorage().hasItem(Items.SMOKER) &&
-                (mod.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(mod, blockPos) &&
-                        WorldHelper.canReach(mod, blockPos), Blocks.SMOKER)
-                        || mod.getEntityTracker().itemDropped(Items.SMOKER)) && _smeltTask == null &&
+                !AltoClef.INSTANCE.getItemStorage().hasItem(Items.SMOKER) &&
+                (AltoClef.INSTANCE.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(AltoClef.INSTANCE, blockPos) &&
+                        WorldHelper.canReach(AltoClef.INSTANCE, blockPos), Blocks.SMOKER)
+                        || AltoClef.INSTANCE.getEntityTracker().itemDropped(Items.SMOKER)) && _smeltTask == null &&
                 _foodTask == null) {
             setDebugState("Picking up the smoker while we are at it.");
             return new MineAndCollectTask(Items.SMOKER, 1, new Block[]{Blocks.SMOKER}, MiningRequirement.WOOD);
         }
         if (_config.rePickupFurnace && !_endPortalOpened && WorldHelper.getCurrentDimension() != Dimension.END &&
-                !mod.getItemStorage().hasItem(Items.FURNACE) &&
-                (mod.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(mod, blockPos) &&
-                        WorldHelper.canReach(mod, blockPos), Blocks.FURNACE) ||
-                        mod.getEntityTracker().itemDropped(Items.FURNACE)) && _starterGearTask == null &&
+                !AltoClef.INSTANCE.getItemStorage().hasItem(Items.FURNACE) &&
+                (AltoClef.INSTANCE.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(AltoClef.INSTANCE, blockPos) &&
+                        WorldHelper.canReach(AltoClef.INSTANCE, blockPos), Blocks.FURNACE) ||
+                        AltoClef.INSTANCE.getEntityTracker().itemDropped(Items.FURNACE)) && _starterGearTask == null &&
                 _shieldTask == null && _ironGearTask == null && _gearTask == null && !_goToNetherTask.isActive() &&
-                !_ranStrongholdLocator && !mod.getModSettings().shouldUseBlastFurnace()) {
+                !_ranStrongholdLocator && !AltoClef.INSTANCE.getModSettings().shouldUseBlastFurnace()) {
             setDebugState("Picking up the furnace while we are at it.");
             return new MineAndCollectTask(Items.FURNACE, 1, new Block[]{Blocks.FURNACE}, MiningRequirement.WOOD);
         }
         if (_config.rePickupFurnace && !_endPortalOpened && WorldHelper.getCurrentDimension() != Dimension.END &&
-                !mod.getItemStorage().hasItem(Items.BLAST_FURNACE) &&
-                (mod.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(mod, blockPos) &&
-                        WorldHelper.canReach(mod, blockPos), Blocks.BLAST_FURNACE) ||
-                        mod.getEntityTracker().itemDropped(Items.BLAST_FURNACE)) && _starterGearTask == null &&
+                !AltoClef.INSTANCE.getItemStorage().hasItem(Items.BLAST_FURNACE) &&
+                (AltoClef.INSTANCE.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(AltoClef.INSTANCE, blockPos) &&
+                        WorldHelper.canReach(AltoClef.INSTANCE, blockPos), Blocks.BLAST_FURNACE) ||
+                        AltoClef.INSTANCE.getEntityTracker().itemDropped(Items.BLAST_FURNACE)) && _starterGearTask == null &&
                 _shieldTask == null && _ironGearTask == null && _gearTask == null && !_goToNetherTask.isActive() &&
-                !_ranStrongholdLocator && mod.getModSettings().shouldUseBlastFurnace()) {
+                !_ranStrongholdLocator && AltoClef.INSTANCE.getModSettings().shouldUseBlastFurnace()) {
             setDebugState("Picking up the blast furnace while we are at it.");
             return new MineAndCollectTask(Items.BLAST_FURNACE, 1, new Block[]{Blocks.BLAST_FURNACE}, MiningRequirement.WOOD);
         }
@@ -917,8 +939,8 @@ public class MarvionBeatMinecraftTask extends Task {
                 _shieldTask = null;
                 _ironGearTask = null;
                 _gearTask = null;
-                if (_config.renderDistanceManipulation && mod.getItemStorage().hasItem(ItemHelper.BED)) {
-                    if (!mod.getClientBaritone().getExploreProcess().isActive()) {
+                if (_config.renderDistanceManipulation && AltoClef.INSTANCE.getItemStorage().hasItem(ItemHelper.BED)) {
+                    if (!AltoClef.INSTANCE.getClientBaritone().getExploreProcess().isActive()) {
                         if (_timer1.elapsed()) {
                             getInstance().options.getViewDistance().setValue(2);
                             getInstance().options.getEntityDistanceScaling().setValue(0.5);
@@ -930,11 +952,11 @@ public class MarvionBeatMinecraftTask extends Task {
                     _timer2.reset();
                 }
                 if (_timer2.getDuration() >= 30) {
-                    if (mod.getEntityTracker().itemDropped(ItemHelper.BED) && needsBeds(mod)) {
+                    if (AltoClef.INSTANCE.getEntityTracker().itemDropped(ItemHelper.BED) && needsBeds(AltoClef.INSTANCE)) {
                         setDebugState("Resetting sleep through night task.");
                         return new PickupDroppedItemTask(new ItemTarget(ItemHelper.BED), true);
                     }
-                    if (anyBedsFound(mod)) {
+                    if (anyBedsFound(AltoClef.INSTANCE)) {
                         setDebugState("Resetting sleep through night task.");
                         return new DoToClosestBlockTask(DestroyBlockTask::new, ItemHelper.itemsToBlocks(ItemHelper.BED));
                     }
@@ -942,19 +964,19 @@ public class MarvionBeatMinecraftTask extends Task {
                 setDebugState("Sleeping through night");
                 return _sleepThroughNightTask;
             }
-            if (!mod.getItemStorage().hasItem(ItemHelper.BED)) {
-                if (mod.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(mod, blockPos), ItemHelper.itemsToBlocks(ItemHelper.BED))
-                        || shouldForce(mod, _getOneBedTask)) {
+            if (!AltoClef.INSTANCE.getItemStorage().hasItem(ItemHelper.BED)) {
+                if (AltoClef.INSTANCE.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(AltoClef.INSTANCE, blockPos), ItemHelper.itemsToBlocks(ItemHelper.BED))
+                        || shouldForce(AltoClef.INSTANCE, _getOneBedTask)) {
                     setDebugState("Getting one bed to sleep in at night.");
                     return _getOneBedTask;
                 }
             }
         }
         if (WorldHelper.getCurrentDimension() == Dimension.OVERWORLD) {
-            if (needsBeds(mod) && anyBedsFound(mod)) {
+            if (needsBeds(AltoClef.INSTANCE) && anyBedsFound(AltoClef.INSTANCE)) {
                 setDebugState("A bed was found, getting it.");
                 if (_config.renderDistanceManipulation) {
-                    if (!mod.getClientBaritone().getExploreProcess().isActive()) {
+                    if (!AltoClef.INSTANCE.getClientBaritone().getExploreProcess().isActive()) {
                         if (_timer1.elapsed()) {
                             getInstance().options.getViewDistance().setValue(2);
                             getInstance().options.getEntityDistanceScaling().setValue(0.5);
@@ -962,7 +984,7 @@ public class MarvionBeatMinecraftTask extends Task {
                         }
                     }
                 }
-                getBedTask = getBedTask(mod);
+                getBedTask = getBedTask(AltoClef.INSTANCE);
                 return getBedTask;
             } else {
                 getBedTask = null;
@@ -970,15 +992,15 @@ public class MarvionBeatMinecraftTask extends Task {
         }
 
         // Do we need more eyes?
-        boolean noEyesPlease = (endPortalOpened(mod, _endPortalCenterLocation) || WorldHelper.getCurrentDimension() == Dimension.END);
-        int filledPortalFrames = getFilledPortalFrames(mod, _endPortalCenterLocation);
+        boolean noEyesPlease = (endPortalOpened(AltoClef.INSTANCE, _endPortalCenterLocation) || WorldHelper.getCurrentDimension() == Dimension.END);
+        int filledPortalFrames = getFilledPortalFrames(AltoClef.INSTANCE, _endPortalCenterLocation);
         int eyesNeededMin = noEyesPlease ? 0 : _config.minimumEyes - filledPortalFrames;
         int eyesNeeded = noEyesPlease ? 0 : _config.targetEyes - filledPortalFrames;
-        int eyes = mod.getItemStorage().getItemCount(Items.ENDER_EYE);
+        int eyes = AltoClef.INSTANCE.getItemStorage().getItemCount(Items.ENDER_EYE);
         if (eyes < eyesNeededMin || (!_ranStrongholdLocator && _collectingEyes && eyes < eyesNeeded)) {
             _collectingEyes = true;
             _weHaveEyes = false;
-            return getEyesOfEnderTask(mod, eyesNeeded);
+            return getEyesOfEnderTask(AltoClef.INSTANCE, eyesNeeded);
         } else {
             _weHaveEyes = true;
             _collectingEyes = false;
@@ -987,70 +1009,70 @@ public class MarvionBeatMinecraftTask extends Task {
         // We have eyes. Locate our portal + enter.
         switch (WorldHelper.getCurrentDimension()) {
             case OVERWORLD -> {
-                if (mod.getItemStorage().hasItem(Items.DIAMOND_PICKAXE)) {
+                if (AltoClef.INSTANCE.getItemStorage().hasItem(Items.DIAMOND_PICKAXE)) {
                     Item[] throwGearItems = {Items.STONE_SWORD, Items.STONE_PICKAXE, Items.IRON_SWORD, Items.IRON_PICKAXE};
-                    List<Slot> ironArmors = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+                    List<Slot> ironArmors = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                             COLLECT_IRON_ARMOR);
-                    List<Slot> throwGears = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+                    List<Slot> throwGears = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                             throwGearItems);
                     if (!StorageHelper.isBigCraftingOpen() && !StorageHelper.isFurnaceOpen() &&
                             !StorageHelper.isSmokerOpen() && !StorageHelper.isBlastFurnaceOpen() &&
-                            (mod.getItemStorage().hasItem(Items.FLINT_AND_STEEL) ||
-                                    mod.getItemStorage().hasItem(Items.FIRE_CHARGE))) {
+                            (AltoClef.INSTANCE.getItemStorage().hasItem(Items.FLINT_AND_STEEL) ||
+                                    AltoClef.INSTANCE.getItemStorage().hasItem(Items.FIRE_CHARGE))) {
                         if (!throwGears.isEmpty()) {
                             for (Slot throwGear : throwGears) {
                                 if (Slot.isCursor(throwGear)) {
-                                    if (!mod.getControllerExtras().isBreakingBlock()) {
-                                        LookHelper.randomOrientation(mod);
+                                    if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                                        LookHelper.randomOrientation(AltoClef.INSTANCE);
                                     }
-                                    mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                                    AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                                 } else {
-                                    mod.getSlotHandler().clickSlot(throwGear, 0, SlotActionType.PICKUP);
+                                    AltoClef.INSTANCE.getSlotHandler().clickSlot(throwGear, 0, SlotActionType.PICKUP);
                                 }
                             }
                         }
                         if (!ironArmors.isEmpty()) {
                             for (Slot ironArmor : ironArmors) {
                                 if (Slot.isCursor(ironArmor)) {
-                                    if (!mod.getControllerExtras().isBreakingBlock()) {
-                                        LookHelper.randomOrientation(mod);
+                                    if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                                        LookHelper.randomOrientation(AltoClef.INSTANCE);
                                     }
-                                    mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                                    AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                                 } else {
-                                    mod.getSlotHandler().clickSlot(ironArmor, 0, SlotActionType.PICKUP);
+                                    AltoClef.INSTANCE.getSlotHandler().clickSlot(ironArmor, 0, SlotActionType.PICKUP);
                                 }
                             }
                         }
                     }
                 }
                 // If we found our end portal...
-                if (endPortalFound(mod, _endPortalCenterLocation)) {
+                if (endPortalFound(AltoClef.INSTANCE, _endPortalCenterLocation)) {
                     // Destroy silverfish spawner
-                    if (StorageHelper.miningRequirementMetInventory(mod, MiningRequirement.WOOD)) {
-                        Optional<BlockPos> silverfish = mod.getBlockTracker().getNearestTracking(blockPos -> {
-                            return WorldHelper.getSpawnerEntity(mod, blockPos) instanceof SilverfishEntity;
+                    if (StorageHelper.miningRequirementMetInventory(AltoClef.INSTANCE, MiningRequirement.WOOD)) {
+                        Optional<BlockPos> silverfish = AltoClef.INSTANCE.getBlockTracker().getNearestTracking(blockPos -> {
+                            return WorldHelper.getSpawnerEntity(AltoClef.INSTANCE, blockPos) instanceof SilverfishEntity;
                         }, Blocks.SPAWNER);
                         if (silverfish.isPresent()) {
                             setDebugState("Breaking silverfish spawner.");
                             return new DestroyBlockTask(silverfish.get());
                         }
                     }
-                    if (endPortalOpened(mod, _endPortalCenterLocation)) {
-                        if (needsBuildingMaterials(mod)) {
+                    if (endPortalOpened(AltoClef.INSTANCE, _endPortalCenterLocation)) {
+                        if (needsBuildingMaterials(AltoClef.INSTANCE)) {
                             setDebugState("Collecting building materials.");
                             return _buildMaterialsTask;
                         }
-                        if (_config.placeSpawnNearEndPortal && mod.getItemStorage().hasItem(ItemHelper.BED)) {
-                            if (!spawnSetNearPortal(mod, _endPortalCenterLocation)) {
+                        if (_config.placeSpawnNearEndPortal && AltoClef.INSTANCE.getItemStorage().hasItem(ItemHelper.BED)) {
+                            if (!spawnSetNearPortal(AltoClef.INSTANCE, _endPortalCenterLocation)) {
                                 setDebugState("Setting spawn near end portal");
-                                return setSpawnNearPortalTask(mod);
+                                return setSpawnNearPortalTask(AltoClef.INSTANCE);
                             }
                         }
                         // We're as ready as we'll ever be, hop into the portal!
                         setDebugState("Entering End");
                         _enterindEndPortal = true;
-                        if (!mod.getExtraBaritoneSettings().isCanWalkOnEndPortal()) {
-                            mod.getExtraBaritoneSettings().canWalkOnEndPortal(true);
+                        if (!AltoClef.INSTANCE.getExtraBaritoneSettings().isCanWalkOnEndPortal()) {
+                            AltoClef.INSTANCE.getExtraBaritoneSettings().canWalkOnEndPortal(true);
                         }
                         return new DoToClosestBlockTask(
                                 blockPos -> new GetToBlockTask(blockPos.up()),
@@ -1061,16 +1083,16 @@ public class MarvionBeatMinecraftTask extends Task {
                         setDebugState("Opening End Portal");
                         return new DoToClosestBlockTask(
                                 blockPos -> new InteractWithBlockTask(Items.ENDER_EYE, blockPos),
-                                blockPos -> !isEndPortalFrameFilled(mod, blockPos),
+                                blockPos -> !isEndPortalFrameFilled(AltoClef.INSTANCE, blockPos),
                                 Blocks.END_PORTAL_FRAME
                         );
                     }
                 } else {
                     _ranStrongholdLocator = true;
                     // Get beds before starting our portal location.
-                    if (WorldHelper.getCurrentDimension() == Dimension.OVERWORLD && needsBeds(mod)) {
+                    if (WorldHelper.getCurrentDimension() == Dimension.OVERWORLD && needsBeds(AltoClef.INSTANCE)) {
                         setDebugState("Getting beds before stronghold search.");
-                        if (!mod.getClientBaritone().getExploreProcess().isActive()) {
+                        if (!AltoClef.INSTANCE.getClientBaritone().getExploreProcess().isActive()) {
                             if (_timer1.elapsed()) {
                                 if (_config.renderDistanceManipulation) {
                                     getInstance().options.getViewDistance().setValue(32);
@@ -1079,20 +1101,20 @@ public class MarvionBeatMinecraftTask extends Task {
                                 _timer1.reset();
                             }
                         }
-                        getBedTask = getBedTask(mod);
+                        getBedTask = getBedTask(AltoClef.INSTANCE);
                         return getBedTask;
                     } else {
                         getBedTask = null;
                     }
-                    if (!mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
+                    if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.WATER_BUCKET)) {
                         setDebugState("Getting water bucket.");
                         return TaskCatalogue.getItemTask(Items.WATER_BUCKET, 1);
                     }
-                    if (!mod.getItemStorage().hasItem(Items.FLINT_AND_STEEL)) {
+                    if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.FLINT_AND_STEEL)) {
                         setDebugState("Getting flint and steel.");
                         return TaskCatalogue.getItemTask(Items.FLINT_AND_STEEL, 1);
                     }
-                    if (needsBuildingMaterials(mod)) {
+                    if (needsBuildingMaterials(AltoClef.INSTANCE)) {
                         setDebugState("Collecting building materials.");
                         return _buildMaterialsTask;
                     }
@@ -1103,35 +1125,35 @@ public class MarvionBeatMinecraftTask extends Task {
             }
             case NETHER -> {
                 Item[] throwGearItems = {Items.STONE_SWORD, Items.STONE_PICKAXE, Items.IRON_SWORD, Items.IRON_PICKAXE};
-                List<Slot> ironArmors = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+                List<Slot> ironArmors = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                         COLLECT_IRON_ARMOR);
-                List<Slot> throwGears = mod.getItemStorage().getSlotsWithItemPlayerInventory(true,
+                List<Slot> throwGears = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(true,
                         throwGearItems);
                 if (!StorageHelper.isBigCraftingOpen() && !StorageHelper.isFurnaceOpen() &&
                         !StorageHelper.isSmokerOpen() && !StorageHelper.isBlastFurnaceOpen() &&
-                        (mod.getItemStorage().hasItem(Items.FLINT_AND_STEEL) ||
-                                mod.getItemStorage().hasItem(Items.FIRE_CHARGE))) {
+                        (AltoClef.INSTANCE.getItemStorage().hasItem(Items.FLINT_AND_STEEL) ||
+                                AltoClef.INSTANCE.getItemStorage().hasItem(Items.FIRE_CHARGE))) {
                     if (!throwGears.isEmpty()) {
                         for (Slot throwGear : throwGears) {
                             if (Slot.isCursor(throwGear)) {
-                                if (!mod.getControllerExtras().isBreakingBlock()) {
-                                    LookHelper.randomOrientation(mod);
+                                if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                                    LookHelper.randomOrientation(AltoClef.INSTANCE);
                                 }
-                                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                             } else {
-                                mod.getSlotHandler().clickSlot(throwGear, 0, SlotActionType.PICKUP);
+                                AltoClef.INSTANCE.getSlotHandler().clickSlot(throwGear, 0, SlotActionType.PICKUP);
                             }
                         }
                     }
                     if (!ironArmors.isEmpty()) {
                         for (Slot ironArmor : ironArmors) {
                             if (Slot.isCursor(ironArmor)) {
-                                if (!mod.getControllerExtras().isBreakingBlock()) {
-                                    LookHelper.randomOrientation(mod);
+                                if (!AltoClef.INSTANCE.getControllerExtras().isBreakingBlock()) {
+                                    LookHelper.randomOrientation(AltoClef.INSTANCE);
                                 }
-                                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                             } else {
-                                mod.getSlotHandler().clickSlot(ironArmor, 0, SlotActionType.PICKUP);
+                                AltoClef.INSTANCE.getSlotHandler().clickSlot(ironArmor, 0, SlotActionType.PICKUP);
                             }
                         }
                     }
@@ -1281,7 +1303,7 @@ public class MarvionBeatMinecraftTask extends Task {
         if (mod.getWorld().getBlockState(blockPos.up(1)).getBlock() == Blocks.WATER || blockPos.getY() < 50) {
             return false;
         }
-        for (BlockPos check : WorldHelper.scanRegion(mod, blockPos.add(-4, -2, -4), blockPos.add(4, 2, 4))) {
+        for (BlockPos check : WorldHelper.scanRegion(blockPos.add(-4, -2, -4), blockPos.add(4, 2, 4))) {
             if (mod.getWorld().getBlockState(check).getBlock() == Blocks.NETHERRACK) {
                 return true;
             }

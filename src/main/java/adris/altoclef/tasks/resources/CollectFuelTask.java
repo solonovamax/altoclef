@@ -1,11 +1,11 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.Items;
 
 // TODO: Make this collect more than just coal. It should smartly pick alternative sources if coal is too far away or if we simply cannot get a wooden pick.
@@ -18,12 +18,12 @@ public class CollectFuelTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         // Nothing
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
 
         switch (WorldHelper.getCurrentDimension()) {
             case OVERWORLD -> {
@@ -46,7 +46,7 @@ public class CollectFuelTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
         // Nothing
     }
 
@@ -59,8 +59,8 @@ public class CollectFuelTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return mod.getItemStorage().getItemCountInventoryOnly(Items.COAL) >= _targetFuel;
+    public boolean isFinished() {
+        return AltoClef.INSTANCE.getItemStorage().getItemCountInventoryOnly(Items.COAL) >= _targetFuel;
     }
 
     @Override

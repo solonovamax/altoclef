@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.CraftInInventoryTask;
@@ -20,14 +19,26 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.slots.SmokerSlot;
 import adris.altoclef.util.time.TimerGame;
-import net.minecraft.block.*;
+import gay.solonovamax.altoclef.AltoClef;
+import net.minecraft.block.BeetrootsBlock;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.CarrotsBlock;
+import net.minecraft.block.CropBlock;
+import net.minecraft.block.PotatoesBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.SlimeEntity;
-import net.minecraft.entity.passive.*;
+import net.minecraft.entity.passive.ChickenEntity;
+import net.minecraft.entity.passive.CodEntity;
+import net.minecraft.entity.passive.CowEntity;
+import net.minecraft.entity.passive.PigEntity;
+import net.minecraft.entity.passive.SalmonEntity;
+import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -115,12 +126,12 @@ public class CollectFoodTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
         // Protect ALL food
-        mod.getBehaviour().addProtectedItems(ITEMS_TO_PICK_UP);
+        AltoClef.INSTANCE.getBehaviour().addProtectedItems(ITEMS_TO_PICK_UP);
         for (CropTarget crop : CROPS) {
-            mod.getBlockTracker().trackBlock(crop.cropBlock);
+            AltoClef.INSTANCE.getBlockTracker().trackBlock(crop.cropBlock);
         }
 
         // Allow us to consume food.
@@ -130,40 +141,40 @@ public class CollectFoodTask extends Task {
             mod.getBehaviour().addProtectedItems(crop.cropItem);
         }
          */
-        mod.getBehaviour().addProtectedItems(Items.HAY_BLOCK, Items.SWEET_BERRIES);
+        AltoClef.INSTANCE.getBehaviour().addProtectedItems(Items.HAY_BLOCK, Items.SWEET_BERRIES);
 
-        mod.getBlockTracker().trackBlock(Blocks.HAY_BLOCK);
-        mod.getBlockTracker().trackBlock(Blocks.SWEET_BERRY_BUSH);
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(Blocks.HAY_BLOCK);
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(Blocks.SWEET_BERRY_BUSH);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (mod.getEntityTracker().entityFound(ChickenEntity.class)) {
-            Optional<Entity> chickens = mod.getEntityTracker().getClosestEntity(ChickenEntity.class);
+    protected Task onTick() {
+        if (AltoClef.INSTANCE.getEntityTracker().entityFound(ChickenEntity.class)) {
+            Optional<Entity> chickens = AltoClef.INSTANCE.getEntityTracker().getClosestEntity(ChickenEntity.class);
             if (chickens.isPresent()) {
-                Iterable<Entity> entities = mod.getWorld().getEntities();
+                Iterable<Entity> entities = AltoClef.INSTANCE.getWorld().getEntities();
                 for (Entity entity : entities) {
                     if (entity instanceof HostileEntity || entity instanceof SlimeEntity) {
                         if (chickens.get().hasPassenger(entity)) {
-                            if (mod.getEntityTracker().isEntityReachable(entity)) {
+                            if (AltoClef.INSTANCE.getEntityTracker().isEntityReachable(entity)) {
                                 Debug.logMessage("Blacklisting chicken jockey.");
-                                mod.getEntityTracker().requestEntityUnreachable(chickens.get());
+                                AltoClef.INSTANCE.getEntityTracker().requestEntityUnreachable(chickens.get());
                             }
                         }
                     }
                 }
             }
         }
-        List<BlockPos> haysPos = mod.getBlockTracker().getKnownLocations(Blocks.HAY_BLOCK);
+        List<BlockPos> haysPos = AltoClef.INSTANCE.getBlockTracker().getKnownLocations(Blocks.HAY_BLOCK);
         for (BlockPos HaysPos : haysPos) {
             BlockPos haysUpPos = HaysPos.up();
-            if (mod.getWorld().getBlockState(haysUpPos).getBlock() == Blocks.CARVED_PUMPKIN) {
+            if (AltoClef.INSTANCE.getWorld().getBlockState(haysUpPos).getBlock() == Blocks.CARVED_PUMPKIN) {
                 Debug.logMessage("Blacklisting pillage hay bales.");
-                mod.getBlockTracker().requestBlockUnreachable(HaysPos, 0);
+                AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(HaysPos, 0);
             }
         }
         // If we were previously smelting, keep on smelting.
-        if (_smeltTask != null && _smeltTask.isActive() && !_smeltTask.isFinished(mod)) {
+        if (_smeltTask != null && _smeltTask.isActive() && !_smeltTask.isFinished()) {
             // TODO: If we don't have cooking materials, cancel.
             setDebugState("Cooking...");
             if (MarvionBeatMinecraftTask.getConfig().renderDistanceManipulation) {
@@ -179,12 +190,12 @@ public class CollectFoodTask extends Task {
             _currentResourceTask = null;
         }
 
-        if (_currentResourceTask != null && _currentResourceTask.isActive() && !_currentResourceTask.isFinished(mod) && !_currentResourceTask.thisOrChildAreTimedOut()) {
+        if (_currentResourceTask != null && _currentResourceTask.isActive() && !_currentResourceTask.isFinished() && !_currentResourceTask.thisOrChildAreTimedOut()) {
             return _currentResourceTask;
         }
 
         // Calculate potential
-        double potentialFood = calculateFoodPotential(mod);
+        double potentialFood = calculateFoodPotential(AltoClef.INSTANCE);
         if (potentialFood >= _unitsNeeded) {
             // Convert our raw foods
             // PLAN:
@@ -192,7 +203,7 @@ public class CollectFoodTask extends Task {
             // - If we have raw foods, smelt all of them
 
             // Convert Hay+Wheat -> Bread
-            if (mod.getItemStorage().getItemCount(Items.WHEAT) >= 3) {
+            if (AltoClef.INSTANCE.getItemStorage().getItemCount(Items.WHEAT) >= 3) {
                 setDebugState("Crafting Bread");
                 Item[] w = new Item[]{Items.WHEAT};
                 Item[] o = null;
@@ -200,7 +211,7 @@ public class CollectFoodTask extends Task {
                 _currentResourceTask = new CraftInTableTask(new RecipeTarget(Items.BREAD, 99999999, CraftingRecipe.newShapedRecipe("bread", new Item[][]{w, w, w, o, o, o, o, o, o}, 1)), false, false);
                 return _currentResourceTask;
             }
-            if (mod.getItemStorage().getItemCount(Items.HAY_BLOCK) >= 1) {
+            if (AltoClef.INSTANCE.getItemStorage().getItemCount(Items.HAY_BLOCK) >= 1) {
                 setDebugState("Crafting Wheat");
                 Item[] o = null;
                 _currentResourceTask = new CraftInInventoryTask(new RecipeTarget(Items.WHEAT, 99999999, CraftingRecipe.newShapedRecipe("wheat", new Item[][]{new Item[]{Items.HAY_BLOCK}, o, o, o}, 9)), false, false);
@@ -209,10 +220,10 @@ public class CollectFoodTask extends Task {
             // Convert raw foods -> cooked foods
 
             for (CookableFoodTarget cookable : COOKABLE_FOODS) {
-                int rawCount = mod.getItemStorage().getItemCount(cookable.getRaw());
+                int rawCount = AltoClef.INSTANCE.getItemStorage().getItemCount(cookable.getRaw());
                 if (rawCount > 0) {
                     //Debug.logMessage("STARTING COOK OF " + cookable.getRaw().getTranslationKey());
-                    int toSmelt = rawCount + mod.getItemStorage().getItemCount(cookable.getCooked());
+                    int toSmelt = rawCount + AltoClef.INSTANCE.getItemStorage().getItemCount(cookable.getCooked());
                     _smeltTask = new SmeltInSmokerTask(new SmeltTarget(new ItemTarget(cookable.cookedFood, toSmelt), new ItemTarget(cookable.rawFood, rawCount)));
                     _smeltTask.ignoreMaterials();
                     return _smeltTask;
@@ -221,7 +232,7 @@ public class CollectFoodTask extends Task {
         } else {
             // Pick up food items from ground
             for (Item item : ITEMS_TO_PICK_UP) {
-                Task t = this.pickupTaskOrNull(mod, item);
+                Task t = this.pickupTaskOrNull(AltoClef.INSTANCE, item);
                 if (t != null) {
                     setDebugState("Picking up Food: " + item.getTranslationKey());
                     _currentResourceTask = t;
@@ -230,8 +241,8 @@ public class CollectFoodTask extends Task {
             }
             // Pick up raw/cooked foods on ground
             for (CookableFoodTarget cookable : COOKABLE_FOODS) {
-                Task t = this.pickupTaskOrNull(mod, cookable.getRaw(), 20);
-                if (t == null) t = this.pickupTaskOrNull(mod, cookable.getCooked(), 40);
+                Task t = this.pickupTaskOrNull(AltoClef.INSTANCE, cookable.getRaw(), 20);
+                if (t == null) t = this.pickupTaskOrNull(AltoClef.INSTANCE, cookable.getCooked(), 40);
                 if (t != null) {
                     setDebugState("Picking up Cookable food");
                     _currentResourceTask = t;
@@ -239,7 +250,7 @@ public class CollectFoodTask extends Task {
                 }
             }
             // Hay blocks
-            Task hayTaskBlock = this.pickupBlockTaskOrNull(mod, Blocks.HAY_BLOCK, Items.HAY_BLOCK, 300);
+            Task hayTaskBlock = this.pickupBlockTaskOrNull(AltoClef.INSTANCE, Blocks.HAY_BLOCK, Items.HAY_BLOCK, 300);
             if (hayTaskBlock != null) {
                 setDebugState("Collecting Hay");
                 _currentResourceTask = hayTaskBlock;
@@ -248,14 +259,14 @@ public class CollectFoodTask extends Task {
             // Crops
             for (CropTarget target : CROPS) {
                 // If crops are nearby. Do not replant cause we don't care.
-                Task t = pickupBlockTaskOrNull(mod, target.cropBlock, target.cropItem, (blockPos -> {
-                    BlockState s = mod.getWorld().getBlockState(blockPos);
+                Task t = pickupBlockTaskOrNull(AltoClef.INSTANCE, target.cropBlock, target.cropItem, (blockPos -> {
+                    BlockState s = AltoClef.INSTANCE.getWorld().getBlockState(blockPos);
                     Block b = s.getBlock();
                     if (b instanceof CropBlock) {
                         boolean isWheat = !(b instanceof PotatoesBlock || b instanceof CarrotsBlock || b instanceof BeetrootsBlock);
                         if (isWheat) {
                             // Chunk needs to be loaded for wheat maturity to be checked.
-                            if (!mod.getChunkTracker().isChunkLoaded(blockPos)) {
+                            if (!AltoClef.INSTANCE.getChunkTracker().isChunkLoaded(blockPos)) {
                                 return false;
                             }
                             // Prune if we're not mature/fully grown wheat.
@@ -264,7 +275,7 @@ public class CollectFoodTask extends Task {
                         }
                     }
                     // Unbreakable.
-                    return WorldHelper.canBreak(mod, blockPos);
+                    return WorldHelper.canBreak(AltoClef.INSTANCE, blockPos);
                     // We're not wheat so do NOT reject.
                 }), 96);
                 if (t != null) {
@@ -278,15 +289,15 @@ public class CollectFoodTask extends Task {
             Entity bestEntity = null;
             Item bestRawFood = null;
             for (CookableFoodTarget cookable : COOKABLE_FOODS) {
-                if (!mod.getEntityTracker().entityFound(cookable.mobToKill)) continue;
-                Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), cookable.mobToKill);
+                if (!AltoClef.INSTANCE.getEntityTracker().entityFound(cookable.mobToKill)) continue;
+                Optional<Entity> nearest = AltoClef.INSTANCE.getEntityTracker().getClosestEntity(AltoClef.INSTANCE.getPlayer().getPos(), cookable.mobToKill);
                 if (nearest.isEmpty()) continue; // ?? This crashed once?
                 if (nearest.get() instanceof LivingEntity livingEntity) {
                     // Peta
                     if (livingEntity.isBaby()) continue;
                 }
                 int hungerPerformance = cookable.getCookedUnits();
-                double sqDistance = nearest.get().squaredDistanceTo(mod.getPlayer());
+                double sqDistance = nearest.get().squaredDistanceTo(AltoClef.INSTANCE.getPlayer());
                 double score = (double) 100 * hungerPerformance / (sqDistance);
                 if (cookable.isFish()) {
                     score *= FISH_PENALTY;
@@ -304,7 +315,7 @@ public class CollectFoodTask extends Task {
             }
 
             // Sweet berries (separate from crops because they should have a lower priority than everything else cause they suck)
-            Task berryPickup = pickupBlockTaskOrNull(mod, Blocks.SWEET_BERRY_BUSH, Items.SWEET_BERRIES, 96);
+            Task berryPickup = pickupBlockTaskOrNull(AltoClef.INSTANCE, Blocks.SWEET_BERRY_BUSH, Items.SWEET_BERRIES, 96);
             if (berryPickup != null) {
                 setDebugState("Getting sweet berries (no better foods are present)");
                 _currentResourceTask = berryPickup;
@@ -318,18 +329,18 @@ public class CollectFoodTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBehaviour().pop();
-        mod.getBlockTracker().stopTracking(Blocks.HAY_BLOCK);
-        mod.getBlockTracker().stopTracking(Blocks.SWEET_BERRY_BUSH);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBehaviour().pop();
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.HAY_BLOCK);
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(Blocks.SWEET_BERRY_BUSH);
         for (CropTarget crop : CROPS) {
-            mod.getBlockTracker().stopTracking(crop.cropBlock);
+            AltoClef.INSTANCE.getBlockTracker().stopTracking(crop.cropBlock);
         }
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return StorageHelper.calculateInventoryFoodScore(mod) >= _unitsNeeded;
+    public boolean isFinished() {
+        return StorageHelper.calculateInventoryFoodScore(AltoClef.INSTANCE) >= _unitsNeeded;
     }
 
     @Override

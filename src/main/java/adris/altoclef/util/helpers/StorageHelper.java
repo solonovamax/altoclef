@@ -83,49 +83,49 @@ public class StorageHelper {
         }
     }
 
-    public static MiningRequirement getCurrentMiningRequirement(AltoClef mod) {
+    public static MiningRequirement getCurrentMiningRequirement() {
         MiningRequirement[] order = new MiningRequirement[]{
                 MiningRequirement.DIAMOND, MiningRequirement.IRON, MiningRequirement.STONE, MiningRequirement.WOOD
         };
         for (MiningRequirement check : order) {
-            if (miningRequirementMet(mod, check)) {
+            if (miningRequirementMet(check)) {
                 return check;
             }
         }
         return MiningRequirement.HAND;
     }
 
-    private static boolean h(AltoClef mod, boolean inventoryOnly, Item... items) {
+    private static boolean h(boolean inventoryOnly, Item... items) {
         if (inventoryOnly) {
-            return mod.getItemStorage().hasItemInventoryOnly(items);
+            return AltoClef.INSTANCE.getItemStorage().hasItemInventoryOnly(items);
         }
-        return mod.getItemStorage().hasItem(items);
+        return AltoClef.INSTANCE.getItemStorage().hasItem(items);
     }
 
-    private static boolean miningRequirementMetInner(AltoClef mod, boolean inventoryOnly, MiningRequirement requirement) {
+    private static boolean miningRequirementMetInner(boolean inventoryOnly, MiningRequirement requirement) {
         switch (requirement) {
             case HAND:
                 return true;
             case WOOD:
-                return h(mod, inventoryOnly, Items.WOODEN_PICKAXE) || h(mod, inventoryOnly, Items.STONE_PICKAXE) || h(mod, inventoryOnly, Items.IRON_PICKAXE) || h(mod, inventoryOnly, Items.GOLDEN_PICKAXE) || h(mod, inventoryOnly, Items.DIAMOND_PICKAXE) || h(mod, inventoryOnly, Items.NETHERITE_PICKAXE);
+                return h(inventoryOnly, Items.WOODEN_PICKAXE) || h(inventoryOnly, Items.STONE_PICKAXE) || h(inventoryOnly, Items.IRON_PICKAXE) || h(inventoryOnly, Items.GOLDEN_PICKAXE) || h(inventoryOnly, Items.DIAMOND_PICKAXE) || h(inventoryOnly, Items.NETHERITE_PICKAXE);
             case STONE:
-                return h(mod, inventoryOnly, Items.STONE_PICKAXE) || h(mod, inventoryOnly, Items.IRON_PICKAXE) || h(mod, inventoryOnly, Items.GOLDEN_PICKAXE) || h(mod, inventoryOnly, Items.DIAMOND_PICKAXE) || h(mod, inventoryOnly, Items.NETHERITE_PICKAXE);
+                return h(inventoryOnly, Items.STONE_PICKAXE) || h(inventoryOnly, Items.IRON_PICKAXE) || h(inventoryOnly, Items.GOLDEN_PICKAXE) || h(inventoryOnly, Items.DIAMOND_PICKAXE) || h(inventoryOnly, Items.NETHERITE_PICKAXE);
             case IRON:
-                return h(mod, inventoryOnly, Items.IRON_PICKAXE) || h(mod, inventoryOnly, Items.GOLDEN_PICKAXE) || h(mod, inventoryOnly, Items.DIAMOND_PICKAXE) || h(mod, inventoryOnly, Items.NETHERITE_PICKAXE);
+                return h(inventoryOnly, Items.IRON_PICKAXE) || h(inventoryOnly, Items.GOLDEN_PICKAXE) || h(inventoryOnly, Items.DIAMOND_PICKAXE) || h(inventoryOnly, Items.NETHERITE_PICKAXE);
             case DIAMOND:
-                return h(mod, inventoryOnly, Items.DIAMOND_PICKAXE) || h(mod, inventoryOnly, Items.NETHERITE_PICKAXE);
+                return h(inventoryOnly, Items.DIAMOND_PICKAXE) || h(inventoryOnly, Items.NETHERITE_PICKAXE);
             default:
                 Debug.logError("You missed a spot");
                 return false;
         }
     }
 
-    public static boolean miningRequirementMet(AltoClef mod, MiningRequirement requirement) {
-        return miningRequirementMetInner(mod, false, requirement);
+    public static boolean miningRequirementMet(MiningRequirement requirement) {
+        return miningRequirementMetInner(false, requirement);
     }
 
     public static boolean miningRequirementMetInventory(AltoClef mod, MiningRequirement requirement) {
-        return miningRequirementMetInner(mod, true, requirement);
+        return miningRequirementMetInner(true, requirement);
     }
 
     public static Optional<Slot> getBestToolSlot(AltoClef mod, BlockState state) {
@@ -167,8 +167,8 @@ public class StorageHelper {
         // Throwaway items, but keep a few for building.
         final List<Slot> throwawayBlockItems = new ArrayList<>();
         int totalBlockThrowaways = 0;
-        if (!mod.getItemStorage().getSlotsWithItemPlayerInventory(false, mod.getModSettings().getThrowawayItems(mod)).isEmpty()) {
-            for (Slot slot : mod.getItemStorage().getSlotsWithItemPlayerInventory(false, mod.getModSettings().getThrowawayItems(mod))) {
+        if (!mod.getItemStorage().getSlotsWithItemPlayerInventory(false, mod.getModSettings().getThrowawayItems()).isEmpty()) {
+            for (Slot slot : mod.getItemStorage().getSlotsWithItemPlayerInventory(false, mod.getModSettings().getThrowawayItems())) {
                 // Our cursor slot is NOT a garbage slot
                 if (Slot.isCursor(slot))
                     continue;
@@ -311,8 +311,8 @@ public class StorageHelper {
      *
      * @return whether EVERY item target in {@code targetsToMeet} is strictly in our inventory.
      */
-    public static boolean itemTargetsMetInventory(AltoClef mod, ItemTarget... targetsToMeet) {
-        return Arrays.stream(targetsToMeet).allMatch(target -> mod.getItemStorage().getItemCountInventoryOnly(target.getMatches()) >= target.getTargetCount());
+    public static boolean itemTargetsMetInventory(ItemTarget... targetsToMeet) {
+        return Arrays.stream(targetsToMeet).allMatch(target -> AltoClef.INSTANCE.getItemStorage().getItemCountInventoryOnly(target.getMatches()) >= target.getTargetCount());
     }
 
     /**
@@ -345,7 +345,7 @@ public class StorageHelper {
     }
 
     public static int getBuildingMaterialCount(AltoClef mod) {
-        return mod.getItemStorage().getItemCount(Arrays.stream(mod.getModSettings().getThrowawayItems(mod, true)).filter(item -> item instanceof BlockItem && !item.equals(Items.GRAVEL) && !item.equals(Items.SAND)).toArray(Item[]::new));
+        return mod.getItemStorage().getItemCount(Arrays.stream(mod.getModSettings().getThrowawayItems(true)).filter(item -> item instanceof BlockItem && !item.equals(Items.GRAVEL) && !item.equals(Items.SAND)).toArray(Item[]::new));
     }
 
     private static boolean isScreenOpenInner(Predicate<ScreenHandler> pNotNull) {
@@ -492,7 +492,7 @@ public class StorageHelper {
      */
     public static Optional<Slot> getFilledInventorySlotInaccessibleToContainer(AltoClef mod, ItemTarget withItem) {
         // First check if we have anything within our regular inventory.
-        if (!StorageHelper.isPlayerInventoryOpen() || withItem.isEmpty() || itemTargetsMetInventory(mod, withItem)) {
+        if (!StorageHelper.isPlayerInventoryOpen() || withItem.isEmpty() || itemTargetsMetInventory(withItem)) {
             return Optional.empty();
         }
         // Then check our "invalid" slots for our item.

@@ -15,20 +15,20 @@ import java.util.List;
 
 public class CommandStatusOverlay {
 
-    //For the ingame timer
+    // For the ingame timer
     private long _timeRunning;
     private long _lastTime = 0;
     private DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSS").withZone(ZoneId.from(ZoneOffset.of("+00:00"))); // The date formatter
 
-    public void render(AltoClef mod, MatrixStack matrixstack) {
-        if (mod.getModSettings().shouldShowTaskChain()) {
+    public void render(MatrixStack matrixstack) {
+        if (AltoClef.INSTANCE.getModSettings().shouldShowTaskChain()) {
             List<Task> tasks = Collections.emptyList();
-            if (mod.getTaskRunner().getCurrentTaskChain() != null) {
-                tasks = mod.getTaskRunner().getCurrentTaskChain().getTasks();
+            if (AltoClef.INSTANCE.getTaskRunner().getCurrentTaskChain() != null) {
+                tasks = AltoClef.INSTANCE.getTaskRunner().getCurrentTaskChain().getTasks();
             }
 
             int color = 0xFFFFFFFF;
-            drawTaskChain(MinecraftClient.getInstance().textRenderer, matrixstack, 0, 0, color, 10, tasks, mod);
+            drawTaskChain(MinecraftClient.getInstance().textRenderer, matrixstack, 0, 0, color, 10, tasks, AltoClef.INSTANCE);
         }
     }
 

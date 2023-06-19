@@ -1,8 +1,8 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
+import gay.solonovamax.altoclef.AltoClef;
 
 public class StopCommand extends Command {
 
@@ -11,8 +11,8 @@ public class StopCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) {
-        mod.getUserTaskChain().cancel(mod);
+    protected void call(ArgParser parser) {
+        AltoClef.INSTANCE.getUserTaskChain().cancel();
         finish();
     }
 }

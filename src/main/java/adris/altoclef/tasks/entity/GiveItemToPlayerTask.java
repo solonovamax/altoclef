@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.entity;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.movement.FollowPlayerTask;
@@ -12,6 +11,7 @@ import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.math.Vec3d;
@@ -39,20 +39,19 @@ public class GiveItemToPlayerTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _droppingItems = false;
         _throwTarget.clear();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-
-        if (_throwTask != null && _throwTask.isActive() && !_throwTask.isFinished(mod)) {
+    protected Task onTick() {
+        if (_throwTask != null && _throwTask.isActive() && !_throwTask.isFinished()) {
             setDebugState("Throwing items");
             return _throwTask;
         }
 
-        Optional<Vec3d> lastPos = mod.getEntityTracker().getPlayerMostRecentPosition(_playerName);
+        Optional<Vec3d> lastPos = AltoClef.INSTANCE.getEntityTracker().getPlayerMostRecentPosition(_playerName);
 
         if (lastPos.isEmpty()) {
             setDebugState("No player found/detected. Doing nothing until player loads into render distance.");
@@ -63,11 +62,11 @@ public class GiveItemToPlayerTask extends Task {
         if (_droppingItems) {
             // THROW ITEMS
             setDebugState("Throwing items");
-            LookHelper.lookAt(mod, targetPos);
+            LookHelper.lookAt(AltoClef.INSTANCE, targetPos);
             for (int i = 0; i < _throwTarget.size(); ++i) {
                 ItemTarget target = _throwTarget.get(i);
                 if (target.getTargetCount() > 0) {
-                    Optional<Slot> has = mod.getItemStorage().getSlotsWithItemPlayerInventory(false, target.getMatches()).stream().findFirst();
+                    Optional<Slot> has = AltoClef.INSTANCE.getItemStorage().getSlotsWithItemPlayerInventory(false, target.getMatches()).stream().findFirst();
                     if (has.isPresent()) {
                         Slot currentlyPresent = has.get();
                         if (Slot.isCursor(currentlyPresent)) {
@@ -76,32 +75,32 @@ public class GiveItemToPlayerTask extends Task {
                             target = new ItemTarget(target, target.getTargetCount() - stack.getCount());
                             _throwTarget.set(i, target);
                             Debug.logMessage("THROWING: " + has.get());
-                            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                         } else {
-                            mod.getSlotHandler().clickSlot(currentlyPresent, 0, SlotActionType.PICKUP);
+                            AltoClef.INSTANCE.getSlotHandler().clickSlot(currentlyPresent, 0, SlotActionType.PICKUP);
                         }
                         return null;
                     }
                 }
             }
 
-            if (!targetPos.isInRange(mod.getPlayer().getPos(), 4)) {
-                mod.log("Finished giving items.");
-                stop(mod);
+            if (!targetPos.isInRange(AltoClef.INSTANCE.getPlayer().getPos(), 4)) {
+                AltoClef.INSTANCE.log("Finished giving items.");
+                stop();
                 return null;
             }
             return new RunAwayFromPositionTask(6, WorldHelper.toBlockPos(targetPos));
         }
 
-        if (!StorageHelper.itemTargetsMet(mod, _targets)) {
+        if (!StorageHelper.itemTargetsMet(AltoClef.INSTANCE, _targets)) {
             setDebugState("Collecting resources...");
             return _resourceTask;
         }
 
-        if (targetPos.isInRange(mod.getPlayer().getPos(), 1.5)) {
-            if (!mod.getEntityTracker().isPlayerLoaded(_playerName)) {
-                mod.logWarning("Failed to get to player \"" + _playerName + "\". We moved to where we last saw them but now have no idea where they are.");
-                stop(mod);
+        if (targetPos.isInRange(AltoClef.INSTANCE.getPlayer().getPos(), 1.5)) {
+            if (!AltoClef.INSTANCE.getEntityTracker().isPlayerLoaded(_playerName)) {
+                AltoClef.INSTANCE.logWarning("Failed to get to player \"" + _playerName + "\". We moved to where we last saw them but now have no idea where they are.");
+                stop();
                 return null;
             }
             _droppingItems = true;
@@ -113,7 +112,7 @@ public class GiveItemToPlayerTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

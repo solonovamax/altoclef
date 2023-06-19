@@ -1,8 +1,8 @@
 package adris.altoclef.tasks;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -17,7 +17,6 @@ import java.util.function.Supplier;
  * Finds the closest reachable block and runs a task on that block.
  */
 public class DoToClosestBlockTask extends AbstractDoToClosestObjectTask<BlockPos> {
-
     private final Block[] _targetBlocks;
 
     private final Supplier<Vec3d> _getOriginPos;
@@ -84,13 +83,13 @@ public class DoToClosestBlockTask extends AbstractDoToClosestObjectTask<BlockPos
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBlockTracker().trackBlock(_targetBlocks);
+    protected void onStart() {
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(_targetBlocks);
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBlockTracker().stopTracking(_targetBlocks);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(_targetBlocks);
     }
 
     @Override

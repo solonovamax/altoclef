@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.container;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.slot.EnsureFreeInventorySlotTask;
 import adris.altoclef.tasksystem.Task;
@@ -8,6 +7,7 @@ import adris.altoclef.trackers.storage.ContainerType;
 import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
@@ -38,60 +38,60 @@ public class LootContainerTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
         for (Item item : targets) {
-            if (!mod.getBehaviour().isProtected(item)) {
-                mod.getBehaviour().addProtectedItems(item);
+            if (!AltoClef.INSTANCE.getBehaviour().isProtected(item)) {
+                AltoClef.INSTANCE.getBehaviour().addProtectedItems(item);
             }
         }
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         if (!ContainerType.screenHandlerMatches(ContainerType.CHEST)) {
             setDebugState("Interact with container");
             return new InteractWithBlockTask(chest);
         }
         ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
         if (!cursor.isEmpty()) {
-            Optional<Slot> toFit = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursor, false);
+            Optional<Slot> toFit = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursor, false);
             if (toFit.isPresent()) {
                 setDebugState("Putting cursor in inventory");
-                mod.getSlotHandler().clickSlot(toFit.get(), 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(toFit.get(), 0, SlotActionType.PICKUP);
                 return null;
             } else {
                 setDebugState("Ensuring space");
                 return new EnsureFreeInventorySlotTask();
             }
         }
-        Optional<Slot> optimal = getAMatchingSlot(mod);
+        Optional<Slot> optimal = getAMatchingSlot(AltoClef.INSTANCE);
         if (optimal.isEmpty()) {
             _weDoneHere = true;
             return null;
         }
         setDebugState("Looting items: " + targets);
-        mod.getSlotHandler().clickSlot(optimal.get(), 0, SlotActionType.PICKUP);
+        AltoClef.INSTANCE.getSlotHandler().clickSlot(optimal.get(), 0, SlotActionType.PICKUP);
         return null;
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task task) {
+    protected void onStop(Task task) {
         ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
         if (!cursorStack.isEmpty()) {
-            Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
-            moveTo.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+            moveTo.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             }
-            Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+            Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
             // Try throwing away cursor slot if it's garbage
-            garbage.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            garbage.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
         } else {
             StorageHelper.closeScreen();
         }
-        mod.getBehaviour().pop();
+        AltoClef.INSTANCE.getBehaviour().pop();
     }
 
     @Override
@@ -110,9 +110,9 @@ public class LootContainerTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return _weDoneHere || (ContainerType.screenHandlerMatchesAny() &&
-                getAMatchingSlot(mod).isEmpty());
+                getAMatchingSlot(AltoClef.INSTANCE).isEmpty());
     }
 
     @Override

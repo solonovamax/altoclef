@@ -11,7 +11,7 @@ public class AltoClefCommands {
 
     public AltoClefCommands() throws CommandException {
         // List commands here
-        AltoClef.getCommandExecutor().registerNewCommand(
+        AltoClef.INSTANCE.getCommandExecutor().registerNewCommand(
                 new HelpCommand(),
                 new GetCommand(),
                 new FollowCommand(),

@@ -1,11 +1,11 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.WorldHelper;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalYLevel;
+import gay.solonovamax.altoclef.AltoClef;
 
 public class GetToYTask extends CustomBaritoneGoalTask {
 
@@ -22,11 +22,11 @@ public class GetToYTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         if (_dimension != null && WorldHelper.getCurrentDimension() != _dimension) {
             return new DefaultGoToDimensionTask(_dimension);
         }
-        return super.onTick(mod);
+        return super.onTick();
     }
 
     @Override

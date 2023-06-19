@@ -1,6 +1,5 @@
 package adris.altoclef.tasks;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.slot.MoveItemToSlotFromInventoryTask;
 import adris.altoclef.tasks.slot.ReceiveCraftingOutputSlotTask;
 import adris.altoclef.tasksystem.Task;
@@ -11,6 +10,7 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.CraftingTableSlot;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.screen.slot.SlotActionType;
@@ -23,7 +23,6 @@ import java.util.Optional;
  * Not useful for custom tasks.
  */
 public class CraftGenericManuallyTask extends Task {
-
     private final RecipeTarget _target;
 
     public CraftGenericManuallyTask(RecipeTarget target) {
@@ -31,12 +30,12 @@ public class CraftGenericManuallyTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
 
         boolean bigCrafting = StorageHelper.isBigCraftingOpen();
 
@@ -45,22 +44,22 @@ public class CraftGenericManuallyTask extends Task {
             // otherwise crafting won't work
             ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
             if (!cursorStack.isEmpty()) {
-                Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+                Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
                 if (moveTo.isPresent()) {
-                    mod.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
                     return null;
                 }
-                if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                    mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                     return null;
                 }
-                Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+                Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
                 // Try throwing away cursor slot if it's garbage
                 if (garbage.isPresent()) {
-                    mod.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
                     return null;
                 }
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             } else {
                 StorageHelper.closeScreen();
             }
@@ -91,7 +90,7 @@ public class CraftGenericManuallyTask extends Task {
                 if (present.getItem() != Items.AIR) {
                     // Move this item OUT if it should be empty
                     setDebugState("Found INVALID slot");
-                    mod.getSlotHandler().clickSlot(currentCraftSlot, 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(currentCraftSlot, 0, SlotActionType.PICKUP);
                 }
             } else {
                 boolean correctItem = toFill.matches(present.getItem());
@@ -99,7 +98,7 @@ public class CraftGenericManuallyTask extends Task {
                 if (!isSatisfied) {
                     // We have items that satisfy, but we CAN NOT fill in the current slot!
                     // In that case, just grab from the output.
-                    if (!mod.getItemStorage().hasItemInventoryOnly(present.getItem())) {
+                    if (!AltoClef.INSTANCE.getItemStorage().hasItemInventoryOnly(present.getItem())) {
                         if (!StorageHelper.getItemStackInSlot(outputSlot).isEmpty()) {
                             setDebugState("NO MORE to fit: grabbing from output.");
                             return new ReceiveCraftingOutputSlotTask(outputSlot, _target.getTargetCount());
@@ -116,7 +115,7 @@ public class CraftGenericManuallyTask extends Task {
                 boolean oversatisfies = present.getCount() > requiredPerSlot;
                 if (oversatisfies) {
                     setDebugState("OVER SATISFIED slot! Right clicking slot to extract half and spread it out more.");
-                    mod.getSlotHandler().clickSlot(currentCraftSlot, 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(currentCraftSlot, 0, SlotActionType.PICKUP);
                 }
             }
         }
@@ -124,12 +123,12 @@ public class CraftGenericManuallyTask extends Task {
         // Ensure our cursor is empty/can receive our item
         ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
         if (!ItemHelper.canStackTogether(StorageHelper.getItemStackInSlot(outputSlot), cursor)) {
-            Optional<Slot> toFit = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursor, false).or(() -> StorageHelper.getGarbageSlot(mod));
+            Optional<Slot> toFit = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursor, false).or(() -> StorageHelper.getGarbageSlot(AltoClef.INSTANCE));
             if (toFit.isPresent()) {
-                mod.getSlotHandler().clickSlot(toFit.get(), 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(toFit.get(), 0, SlotActionType.PICKUP);
             } else {
                 // Eh screw it
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             }
         }
 
@@ -142,7 +141,7 @@ public class CraftGenericManuallyTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

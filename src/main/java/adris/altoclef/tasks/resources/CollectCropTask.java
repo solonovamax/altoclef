@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.DoToClosestBlockTask;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.ResourceTask;
@@ -10,6 +9,7 @@ import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.StlHelper;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -85,7 +85,7 @@ public class CollectCropTask extends ResourceTask {
 
         // Collect seeds if we need to.
         if (hasEmptyCrops(mod) && mod.getModSettings().shouldReplantCrops() && !mod.getItemStorage().hasItem(_cropSeed)) {
-            if (_collectSeedTask.isActive() && !_collectSeedTask.isFinished(mod)) {
+            if (_collectSeedTask.isActive() && !_collectSeedTask.isFinished()) {
                 setDebugState("Picking up dropped seeds");
                 return _collectSeedTask;
             }
@@ -144,12 +144,12 @@ public class CollectCropTask extends ResourceTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         // Don't stop while we're replanting crops.
-        if (shouldReplantNow(mod)) {
+        if (shouldReplantNow(AltoClef.INSTANCE)) {
             return false;
         }
-        return super.isFinished(mod);
+        return super.isFinished();
     }
 
     private boolean shouldReplantNow(AltoClef mod) {

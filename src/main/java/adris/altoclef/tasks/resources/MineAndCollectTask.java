@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.AbstractDoToClosestObjectTask;
 import adris.altoclef.tasks.ResourceTask;
@@ -15,6 +14,7 @@ import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import adris.altoclef.util.slots.CursorSlot;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.ItemEntity;
@@ -25,7 +25,12 @@ import net.minecraft.item.MiningToolItem;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 public class MineAndCollectTask extends ResourceTask {
 
@@ -88,7 +93,7 @@ public class MineAndCollectTask extends ResourceTask {
 
     @Override
     protected Task onResourceTick(AltoClef mod) {
-        if (!StorageHelper.miningRequirementMet(mod, _requirement)) {
+        if (!StorageHelper.miningRequirementMet(_requirement)) {
             return new SatisfyMiningRequirementTask(_requirement);
         }
 
@@ -190,8 +195,8 @@ public class MineAndCollectTask extends ResourceTask {
                 closestDrop = mod.getEntityTracker().getClosestItemDrop(pos, _targets);
             }
 
-            double blockSq = closestBlock.isEmpty() ? Double.POSITIVE_INFINITY : closestBlock.get().getSquaredDistance(pos);
-            double dropSq = closestDrop.isEmpty() ? Double.POSITIVE_INFINITY : closestDrop.get().squaredDistanceTo(pos) + 10; // + 5 to make the bot stop mining a bit less
+            double blockSq = closestBlock.map(blockPos -> blockPos.getSquaredDistance(pos)).orElse(Double.POSITIVE_INFINITY);
+            double dropSq = closestDrop.map(itemEntity -> itemEntity.squaredDistanceTo(pos) + 10).orElse(Double.POSITIVE_INFINITY); // + 5 to make the bot stop mining a bit less
 
             // We can't mine right now.
             if (mod.getExtraBaritoneSettings().isInteractionPaused()) {
@@ -211,19 +216,19 @@ public class MineAndCollectTask extends ResourceTask {
         }
 
         @Override
-        protected Task onTick(AltoClef mod) {
-            if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
+        protected Task onTick() {
+            if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
                 _progressChecker.reset();
             }
-            if (_miningPos != null && !_progressChecker.check(mod)) {
-                mod.getClientBaritone().getPathingBehavior().forceCancel();
+            if (_miningPos != null && !_progressChecker.check(AltoClef.INSTANCE)) {
+                AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
                 Debug.logMessage("Failed to mine block. Suggesting it may be unreachable.");
-                mod.getBlockTracker().requestBlockUnreachable(_miningPos, 2);
+                AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(_miningPos, 2);
                 _blacklist.add(_miningPos);
                 _miningPos = null;
                 _progressChecker.reset();
             }
-            return super.onTick(mod);
+            return super.onTick();
         }
 
         @Override
@@ -260,13 +265,13 @@ public class MineAndCollectTask extends ResourceTask {
         }
 
         @Override
-        protected void onStart(AltoClef mod) {
+        protected void onStart() {
             _progressChecker.reset();
             _miningPos = null;
         }
 
         @Override
-        protected void onStop(AltoClef mod, Task interruptTask) {
+        protected void onStop(Task interruptTask) {
 
         }
 

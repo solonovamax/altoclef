@@ -585,12 +585,12 @@ public class Settings implements IFailableConfigFile {
         return entityReachRange;
     }
 
-    public Item[] getThrowawayItems(AltoClef mod, boolean includeProtected) {
-        return throwawayItems.stream().filter(item -> includeProtected || !mod.getBehaviour().isProtected(item)).toArray(Item[]::new);
+    public Item[] getThrowawayItems(boolean includeProtected) {
+        return throwawayItems.stream().filter(item -> includeProtected || !AltoClef.INSTANCE.getBehaviour().isProtected(item)).toArray(Item[]::new);
     }
 
-    public Item[] getThrowawayItems(AltoClef mod) {
-        return getThrowawayItems(mod, false);
+    public Item[] getThrowawayItems() {
+        return getThrowawayItems(false);
     }
 
     public boolean shouldLimitFuelsToSupportedFuels() {

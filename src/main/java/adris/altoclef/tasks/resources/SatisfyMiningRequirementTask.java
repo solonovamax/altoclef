@@ -1,10 +1,10 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.MiningRequirement;
 import adris.altoclef.util.helpers.StorageHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.Items;
 
 /**
@@ -19,12 +19,12 @@ public class SatisfyMiningRequirementTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         switch (_requirement) {
             case HAND:
                 // Will never happen if you program this right
@@ -42,7 +42,7 @@ public class SatisfyMiningRequirementTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 
@@ -60,7 +60,7 @@ public class SatisfyMiningRequirementTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return StorageHelper.miningRequirementMetInventory(mod, _requirement);
+    public boolean isFinished() {
+        return StorageHelper.miningRequirementMetInventory(AltoClef.INSTANCE, _requirement);
     }
 }

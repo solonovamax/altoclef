@@ -8,6 +8,7 @@ import adris.altoclef.trackers.Tracker;
 import adris.altoclef.trackers.TrackerManager;
 import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -26,7 +27,6 @@ import java.util.function.Predicate;
  * Keeps track of items in containers
  */
 public class ContainerSubTracker extends Tracker {
-
     private final HashMap<Dimension, HashMap<BlockPos, ContainerCache>> _containerCaches = new HashMap<>();
     private boolean _containerOpen;
     private BlockPos _lastBlockPosInteraction;
@@ -43,7 +43,7 @@ public class ContainerSubTracker extends Tracker {
         // Listen for when we interact with a block
         EventBus.subscribe(BlockInteractEvent.class, evt -> {
             BlockPos blockPos = evt.hitResult.getBlockPos();
-            BlockState bs = _mod.getWorld().getBlockState(blockPos);
+            BlockState bs = AltoClef.INSTANCE.getWorld().getBlockState(blockPos);
             onBlockInteract(blockPos, bs.getBlock());
         });
         EventBus.subscribe(ScreenOpenEvent.class, evt -> {
@@ -93,7 +93,7 @@ public class ContainerSubTracker extends Tracker {
             if (MinecraftClient.getInstance().crosshairTarget instanceof BlockHitResult bhit) {
                 Debug.logWarning("Screen open but no block interaction detected, using the block we're currently looking at.");
                 _lastBlockPosInteraction = bhit.getBlockPos();
-                _lastBlockInteraction = _mod.getWorld().getBlockState(_lastBlockPosInteraction).getBlock();
+                _lastBlockInteraction = AltoClef.INSTANCE.getWorld().getBlockState(_lastBlockPosInteraction).getBlock();
             }
         }
         if (_containerOpen && _lastBlockPosInteraction != null && _lastBlockInteraction != null) {
@@ -138,8 +138,8 @@ public class ContainerSubTracker extends Tracker {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean isContainerCacheValid(Dimension dimension, ContainerCache cache) {
         BlockPos pos = cache.getBlockPos();
-        if (WorldHelper.getCurrentDimension() == dimension && _mod.getChunkTracker().isChunkLoaded(pos)) {
-            ContainerType actualType = ContainerType.getFromBlock(_mod.getWorld().getBlockState(pos).getBlock());
+        if (WorldHelper.getCurrentDimension() == dimension && AltoClef.INSTANCE.getChunkTracker().isChunkLoaded(pos)) {
+            ContainerType actualType = ContainerType.getFromBlock(AltoClef.INSTANCE.getWorld().getBlockState(pos).getBlock());
             if (actualType == ContainerType.EMPTY) {
                 return false;
             }

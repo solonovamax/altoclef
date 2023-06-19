@@ -17,7 +17,7 @@ public abstract class AbstractObjectBlacklist<T> {
 
     private final HashMap<T, BlacklistEntry> _entries = new HashMap<>();
 
-    public void blackListItem(AltoClef mod, T item, int numberOfFailuresAllowed) {
+    public void blackListItem(T item, int numberOfFailuresAllowed) {
         if (!_entries.containsKey(item)) {
             BlacklistEntry entry = new BlacklistEntry();
             entry.numberOfFailuresAllowed = numberOfFailuresAllowed;
@@ -27,8 +27,8 @@ public abstract class AbstractObjectBlacklist<T> {
             _entries.put(item, entry);
         }
         BlacklistEntry entry = _entries.get(item);
-        double newDistance = getPos(item).squaredDistanceTo(mod.getPlayer().getPos());
-        MiningRequirement newTool = StorageHelper.getCurrentMiningRequirement(mod);
+        double newDistance = getPos(item).squaredDistanceTo(AltoClef.INSTANCE.getPlayer().getPos());
+        MiningRequirement newTool = StorageHelper.getCurrentMiningRequirement();
         // For distance, add a slight threshold so it doesn't reset EVERY time we move a tiny bit closer.
         if (newTool.ordinal() > entry.bestTool.ordinal() || (newDistance < entry.bestDistanceSq - 1)) {
             if (newTool.ordinal() > entry.bestTool.ordinal()) entry.bestTool = newTool;

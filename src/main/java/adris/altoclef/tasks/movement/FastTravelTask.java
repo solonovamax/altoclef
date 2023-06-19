@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.construction.compound.ConstructNetherPortalObsidianTask;
 import adris.altoclef.tasks.speedrun.MarvionBeatMinecraftTask;
@@ -9,6 +8,7 @@ import adris.altoclef.util.Dimension;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.item.Item;
@@ -59,21 +59,20 @@ public class FastTravelTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _goToOverworldTask = new EnterNetherPortalTask(new ConstructNetherPortalObsidianTask(), Dimension.OVERWORLD, checkPos -> {
             // Make sure the portal we enter is NOT close to our exit portal...
-            Optional<BlockPos> lastPortal = mod.getMiscBlockTracker().getLastUsedNetherPortal(Dimension.NETHER);
+            Optional<BlockPos> lastPortal = AltoClef.INSTANCE.getMiscBlockTracker().getLastUsedNetherPortal(Dimension.NETHER);
             return lastPortal.isEmpty() || !WorldHelper.inRangeXZ(lastPortal.get(), checkPos, 3);
         });
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-
+    protected Task onTick() {
         BlockPos netherTarget = new BlockPos(_target.getX() / 8, _target.getY(), _target.getZ() / 8);
 
-        boolean canBuildPortal = mod.getItemStorage().hasItem(Items.DIAMOND_PICKAXE) || mod.getItemStorage().getItemCount(Items.OBSIDIAN) >= 10;
-        boolean canLightPortal = mod.getItemStorage().hasItem(Items.FLINT_AND_STEEL, Items.FIRE_CHARGE);
+        boolean canBuildPortal = AltoClef.INSTANCE.getItemStorage().hasItem(Items.DIAMOND_PICKAXE) || AltoClef.INSTANCE.getItemStorage().getItemCount(Items.OBSIDIAN) >= 10;
+        boolean canLightPortal = AltoClef.INSTANCE.getItemStorage().hasItem(Items.FLINT_AND_STEEL, Items.FIRE_CHARGE);
 
         // EDGE CASE: We die in the nether, stop force walking, we want to start over.
         if (MinecraftClient.getInstance().currentScreen instanceof DeathScreen) {
@@ -84,7 +83,7 @@ public class FastTravelTask extends Task {
             case OVERWORLD -> {
                 _attemptToMoveToIdealNetherCoordinateTimeout.reset();
                 // WALK
-                if (_forceOverworldWalking || WorldHelper.inRangeXZ(mod.getPlayer(), _target, getOverworldThreshold(mod))) {
+                if (_forceOverworldWalking || WorldHelper.inRangeXZ(AltoClef.INSTANCE.getPlayer(), _target, getOverworldThreshold(AltoClef.INSTANCE))) {
                     _forceOverworldWalking = true;
                     setDebugState("Walking: We're close enough to our target");
                     return new GetToBlockTask(_target);
@@ -109,14 +108,14 @@ public class FastTravelTask extends Task {
 
                 if (!_forceOverworldWalking) {
                     // After walking a bit, the moment we go back into the overworld, walk again.
-                    Optional<BlockPos> portalEntrance = mod.getMiscBlockTracker().getLastUsedNetherPortal(Dimension.NETHER);
-                    if (portalEntrance.isPresent() && !portalEntrance.get().isWithinDistance(mod.getPlayer().getPos(), 3)) {
+                    Optional<BlockPos> portalEntrance = AltoClef.INSTANCE.getMiscBlockTracker().getLastUsedNetherPortal(Dimension.NETHER);
+                    if (portalEntrance.isPresent() && !portalEntrance.get().isWithinDistance(AltoClef.INSTANCE.getPlayer().getPos(), 3)) {
                         _forceOverworldWalking = true;
                     }
                 }
 
                 // If we're going to the overworld, keep going.
-                if (_goToOverworldTask.isActive() && !_goToOverworldTask.isFinished(mod)) {
+                if (_goToOverworldTask.isActive() && !_goToOverworldTask.isFinished()) {
                     setDebugState("Going back to overworld");
                     if (MarvionBeatMinecraftTask.getConfig().renderDistanceManipulation) {
                         MinecraftClient.getInstance().options.getViewDistance().setValue(32);
@@ -125,19 +124,19 @@ public class FastTravelTask extends Task {
                 }
 
                 // PICKUP DROPPED STUFF if we need it
-                if (mod.getItemStorage().getItemCount(Items.OBSIDIAN) < 10) {
+                if (AltoClef.INSTANCE.getItemStorage().getItemCount(Items.OBSIDIAN) < 10) {
                     setDebugState("Making sure we can build our portal");
                     return TaskCatalogue.getItemTask(Items.OBSIDIAN, 10);
                 }
-                if (!canLightPortal && mod.getEntityTracker().itemDropped(Items.FLINT_AND_STEEL, Items.FIRE_CHARGE)) {
+                if (!canLightPortal && AltoClef.INSTANCE.getEntityTracker().itemDropped(Items.FLINT_AND_STEEL, Items.FIRE_CHARGE)) {
                     setDebugState("Making sure we can light our portal");
                     return new PickupDroppedItemTask(new ItemTarget(new Item[]{Items.FLINT_AND_STEEL, Items.FIRE_CHARGE}), true);
                 }
 
-                if (WorldHelper.inRangeXZ(mod.getPlayer(), netherTarget, IN_NETHER_CLOSE_ENOUGH_THRESHOLD) &&
-                        mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
+                if (WorldHelper.inRangeXZ(AltoClef.INSTANCE.getPlayer(), netherTarget, IN_NETHER_CLOSE_ENOUGH_THRESHOLD) &&
+                        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
                     // If we're precisely at our target XZ or if we've tried long enough
-                    if ((mod.getPlayer().getBlockX() == netherTarget.getX() && mod.getPlayer().getBlockZ() == netherTarget.getZ()) || _attemptToMoveToIdealNetherCoordinateTimeout.elapsed()) {
+                    if ((AltoClef.INSTANCE.getPlayer().getBlockX() == netherTarget.getX() && AltoClef.INSTANCE.getPlayer().getBlockZ() == netherTarget.getZ()) || _attemptToMoveToIdealNetherCoordinateTimeout.elapsed()) {
                         return _goToOverworldTask;
                     }
                 }
@@ -197,7 +196,7 @@ public class FastTravelTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

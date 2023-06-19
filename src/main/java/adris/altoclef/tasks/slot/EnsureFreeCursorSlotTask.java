@@ -1,10 +1,10 @@
 package adris.altoclef.tasks.slot;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 
@@ -13,35 +13,32 @@ import java.util.Optional;
 public class EnsureFreeCursorSlotTask extends Task {
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         // YEET
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-
-
+    protected Task onTick() {
         ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
 
-
         if (!cursor.isEmpty()) {
-            Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursor, false);
+            Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursor, false);
             if (moveTo.isPresent()) {
                 setDebugState("Moving cursor stack back");
-                mod.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
                 return null;
             }
-            if (ItemHelper.canThrowAwayStack(mod, cursor)) {
+            if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursor)) {
                 setDebugState("Incompatible cursor stack, throwing");
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             } else {
-                Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+                Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
                 if (garbage.isPresent()) {
                     // Pick up garbage so we throw it out next frame
                     setDebugState("Picking up garbage");
-                    mod.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
                 } else {
-                    mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                 }
             }
             return null;
@@ -50,7 +47,7 @@ public class EnsureFreeCursorSlotTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

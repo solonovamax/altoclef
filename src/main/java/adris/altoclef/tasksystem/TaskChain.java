@@ -1,7 +1,5 @@
 package adris.altoclef.tasksystem;
 
-import gay.solonovamax.altoclef.AltoClef;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,23 +11,23 @@ public abstract class TaskChain {
         runner.addTaskChain(this);
     }
 
-    public void tick(AltoClef mod) {
+    public void tick() {
         _cachedTaskChain.clear();
-        onTick(mod);
+        onTick();
     }
 
-    public void stop(AltoClef mod) {
+    public void stop() {
         _cachedTaskChain.clear();
-        onStop(mod);
+        onStop();
     }
 
-    protected abstract void onStop(AltoClef mod);
+    protected abstract void onStop();
 
-    public abstract void onInterrupt(AltoClef mod, TaskChain other);
+    public abstract void onInterrupt(TaskChain other);
 
-    protected abstract void onTick(AltoClef mod);
+    protected abstract void onTick();
 
-    public abstract float getPriority(AltoClef mod);
+    public abstract float getPriority();
 
     public abstract boolean isActive();
 

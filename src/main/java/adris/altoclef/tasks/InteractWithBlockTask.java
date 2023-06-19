@@ -204,8 +204,8 @@ public class InteractWithBlockTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getClientBaritone().getPathingBehavior().forceCancel();
+    protected void onStart() {
+        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
         _moveChecker.reset();
         stuckCheck.reset();
         _wanderTask.resetWander();
@@ -213,38 +213,38 @@ public class InteractWithBlockTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
+    protected Task onTick() {
+        if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
             _moveChecker.reset();
         }
-        if (WorldHelper.isInNetherPortal(mod)) {
-            if (!mod.getClientBaritone().getPathingBehavior().isPathing()) {
+        if (WorldHelper.isInNetherPortal(AltoClef.INSTANCE)) {
+            if (!AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
                 setDebugState("Getting out from nether portal");
-                mod.getInputControls().hold(Input.SNEAK);
-                mod.getInputControls().hold(Input.MOVE_FORWARD);
+                AltoClef.INSTANCE.getInputControls().hold(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().hold(Input.MOVE_FORWARD);
                 return null;
             } else {
-                mod.getInputControls().release(Input.SNEAK);
-                mod.getInputControls().release(Input.MOVE_BACK);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             }
         } else {
-            if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
-                mod.getInputControls().release(Input.SNEAK);
-                mod.getInputControls().release(Input.MOVE_BACK);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
+            if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
+                AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_BACK);
+                AltoClef.INSTANCE.getInputControls().release(Input.MOVE_FORWARD);
             }
         }
-        if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished(mod) && stuckInBlock(mod) != null) {
+        if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished() && stuckInBlock(AltoClef.INSTANCE) != null) {
             setDebugState("Getting unstuck from block.");
             stuckCheck.reset();
             // Stop other tasks, we are JUST shimmying
-            mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-            mod.getClientBaritone().getExploreProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getExploreProcess().onLostControl();
             return _unstuckTask;
         }
-        if (!_moveChecker.check(mod) || !stuckCheck.check(mod)) {
-            BlockPos blockStuck = stuckInBlock(mod);
+        if (!_moveChecker.check(AltoClef.INSTANCE) || !stuckCheck.check(AltoClef.INSTANCE)) {
+            BlockPos blockStuck = stuckInBlock(AltoClef.INSTANCE);
             if (blockStuck != null) {
                 _unstuckTask = getFenceUnstuckTask();
                 return _unstuckTask;
@@ -255,29 +255,29 @@ public class InteractWithBlockTask extends Task {
         _cachedClickStatus = ClickResponse.CANT_REACH;
 
         // Get our use item first
-        if (!ItemTarget.nullOrEmpty(_toUse) && !StorageHelper.itemTargetsMet(mod, _toUse)) {
+        if (!ItemTarget.nullOrEmpty(_toUse) && !StorageHelper.itemTargetsMet(AltoClef.INSTANCE, _toUse)) {
             _moveChecker.reset();
             _clickTimer.reset();
             return TaskCatalogue.getItemTask(_toUse);
         }
 
         // Wander and check
-        if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
+        if (_wanderTask.isActive() && !_wanderTask.isFinished()) {
             _moveChecker.reset();
             _clickTimer.reset();
             return _wanderTask;
         }
-        if (!_moveChecker.check(mod)) {
+        if (!_moveChecker.check(AltoClef.INSTANCE)) {
             Debug.logMessage("Failed, blacklisting and wandering.");
-            mod.getBlockTracker().requestBlockUnreachable(_target);
+            AltoClef.INSTANCE.getBlockTracker().requestBlockUnreachable(_target);
             return _wanderTask;
         }
 
         int reachDistance = 0;
         Goal moveGoal = createGoalForInteract(_target, reachDistance, _direction, _interactOffset, _walkInto);
-        ICustomGoalProcess proc = mod.getClientBaritone().getCustomGoalProcess();
+        ICustomGoalProcess proc = AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess();
 
-        _cachedClickStatus = rightClick(mod);
+        _cachedClickStatus = rightClick(AltoClef.INSTANCE);
         switch (Objects.requireNonNull(_cachedClickStatus)) {
             case CANT_REACH -> {
                 setDebugState("Getting to our goal");
@@ -311,15 +311,15 @@ public class InteractWithBlockTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getClientBaritone().getPathingBehavior().forceCancel();
-        mod.getInputControls().release(Input.SNEAK);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
+        AltoClef.INSTANCE.getInputControls().release(Input.SNEAK);
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return false;
-        //return _trying && !proc(mod).isActive();
+        // return _trying && !proc(mod).isActive();
     }
 
     @Override

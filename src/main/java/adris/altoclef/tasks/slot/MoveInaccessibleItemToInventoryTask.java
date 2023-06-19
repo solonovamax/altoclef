@@ -1,12 +1,12 @@
 package adris.altoclef.tasks.slot;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.CursorSlot;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 
@@ -22,33 +22,32 @@ public class MoveInaccessibleItemToInventoryTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-
+    protected Task onTick() {
         // Ensure inventory is closed.
         if (!StorageHelper.isPlayerInventoryOpen()) {
             ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
             if (!cursorStack.isEmpty()) {
-                Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+                Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
                 if (moveTo.isPresent()) {
-                    mod.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(moveTo.get(), 0, SlotActionType.PICKUP);
                     return null;
                 }
-                if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                    mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                     return null;
                 }
-                Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+                Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
                 // Try throwing away cursor slot if it's garbage
                 if (garbage.isPresent()) {
-                    mod.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(garbage.get(), 0, SlotActionType.PICKUP);
                     return null;
                 }
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             } else {
                 StorageHelper.closeScreen();
             }
@@ -56,7 +55,7 @@ public class MoveInaccessibleItemToInventoryTask extends Task {
             return null;
         }
 
-        Optional<Slot> slotToMove = StorageHelper.getFilledInventorySlotInaccessibleToContainer(mod, _target);
+        Optional<Slot> slotToMove = StorageHelper.getFilledInventorySlotInaccessibleToContainer(AltoClef.INSTANCE, _target);
         if (slotToMove.isPresent()) {
             // Force cursor slot if we have one.
             if (_target.matches(StorageHelper.getItemStackInCursorSlot().getItem())) {
@@ -70,14 +69,14 @@ public class MoveInaccessibleItemToInventoryTask extends Task {
 
             Slot toMove = slotToMove.get();
             ItemStack stack = StorageHelper.getItemStackInSlot(toMove);
-            Optional<Slot> toMoveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(stack, false);
+            Optional<Slot> toMoveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(stack, false);
             if (toMoveTo.isPresent()) {
                 setDebugState("Moving slot " + toMove + " to inventory");
                 // Pick up & move
                 if (Slot.isCursor(toMove)) {
-                    mod.getSlotHandler().clickSlot(toMoveTo.get(), 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(toMoveTo.get(), 0, SlotActionType.PICKUP);
                 } else {
-                    mod.getSlotHandler().clickSlot(toMove, 0, SlotActionType.PICKUP);
+                    AltoClef.INSTANCE.getSlotHandler().clickSlot(toMove, 0, SlotActionType.PICKUP);
                 }
                 return null;
             } else {
@@ -91,7 +90,7 @@ public class MoveInaccessibleItemToInventoryTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

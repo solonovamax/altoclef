@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.ProjectileHelper;
@@ -8,6 +7,7 @@ import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.time.TimerGame;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
@@ -45,23 +45,23 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _thrownTimer.forceElapse();
         _thrown = false;
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         // TODO: Unlikely/minor nitpick, but there could be other people throwing ender pearls, which would delay the bot.
-        if (mod.getEntityTracker().entityFound(EnderPearlEntity.class)) {
+        if (AltoClef.INSTANCE.getEntityTracker().entityFound(EnderPearlEntity.class)) {
             _thrownTimer.reset();
         }
         if (_thrownTimer.elapsed()) {
-            if (mod.getSlotHandler().forceEquipItem(Items.ENDER_PEARL)) {
-                Rotation lookTarget = calculateThrowLook(mod, _target);
-                LookHelper.lookAt(mod, lookTarget);
-                if (LookHelper.isLookingAt(mod, lookTarget)) {
-                    mod.getInputControls().tryPress(Input.CLICK_RIGHT);
+            if (AltoClef.INSTANCE.getSlotHandler().forceEquipItem(Items.ENDER_PEARL)) {
+                Rotation lookTarget = calculateThrowLook(AltoClef.INSTANCE, _target);
+                LookHelper.lookAt(AltoClef.INSTANCE, lookTarget);
+                if (LookHelper.isLookingAt(AltoClef.INSTANCE, lookTarget)) {
+                    AltoClef.INSTANCE.getInputControls().tryPress(Input.CLICK_RIGHT);
                     _thrown = true;
                     _thrownTimer.reset();
                 }
@@ -71,13 +71,13 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return _thrown && _thrownTimer.elapsed() || (!_thrown && !mod.getItemStorage().hasItem(Items.ENDER_PEARL));
+    public boolean isFinished() {
+        return _thrown && _thrownTimer.elapsed() || (!_thrown && !AltoClef.INSTANCE.getItemStorage().hasItem(Items.ENDER_PEARL));
     }
 
     @Override

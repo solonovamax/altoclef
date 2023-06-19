@@ -11,6 +11,7 @@ import adris.altoclef.util.helpers.BaritoneHelper;
 import adris.altoclef.util.helpers.EntityHelper;
 import adris.altoclef.util.helpers.ProjectileHelper;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
@@ -32,7 +33,6 @@ import java.util.function.Predicate;
  */
 @SuppressWarnings("rawtypes")
 public class EntityTracker extends Tracker {
-
     private final HashMap<Item, List<ItemEntity>> _itemDropLocations = new HashMap<>();
     private final HashMap<Class, List<Entity>> _entityMap = new HashMap<>();
 
@@ -83,11 +83,11 @@ public class EntityTracker extends Tracker {
     }
 
     public boolean isCollidingWithPlayer(Entity entity) {
-        return isCollidingWithPlayer(_mod.getPlayer(), entity);
+        return isCollidingWithPlayer(AltoClef.INSTANCE.getPlayer(), entity);
     }
 
     public Optional<ItemEntity> getClosestItemDrop(Item... items) {
-        return getClosestItemDrop(_mod.getPlayer().getPos(), items);
+        return getClosestItemDrop(AltoClef.INSTANCE.getPlayer().getPos(), items);
     }
 
     public Optional<ItemEntity> getClosestItemDrop(Vec3d position, Item... items) {
@@ -99,7 +99,7 @@ public class EntityTracker extends Tracker {
     }
 
     public Optional<ItemEntity> getClosestItemDrop(Predicate<ItemEntity> acceptPredicate, Item... items) {
-        return getClosestItemDrop(_mod.getPlayer().getPos(), acceptPredicate, items);
+        return getClosestItemDrop(AltoClef.INSTANCE.getPlayer().getPos(), acceptPredicate, items);
     }
 
     public Optional<ItemEntity> getClosestItemDrop(Vec3d position, Predicate<ItemEntity> acceptPredicate, Item... items) {
@@ -143,7 +143,7 @@ public class EntityTracker extends Tracker {
     }
 
     public Optional<Entity> getClosestEntity(Class... entityTypes) {
-        return getClosestEntity(_mod.getPlayer().getPos(), entityTypes);
+        return getClosestEntity(AltoClef.INSTANCE.getPlayer().getPos(), entityTypes);
     }
 
     public Optional<Entity> getClosestEntity(Vec3d position, Class... entityTypes) {
@@ -151,7 +151,7 @@ public class EntityTracker extends Tracker {
     }
 
     public Optional<Entity> getClosestEntity(Predicate<Entity> acceptPredicate, Class... entityTypes) {
-        return getClosestEntity(_mod.getPlayer().getPos(), acceptPredicate, entityTypes);
+        return getClosestEntity(AltoClef.INSTANCE.getPlayer().getPos(), acceptPredicate, entityTypes);
     }
 
     public Optional<Entity> getClosestEntity(Vec3d position, Predicate<Entity> acceptPredicate, Class... entityTypes) {
@@ -303,7 +303,7 @@ public class EntityTracker extends Tracker {
      * Tells the entity tracker that we were unable to reach this entity.
      */
     public void requestEntityUnreachable(Entity entity) {
-        _entityBlacklist.blackListItem(_mod, entity, 3);
+        _entityBlacklist.blackListItem(entity, 3);
     }
 
     /**
@@ -343,14 +343,14 @@ public class EntityTracker extends Tracker {
                 if (entity == null || !entity.isAlive()) continue;
 
                 // Don't catalogue our own player.
-                if (type == PlayerEntity.class && entity.equals(_mod.getPlayer())) continue;
+                if (type == PlayerEntity.class && entity.equals(AltoClef.INSTANCE.getPlayer())) continue;
 
                 if (!_entityMap.containsKey(type)) {
                     _entityMap.put(type, new ArrayList<>());
                 }
                 _entityMap.get(type).add(entity);
 
-                if (_mod.getControllerExtras().inRange(entity)) {
+                if (AltoClef.INSTANCE.getControllerExtras().inRange(entity)) {
                     _closeEntities.add(entity);
                 }
 
@@ -358,7 +358,7 @@ public class EntityTracker extends Tracker {
                     Item droppedItem = ientity.getStack().getItem();
 
                     // Only cared about GROUNDED item entities
-                    if (ientity.isOnGround() || ientity.isTouchingWater() || WorldHelper.isSolid(_mod, ientity.getBlockPos().down(2)) || WorldHelper.isSolid(_mod, ientity.getBlockPos().down(3))) {
+                    if (ientity.isOnGround() || ientity.isTouchingWater() || WorldHelper.isSolid(AltoClef.INSTANCE, ientity.getBlockPos().down(2)) || WorldHelper.isSolid(AltoClef.INSTANCE, ientity.getBlockPos().down(3))) {
                         if (!_itemDropLocations.containsKey(droppedItem)) {
                             _itemDropLocations.put(droppedItem, new ArrayList<>());
                         }
@@ -366,18 +366,18 @@ public class EntityTracker extends Tracker {
                     }
                 }
                 if (entity instanceof MobEntity) {
-                    if (EntityHelper.isAngryAtPlayer(_mod, entity)) {
+                    if (EntityHelper.isAngryAtPlayer(AltoClef.INSTANCE, entity)) {
 
                         // Check if the mob is facing us or is close enough
-                        boolean closeEnough = entity.isInRange(_mod.getPlayer(), 26);
+                        boolean closeEnough = entity.isInRange(AltoClef.INSTANCE.getPlayer(), 26);
 
-                        //Debug.logInternal("TARGET: " + hostile.is);
+                        // Debug.logInternal("TARGET: " + hostile.is);
                         if (closeEnough) {
                             _hostiles.add(entity);
                         }
                     }
                 } else if (entity instanceof ProjectileEntity projEntity) {
-                    if (!_mod.getBehaviour().shouldAvoidDodgingProjectile(entity)) {
+                    if (!AltoClef.INSTANCE.getBehaviour().shouldAvoidDodgingProjectile(entity)) {
                         CachedProjectile proj = new CachedProjectile();
 
                         boolean inGround = false;

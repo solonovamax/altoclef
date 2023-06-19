@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.squashed;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.ResourceTask;
 import adris.altoclef.tasks.container.CraftInTableTask;
@@ -8,9 +7,14 @@ import adris.altoclef.tasks.container.UpgradeInSmithingTableTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.StorageHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CataloguedResourceTask extends ResourceTask {
 
@@ -50,17 +54,17 @@ public class CataloguedResourceTask extends ResourceTask {
         for (ResourceTask task : _tasksToComplete) {
             for (ItemTarget target : task.getItemTargets()) {
                 // If we failed to meet this task's targets, do the task.
-                if (!StorageHelper.itemTargetsMetInventory(mod, target)) return task;
+                if (!StorageHelper.itemTargetsMetInventory(target)) return task;
             }
         }
         return null;
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         for (ResourceTask task : _tasksToComplete) {
             for (ItemTarget target : task.getItemTargets()) {
-                if (!StorageHelper.itemTargetsMetInventory(mod, target)) return false;
+                if (!StorageHelper.itemTargetsMetInventory(target)) return false;
             }
         }
         // All targets are met.
@@ -100,7 +104,7 @@ public class CataloguedResourceTask extends ResourceTask {
     @SuppressWarnings({"unchecked", "rawtypes"})
     static class TaskSquasher {
 
-        private final Map<Class, adris.altoclef.tasks.squashed.TypeSquasher> _squashMap = new HashMap<>();
+        private final Map<Class, TypeSquasher> _squashMap = new HashMap<>();
 
         private final List<ResourceTask> _unSquashableTasks = new ArrayList<>();
 

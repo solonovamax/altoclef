@@ -1,7 +1,7 @@
 package adris.altoclef.commandsystem;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
+import gay.solonovamax.altoclef.AltoClef;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,10 +10,8 @@ import java.util.function.Consumer;
 public class CommandExecutor {
 
     private final HashMap<String, Command> _commandSheet = new HashMap<>();
-    private final AltoClef _mod;
 
-    public CommandExecutor(AltoClef mod) {
-        _mod = mod;
+    public CommandExecutor() {
     }
 
     public void registerNewCommand(Command... commands) {
@@ -27,7 +25,7 @@ public class CommandExecutor {
     }
 
     private String getCommandPrefix() {
-        return _mod.getModSettings().getCommandPrefix();
+        return AltoClef.INSTANCE.getModSettings().getCommandPrefix();
     }
 
     public boolean isClientCommand(String line) {
@@ -47,7 +45,7 @@ public class CommandExecutor {
                 getException.accept(new CommandException("Invalid command:" + part));
                 executeRecursive(commands, parts, index + 1, onFinish, getException);
             } else {
-                command.run(_mod, part, () -> executeRecursive(commands, parts, index + 1, onFinish, getException));
+                command.run(part, () -> executeRecursive(commands, parts, index + 1, onFinish, getException));
             }
         } catch (CommandException ae) {
             getException.accept(new CommandException(ae.getMessage() + "\nUsage: " + command.getHelpRepresentation(), ae));

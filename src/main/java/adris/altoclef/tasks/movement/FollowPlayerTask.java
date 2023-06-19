@@ -1,7 +1,7 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -17,14 +17,13 @@ public class FollowPlayerTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-
-        Optional<Vec3d> lastPos = mod.getEntityTracker().getPlayerMostRecentPosition(_playerName);
+    protected Task onTick() {
+        Optional<Vec3d> lastPos = AltoClef.INSTANCE.getEntityTracker().getPlayerMostRecentPosition(_playerName);
 
         if (lastPos.isEmpty()) {
             setDebugState("No player found/detected. Doing nothing until player loads into render distance.");
@@ -32,13 +31,13 @@ public class FollowPlayerTask extends Task {
         }
         Vec3d target = lastPos.get();
 
-        if (target.isInRange(mod.getPlayer().getPos(), 1) && !mod.getEntityTracker().isPlayerLoaded(_playerName)) {
-            mod.logWarning("Failed to get to player \"" + _playerName + "\". We moved to where we last saw them but now have no idea where they are.");
-            stop(mod);
+        if (target.isInRange(AltoClef.INSTANCE.getPlayer().getPos(), 1) && !AltoClef.INSTANCE.getEntityTracker().isPlayerLoaded(_playerName)) {
+            AltoClef.INSTANCE.logWarning("Failed to get to player \"" + _playerName + "\". We moved to where we last saw them but now have no idea where they are.");
+            stop();
             return null;
         }
 
-        Optional<PlayerEntity> player = mod.getEntityTracker().getPlayerEntity(_playerName);
+        Optional<PlayerEntity> player = AltoClef.INSTANCE.getEntityTracker().getPlayerEntity(_playerName);
         if (player.isEmpty()) {
             // Go to last location
             return new GetToBlockTask(new BlockPos((int) target.x, (int) target.y, (int) target.z), false);
@@ -47,7 +46,7 @@ public class FollowPlayerTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 

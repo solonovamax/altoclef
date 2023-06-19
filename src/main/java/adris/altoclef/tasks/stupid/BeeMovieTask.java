@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.stupid;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.construction.DestroyBlockTask;
 import adris.altoclef.tasks.construction.PlaceSignTask;
@@ -12,6 +11,7 @@ import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.MiningRequirement;
 import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -73,15 +73,15 @@ public class BeeMovieTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
         // Prevent mineshaft garbage
-        mod.getBehaviour().setExclusivelyMineLogs(true);
+        AltoClef.INSTANCE.getBehaviour().setExclusivelyMineLogs(true);
 
         // Avoid breaking the ground below the signs.
-        mod.getBehaviour().avoidBlockBreaking(this::isOnPath);
+        AltoClef.INSTANCE.getBehaviour().avoidBlockBreaking(this::isOnPath);
         // Avoid placing blocks where the signs should be placed.
-        mod.getBehaviour().avoidBlockPlacing(block -> isOnPath(block.down()));
+        AltoClef.INSTANCE.getBehaviour().avoidBlockPlacing(block -> isOnPath(block.down()));
     }
 
     // Whether a block pos is on the path of its signs.
@@ -94,30 +94,29 @@ public class BeeMovieTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-
-        if (_currentPlace != null && _currentPlace.isActive() && !_currentPlace.isFinished(mod)) {
+    protected Task onTick() {
+        if (_currentPlace != null && _currentPlace.isActive() && !_currentPlace.isFinished()) {
             setDebugState("Placing...");
             return _currentPlace;
         }
 
         if (_sharpenTheAxe) {
-            if (!mod.getItemStorage().hasItem(Items.DIAMOND_AXE) || !mod.getItemStorage().hasItem(Items.DIAMOND_SHOVEL) || !mod.getItemStorage().hasItem(Items.DIAMOND_PICKAXE)) {
+            if (!AltoClef.INSTANCE.getItemStorage().hasItem(Items.DIAMOND_AXE) || !AltoClef.INSTANCE.getItemStorage().hasItem(Items.DIAMOND_SHOVEL) || !AltoClef.INSTANCE.getItemStorage().hasItem(Items.DIAMOND_PICKAXE)) {
                 setDebugState("Sharpening the axe: Tools");
                 return new CataloguedResourceTask(new ItemTarget(Items.DIAMOND_AXE, 1), new ItemTarget("diamond_shovel", 1), new ItemTarget("diamond_pickaxe", 1));
             }
-            if (_extraSignAcquireTask.isActive() && !_extraSignAcquireTask.isFinished(mod)) {
+            if (_extraSignAcquireTask.isActive() && !_extraSignAcquireTask.isFinished()) {
                 setDebugState("Sharpening the axe: Signs");
                 return _extraSignAcquireTask;
             }
-            if (!mod.getItemStorage().hasItem(ItemHelper.WOOD_SIGN)) {
+            if (!AltoClef.INSTANCE.getItemStorage().hasItem(ItemHelper.WOOD_SIGN)) {
                 // Get a bunch of signs in bulk
                 return _extraSignAcquireTask;
             }
         }
 
         // Get building blocks
-        int buildCount = mod.getItemStorage().getItemCount(Items.DIRT, Items.COBBLESTONE);
+        int buildCount = AltoClef.INSTANCE.getItemStorage().getItemCount(Items.DIRT, Items.COBBLESTONE);
         if (buildCount < STRUCTURE_MATERIALS_BUFFER && (buildCount == 0 || _structureMaterialsTask.isActive())) {
             setDebugState("Collecting structure blocks...");
             return _structureMaterialsTask;
@@ -130,7 +129,7 @@ public class BeeMovieTask extends Task {
             assert MinecraftClient.getInstance().world != null;
 
 
-            boolean loaded = mod.getChunkTracker().isChunkLoaded(currentSignPos);
+            boolean loaded = AltoClef.INSTANCE.getChunkTracker().isChunkLoaded(currentSignPos);
 
             // Clear above
             BlockState above = MinecraftClient.getInstance().world.getBlockState(currentSignPos.up());
@@ -141,7 +140,7 @@ public class BeeMovieTask extends Task {
 
             // Fortify below
             //BlockState below = MinecraftClient.getInstance().world.getBlockState(currentSignPos.down());
-            boolean canPlace = WorldHelper.isSolid(mod, currentSignPos.down());//isSideSolidFullSquare(MinecraftClient.getInstance().world, currentSignPos.down(), Direction.UP);
+            boolean canPlace = WorldHelper.isSolid(AltoClef.INSTANCE, currentSignPos.down());// isSideSolidFullSquare(MinecraftClient.getInstance().world, currentSignPos.down(), Direction.UP);
             if (loaded && !canPlace) {
                 setDebugState("Placing block below for sign placement...");
                 return new PlaceStructureBlockTask(currentSignPos.down());
@@ -176,8 +175,8 @@ public class BeeMovieTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBehaviour().pop();
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBehaviour().pop();
     }
 
     @Override
@@ -194,7 +193,7 @@ public class BeeMovieTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         return _finished;
     }
 

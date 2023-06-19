@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.AbstractDoToClosestObjectTask;
 import adris.altoclef.tasks.resources.SatisfyMiningRequirementTask;
@@ -13,7 +12,13 @@ import adris.altoclef.util.helpers.StlHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
-import net.minecraft.block.*;
+import gay.solonovamax.altoclef.AltoClef;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.DoorBlock;
+import net.minecraft.block.FenceBlock;
+import net.minecraft.block.FenceGateBlock;
+import net.minecraft.block.FlowerBlock;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
@@ -132,61 +137,61 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _wanderTask.reset();
         _progressChecker.reset();
         stuckCheck.reset();
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
+    protected Task onTick() {
+        if (_wanderTask.isActive() && !_wanderTask.isFinished()) {
             setDebugState("Wandering.");
             return _wanderTask;
         }
-        if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
+        if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
             _progressChecker.reset();
         }
-        if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished(mod) && stuckInBlock(mod) != null) {
+        if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished() && stuckInBlock(AltoClef.INSTANCE) != null) {
             setDebugState("Getting unstuck from block.");
             stuckCheck.reset();
             // Stop other tasks, we are JUST shimmying
-            mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-            mod.getClientBaritone().getExploreProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().onLostControl();
+            AltoClef.INSTANCE.getClientBaritone().getExploreProcess().onLostControl();
             return _unstuckTask;
         }
-        if (!_progressChecker.check(mod) || !stuckCheck.check(mod)) {
-            BlockPos blockStuck = stuckInBlock(mod);
+        if (!_progressChecker.check(AltoClef.INSTANCE) || !stuckCheck.check(AltoClef.INSTANCE)) {
+            BlockPos blockStuck = stuckInBlock(AltoClef.INSTANCE);
             if (blockStuck != null) {
                 _unstuckTask = getFenceUnstuckTask();
                 return _unstuckTask;
             }
             stuckCheck.reset();
         }
-        _mod = mod;
+        _mod = AltoClef.INSTANCE;
 
         // If we're getting a pickaxe for THIS resource...
-        if (isIsGettingPickaxeFirst(mod) && _collectingPickaxeForThisResource && !StorageHelper.miningRequirementMetInventory(mod, MiningRequirement.STONE)) {
+        if (isIsGettingPickaxeFirst(AltoClef.INSTANCE) && _collectingPickaxeForThisResource && !StorageHelper.miningRequirementMetInventory(AltoClef.INSTANCE, MiningRequirement.STONE)) {
             _progressChecker.reset();
             setDebugState("Collecting pickaxe first");
             return getPickaxeFirstTask;
         } else {
-            if (StorageHelper.miningRequirementMetInventory(mod, MiningRequirement.STONE)) {
+            if (StorageHelper.miningRequirementMetInventory(AltoClef.INSTANCE, MiningRequirement.STONE)) {
                 isGettingPickaxeFirstFlag = false;
             }
             _collectingPickaxeForThisResource = false;
         }
 
-        if (!_progressChecker.check(mod)) {
-            mod.getClientBaritone().getPathingBehavior().forceCancel();
+        if (!_progressChecker.check(AltoClef.INSTANCE)) {
+            AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().forceCancel();
             if (_currentDrop != null && !_currentDrop.getStack().isEmpty()) {
                 // We might want to get a pickaxe first.
-                if (!isGettingPickaxeFirstFlag && mod.getModSettings().shouldCollectPickaxeFirst() && !StorageHelper.miningRequirementMetInventory(mod, MiningRequirement.STONE)) {
+                if (!isGettingPickaxeFirstFlag && AltoClef.INSTANCE.getModSettings().shouldCollectPickaxeFirst() && !StorageHelper.miningRequirementMetInventory(AltoClef.INSTANCE, MiningRequirement.STONE)) {
                     Debug.logMessage("Failed to pick up drop, will try to collect a stone pickaxe first and try again!");
                     _collectingPickaxeForThisResource = true;
                     isGettingPickaxeFirstFlag = true;
@@ -195,12 +200,12 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
                 Debug.logMessage(StlHelper.toString(_blacklist, element -> element == null ? "(null)" : element.getStack().getItem().getTranslationKey()));
                 Debug.logMessage("Failed to pick up drop, suggesting it's unreachable.");
                 _blacklist.add(_currentDrop);
-                mod.getEntityTracker().requestEntityUnreachable(_currentDrop);
+                AltoClef.INSTANCE.getEntityTracker().requestEntityUnreachable(_currentDrop);
                 return _wanderTask;
             }
         }
 
-        return super.onTick(mod);
+        return super.onTick();
     }
 
 

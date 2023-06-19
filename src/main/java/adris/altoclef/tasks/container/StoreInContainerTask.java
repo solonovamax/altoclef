@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.container;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.slot.MoveItemToSlotFromInventoryTask;
 import adris.altoclef.tasksystem.Task;
@@ -8,6 +7,7 @@ import adris.altoclef.trackers.storage.ContainerCache;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
@@ -38,12 +38,12 @@ public class StoreInContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        super.onStart(mod);
+    protected void onStart() {
+        super.onStart();
         if (_storedItems == null) {
             // Only consider transfers to the container we wish
             _storedItems = new ContainerStoredTracker(slot -> {
-                Optional<BlockPos> openContainer = mod.getItemStorage().getLastBlockPosInteraction();
+                Optional<BlockPos> openContainer = AltoClef.INSTANCE.getItemStorage().getLastBlockPosInteraction();
                 return openContainer.isPresent() && openContainer.get().equals(_targetContainer);
             });
         }
@@ -51,22 +51,22 @@ public class StoreInContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         // Get more if we don't have & "get if not present" is true.
         if (_getIfNotPresent) {
             for (ItemTarget target : _toStore) {
                 int inventoryNeed = target.getTargetCount() - _storedItems.getStoredCount(target.getMatches());
-                if (inventoryNeed > mod.getItemStorage().getItemCount(target)) {
+                if (inventoryNeed > AltoClef.INSTANCE.getItemStorage().getItemCount(target)) {
                     return TaskCatalogue.getItemTask(new ItemTarget(target, inventoryNeed));
                 }
             }
         }
-        return super.onTick(mod);
+        return super.onTick();
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        super.onStop(mod, interruptTask);
+    protected void onStop(Task interruptTask) {
+        super.onStop(interruptTask);
         _storedItems.stopTracking();
     }
 
@@ -80,7 +80,6 @@ public class StoreInContainerTask extends AbstractDoToStorageContainerTask {
 
             // Pick the best slot to grab from.
             Optional<Slot> bestPotential = PickupFromContainerTask.getBestSlotToTransfer(
-                    mod,
                     target,
                     mod.getItemStorage().getItemCountContainer(target.getMatches()),
                     potentials,
@@ -102,9 +101,9 @@ public class StoreInContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         // We've stored all items
-        return _storedItems != null && _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore).length == 0;
+        return _storedItems != null && _storedItems.getUnstoredItemTargetsYouCanStore(AltoClef.INSTANCE, _toStore).length == 0;
     }
 
     @Override

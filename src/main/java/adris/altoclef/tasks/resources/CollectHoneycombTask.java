@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.InteractWithBlockTask;
 import adris.altoclef.tasks.ResourceTask;
 import adris.altoclef.tasks.construction.PlaceBlockTask;
@@ -10,6 +9,7 @@ import adris.altoclef.tasks.squashed.CataloguedResourceTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.WorldHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
 import net.minecraft.state.property.Properties;
@@ -101,7 +101,7 @@ public class CollectHoneycombTask extends ResourceTask {
     }
 
     private boolean isCampfireUnderNest(AltoClef mod, BlockPos pos) {
-        for (BlockPos underPos : WorldHelper.scanRegion(mod, pos.down(6), pos.down())) {
+        for (BlockPos underPos : WorldHelper.scanRegion(pos.down(6), pos.down())) {
             if (mod.getWorld().getBlockState(underPos).getBlock() == Blocks.CAMPFIRE)
                 return true;
         }

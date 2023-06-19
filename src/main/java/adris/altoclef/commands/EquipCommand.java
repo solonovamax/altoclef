@@ -1,9 +1,13 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
-import adris.altoclef.commandsystem.*;
+import adris.altoclef.commandsystem.Arg;
+import adris.altoclef.commandsystem.ArgParser;
+import adris.altoclef.commandsystem.Command;
+import adris.altoclef.commandsystem.CommandException;
+import adris.altoclef.commandsystem.ItemList;
 import adris.altoclef.tasks.misc.EquipArmorTask;
 import adris.altoclef.util.ItemTarget;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -14,10 +18,10 @@ public class EquipCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(ArgParser parser) throws CommandException {
         ItemTarget[] items;
         if (parser.getArgUnits().length == 1) {
-            switch (parser.getArgUnits()[0].toLowerCase()) { //Hot commands for the default full armor sets
+            switch (parser.getArgUnits()[0].toLowerCase()) { // Hot commands for the default full armor sets
                 case "leather" -> items =
                         new ItemTarget[]{new ItemTarget(Items.LEATHER_HELMET),
                                 new ItemTarget(Items.LEATHER_CHESTPLATE),
@@ -61,7 +65,7 @@ public class EquipCommand extends Command {
 
 
         if (items != null)
-            mod.runUserTask(new EquipArmorTask(items), this::finish); // do not run the equip task with non armor items.
+            AltoClef.INSTANCE.runUserTask(new EquipArmorTask(items), this::finish); // do not run the equip task with non armor items.
         else
             throw new CommandException("You must provide armor items."); //inform the user that they can only use armor items.
         //TODO Possibly add in a variable to tell the user what was wrong. However, this is less helpful if a list of items is wrong.

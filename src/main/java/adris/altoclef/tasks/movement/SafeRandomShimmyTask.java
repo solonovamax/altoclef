@@ -1,11 +1,11 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.time.TimerGame;
 import baritone.api.utils.input.Input;
+import gay.solonovamax.altoclef.AltoClef;
 
 /**
  * Will move around randomly while holding shift
@@ -24,30 +24,29 @@ public class SafeRandomShimmyTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _lookTimer.reset();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-
+    protected Task onTick() {
         if (_lookTimer.elapsed()) {
             Debug.logMessage("Random Orientation");
             _lookTimer.reset();
-            LookHelper.randomOrientation(mod);
+            LookHelper.randomOrientation(AltoClef.INSTANCE);
         }
 
-        mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.SNEAK, true);
-        mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, true);
-        mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, true);
+        AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.SNEAK, true);
+        AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, true);
+        AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, true);
         return null;
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, false);
-        mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.SNEAK, false);
-        mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, false);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, false);
+        AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.SNEAK, false);
+        AltoClef.INSTANCE.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, false);
     }
 
     @Override

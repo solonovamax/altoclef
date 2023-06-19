@@ -1,11 +1,11 @@
 package adris.altoclef.tasks.movement;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.WorldHelper;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalXZ;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.util.math.BlockPos;
 
 public class GetToXZTask extends CustomBaritoneGoalTask {
@@ -24,11 +24,11 @@ public class GetToXZTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         if (_dimension != null && WorldHelper.getCurrentDimension() != _dimension) {
             return new DefaultGoToDimensionTask(_dimension);
         }
-        return super.onTick(mod);
+        return super.onTick();
     }
 
     @Override
@@ -45,8 +45,8 @@ public class GetToXZTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        BlockPos cur = mod.getPlayer().getBlockPos();
+    public boolean isFinished() {
+        BlockPos cur = AltoClef.INSTANCE.getPlayer().getBlockPos();
         return (cur.getX() == _x && cur.getZ() == _z && (_dimension == null || _dimension == WorldHelper.getCurrentDimension()));
     }
 

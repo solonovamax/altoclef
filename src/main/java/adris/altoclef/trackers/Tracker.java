@@ -1,10 +1,6 @@
 package adris.altoclef.trackers;
 
-import gay.solonovamax.altoclef.AltoClef;
-
 public abstract class Tracker {
-
-    protected AltoClef _mod;
     // Needs to update
     private boolean _dirty = true;
 

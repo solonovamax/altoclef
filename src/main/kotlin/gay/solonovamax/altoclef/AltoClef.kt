@@ -1,6 +1,9 @@
 package gay.solonovamax.altoclef
 
-import adris.altoclef.*
+import adris.altoclef.AltoClefCommands
+import adris.altoclef.BotBehaviour
+import adris.altoclef.Debug
+import adris.altoclef.Settings
 import adris.altoclef.butler.Butler
 import adris.altoclef.chains.*
 import adris.altoclef.commandsystem.CommandExecutor
@@ -25,7 +28,6 @@ import baritone.Baritone
 import baritone.altoclef.AltoClefSettings
 import baritone.api.BaritoneAPI
 import net.fabricmc.api.ModInitializer
-import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents
 import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
@@ -37,6 +39,7 @@ import net.minecraft.util.math.BlockPos
 import org.lwjgl.glfw.GLFW
 import java.util.*
 import java.util.function.Consumer
+import baritone.api.Settings as BaritoneSettings
 
 /**
  * Central access point for AltoClef
@@ -48,8 +51,7 @@ object AltoClef : ModInitializer {
     /**
      * Executes commands (ex. `@get`/`@gamer`)
      */
-    @JvmStatic
-    val commandExecutor: CommandExecutor = CommandExecutor(this)
+    val commandExecutor: CommandExecutor = CommandExecutor()
 
     // Are we in game (playing in a server/world)
     @JvmStatic
@@ -62,19 +64,19 @@ object AltoClef : ModInitializer {
      * Runs the highest priority task chain
      * (task chains run the task tree)
      */
-    val taskRunner: TaskRunner = TaskRunner(this)
+    val taskRunner: TaskRunner = TaskRunner()
 
-    private val trackerManager: TrackerManager = TrackerManager(this)
+    private val trackerManager: TrackerManager = TrackerManager()
 
     /**
      * Controls bot behaviours, like whether to temporarily "protect" certain blocks or items
      */
-    val behaviour: BotBehaviour = BotBehaviour(this)
+    val behaviour: BotBehaviour = BotBehaviour()
 
     /**
      * Extra controls not present in ClientPlayerInteractionManager. This REALLY should be made static or combined with something else.
      */
-    val controllerExtras: PlayerExtraController = PlayerExtraController(this)
+    val controllerExtras: PlayerExtraController = PlayerExtraController()
 
     /**
      * The user task chain (runs your command. Ex. Get Diamonds, Beat the Game)
@@ -103,7 +105,7 @@ object AltoClef : ModInitializer {
      * Tracks items in your inventory and in storage containers.
      */
     // Trackers
-    val itemStorage: ItemStorageTracker = ItemStorageTracker(this, trackerManager, containerSubTracker)
+    val itemStorage: ItemStorageTracker = ItemStorageTracker(trackerManager, containerSubTracker)
 
     /**
      * Tracks loaded entities
@@ -113,17 +115,17 @@ object AltoClef : ModInitializer {
     /**
      * Tracks blocks and their positions
      */
-    val blockTracker: BlockTracker = BlockTracker(this, trackerManager)
+    val blockTracker: BlockTracker = BlockTracker(trackerManager)
 
     /**
      * Tracks of whether a chunk is loaded/visible or not
      */
-    val chunkTracker: SimpleChunkTracker = SimpleChunkTracker(this)
+    val chunkTracker: SimpleChunkTracker = SimpleChunkTracker()
 
     /**
      * Tracks random block things, like the last nether portal we used
      */
-    val miscBlockTracker: MiscBlockTracker = MiscBlockTracker(this)
+    val miscBlockTracker: MiscBlockTracker = MiscBlockTracker()
 
     // Renderers
     private val commandStatusOverlay: CommandStatusOverlay = CommandStatusOverlay()
@@ -132,7 +134,7 @@ object AltoClef : ModInitializer {
      * AltoClef Settings
      */
     // Settings
-    var modSettings: Settings? = null
+    lateinit var modSettings: Settings
         private set
 
     /**
@@ -149,21 +151,18 @@ object AltoClef : ModInitializer {
     /**
      * Does Inventory/container slot actions
      */
-    val slotHandler: SlotHandler = SlotHandler(this)
+    val slotHandler: SlotHandler = SlotHandler()
 
     /**
      * Butler controller. Keeps track of users and lets you receive user messages
      */
     // Butler
-    val butler: Butler = Butler(this)
+    val butler: Butler = Butler()
 
     override fun onInitialize() {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
         // However, some things (like resources) may still be uninitialized.
         // As such, nothing will be loaded here but basic initialization.
-        ScreenEvents.AFTER_INIT.register { client, screen, i, i2 ->
-        }
-
         EventBus.subscribe(TitleScreenEntryEvent::class.java) {
             onInitializeLoad()
         }
@@ -185,29 +184,25 @@ object AltoClef : ModInitializer {
         initializeCommands()
 
         // Load settings
-        Settings.load { newSettings: Settings? ->
+        Settings.load { newSettings: Settings ->
             modSettings = newSettings
             // Baritone's `acceptableThrowawayItems` should match our own.
-            val baritoneCanPlace = modSettings!!.getThrowawayItems(this, true).filter { item ->
+            val baritoneCanPlace = modSettings.getThrowawayItems(true).filter { item ->
                 !(item == Items.SOUL_SAND || item == Items.MAGMA_BLOCK || item == Items.SAND || item == Items.GRAVEL)
             }.toList()
 
             clientBaritoneSettings.acceptableThrowawayItems.value.addAll(baritoneCanPlace)
             // If we should run an idle command...
-            if ((!userTaskChain.isActive || userTaskChain.isRunningIdleTask) && modSettings!!.shouldRunIdleCommandWhenNotActive()) {
+            if ((!userTaskChain.isActive || userTaskChain.isRunningIdleTask) && modSettings.shouldRunIdleCommandWhenNotActive()) {
                 userTaskChain.signalNextTaskToBeIdleTask()
-                commandExecutor.executeWithPrefix(modSettings!!.idleCommand)
+                commandExecutor.executeWithPrefix(modSettings.idleCommand)
             }
             // Don't break blocks or place blocks where we are explicitly protected.
             extraBaritoneSettings.avoidBlockBreak { blockPos: BlockPos? ->
-                modSettings!!.isPositionExplicitlyProtected(
-                    blockPos
-                )
+                modSettings.isPositionExplicitlyProtected(blockPos)
             }
             extraBaritoneSettings.avoidBlockPlace { blockPos: BlockPos? ->
-                modSettings!!.isPositionExplicitlyProtected(
-                    blockPos
-                )
+                modSettings.isPositionExplicitlyProtected(blockPos)
             }
         }
 
@@ -220,16 +215,10 @@ object AltoClef : ModInitializer {
             }
         }
 
-        // Debug jank/hookup
-        Debug.jankModInstance = this
-
         // Tick with the client
         EventBus.subscribe(ClientTickEvent::class.java) { onClientTick() }
         // Render
         EventBus.subscribe(ClientRenderEvent::class.java) { evt: ClientRenderEvent -> onClientRenderOverlay(evt.stack) }
-
-        // Playground
-        Playground.IDLE_TEST_INIT_FUNCTION(this)
 
         // External mod initialization
         runEnqueuedPostInits()
@@ -242,10 +231,9 @@ object AltoClef : ModInitializer {
 
         // Cancel shortcut
         if (InputHelper.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) && InputHelper.isKeyPressed(GLFW.GLFW_KEY_K)) {
-            userTaskChain.cancel(this)
-            if (taskRunner.currentTaskChain != null) {
-                taskRunner.currentTaskChain.stop(this)
-            }
+            userTaskChain.cancel()
+            if (taskRunner.currentTaskChain != null)
+                taskRunner.currentTaskChain.stop()
         }
 
         // TODO: should this go here?
@@ -263,7 +251,7 @@ object AltoClef : ModInitializer {
 
     /// GETTERS AND SETTERS
     private fun onClientRenderOverlay(matrixStack: MatrixStack) {
-        commandStatusOverlay.render(this, matrixStack)
+        commandStatusOverlay.render(matrixStack)
     }
 
     private fun initializeBaritoneSettings() {
@@ -330,7 +318,7 @@ object AltoClef : ModInitializer {
     /**
      * Baritone settings access (could just be static honestly)
      */
-    val clientBaritoneSettings: baritone.api.Settings
+    val clientBaritoneSettings: BaritoneSettings
         get() = Baritone.settings()
 
     /**
@@ -361,15 +349,15 @@ object AltoClef : ModInitializer {
      * Run a user task
      */
     @JvmOverloads
-    fun runUserTask(task: Task?, onFinish: Runnable? = Runnable {}) {
-        userTaskChain.runTask(this, task, onFinish)
+    fun runUserTask(task: Task, onFinish: Runnable = Runnable {}) {
+        userTaskChain.runTask(task, onFinish)
     }
 
     /**
      * Cancel currently running user task
      */
     fun cancelUserTask() {
-        userTaskChain.cancel(this)
+        userTaskChain.cancel()
     }
 
     /**

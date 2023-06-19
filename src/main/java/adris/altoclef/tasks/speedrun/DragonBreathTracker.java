@@ -1,12 +1,12 @@
 package adris.altoclef.tasks.speedrun;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.movement.CustomBaritoneGoalTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalRunAway;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.util.math.BlockPos;
 
@@ -35,18 +35,18 @@ public class DragonBreathTracker {
     private class RunAwayFromDragonsBreathTask extends CustomBaritoneGoalTask {
 
         @Override
-        protected void onStart(AltoClef mod) {
-            super.onStart(mod);
-            mod.getBehaviour().push();
-            mod.getBehaviour().setBlockPlacePenalty(Double.POSITIVE_INFINITY);
+        protected void onStart() {
+            super.onStart();
+            AltoClef.INSTANCE.getBehaviour().push();
+            AltoClef.INSTANCE.getBehaviour().setBlockPlacePenalty(Double.POSITIVE_INFINITY);
             // do NOT ever wander
             _checker = new MovementProgressChecker((int) Float.POSITIVE_INFINITY);
         }
 
         @Override
-        protected void onStop(AltoClef mod, Task interruptTask) {
-            super.onStop(mod, interruptTask);
-            mod.getBehaviour().pop();
+        protected void onStop(Task interruptTask) {
+            super.onStop(interruptTask);
+            AltoClef.INSTANCE.getBehaviour().pop();
         }
 
         @Override

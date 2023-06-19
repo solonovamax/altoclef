@@ -1,12 +1,16 @@
 package adris.altoclef.commands;
 
-import gay.solonovamax.altoclef.AltoClef;
-import adris.altoclef.commandsystem.*;
+import adris.altoclef.commandsystem.Arg;
+import adris.altoclef.commandsystem.ArgParser;
+import adris.altoclef.commandsystem.Command;
+import adris.altoclef.commandsystem.CommandException;
+import adris.altoclef.commandsystem.GotoTarget;
 import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
 import adris.altoclef.tasks.movement.GetToBlockTask;
 import adris.altoclef.tasks.movement.GetToXZTask;
 import adris.altoclef.tasks.movement.GetToYTask;
 import adris.altoclef.tasksystem.Task;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -37,8 +41,8 @@ public class GotoCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(ArgParser parser) throws CommandException {
         GotoTarget target = parser.get(GotoTarget.class);
-        mod.runUserTask(getMovementTaskFor(target), this::finish);
+        AltoClef.INSTANCE.runUserTask(getMovementTaskFor(target), this::finish);
     }
 }

@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.ResourceTask;
@@ -10,6 +9,7 @@ import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.EntityHelper;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.HoglinEntity;
@@ -60,7 +60,7 @@ public class TradeWithPiglinsTask extends ResourceTask {
     @Override
     protected Task onResourceTick(AltoClef mod) {
         // Collect gold if we don't have it.
-        if (_goldTask != null && _goldTask.isActive() && !_goldTask.isFinished(mod)) {
+        if (_goldTask != null && _goldTask.isActive() && !_goldTask.isFinished()) {
             setDebugState("Collecting gold");
             return _goldTask;
         }
@@ -110,16 +110,16 @@ public class TradeWithPiglinsTask extends ResourceTask {
         }
 
         @Override
-        protected void onStart(AltoClef mod) {
-            super.onStart(mod);
+        protected void onStart() {
+            super.onStart();
 
-            mod.getBehaviour().push();
+            AltoClef.INSTANCE.getBehaviour().push();
 
             // Don't throw away our gold lol
-            mod.getBehaviour().addProtectedItems(Items.GOLD_INGOT);
+            AltoClef.INSTANCE.getBehaviour().addProtectedItems(Items.GOLD_INGOT);
 
             // Don't attack piglins unless we've blacklisted them.
-            mod.getBehaviour().addForceFieldExclusion(entity -> {
+            AltoClef.INSTANCE.getBehaviour().addForceFieldExclusion(entity -> {
                 if (entity instanceof PiglinEntity) {
                     return !_blacklisted.contains(entity);
                 }
@@ -129,9 +129,9 @@ public class TradeWithPiglinsTask extends ResourceTask {
         }
 
         @Override
-        protected void onStop(AltoClef mod, Task interruptTask) {
-            super.onStop(mod, interruptTask);
-            mod.getBehaviour().pop();
+        protected void onStop(Task interruptTask) {
+            super.onStop(interruptTask);
+            AltoClef.INSTANCE.getBehaviour().pop();
         }
 
         @Override

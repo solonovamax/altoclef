@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.container;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.ResourceTask;
@@ -15,6 +14,7 @@ import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.FurnaceSlot;
 import adris.altoclef.util.slots.Slot;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -107,8 +107,8 @@ public class SmeltInFurnaceTask extends ResourceTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
-        return super.isFinished(mod) || _doTask.isFinished(mod);
+    public boolean isFinished() {
+        return super.isFinished() || _doTask.isFinished();
     }
 
     @Override
@@ -160,12 +160,12 @@ public class SmeltInFurnaceTask extends ResourceTask {
         }
 
         @Override
-        protected Task onTick(AltoClef mod) {
-            mod.getBehaviour().addProtectedItems(ItemHelper.PLANKS);
-            mod.getBehaviour().addProtectedItems(Items.COAL);
-            mod.getBehaviour().addProtectedItems(_allMaterials.getMatches());
-            mod.getBehaviour().addProtectedItems(_target.getMaterial().getMatches());
-            tryUpdateOpenFurnace(mod);
+        protected Task onTick() {
+            AltoClef.INSTANCE.getBehaviour().addProtectedItems(ItemHelper.PLANKS);
+            AltoClef.INSTANCE.getBehaviour().addProtectedItems(Items.COAL);
+            AltoClef.INSTANCE.getBehaviour().addProtectedItems(_allMaterials.getMatches());
+            AltoClef.INSTANCE.getBehaviour().addProtectedItems(_target.getMaterial().getMatches());
+            tryUpdateOpenFurnace(AltoClef.INSTANCE);
             // Include both regular + optional items
             ItemTarget materialTarget = _allMaterials;
             ItemTarget outputTarget = _target.getItem();
@@ -173,7 +173,7 @@ public class SmeltInFurnaceTask extends ResourceTask {
             // ^ 0 * mat_in_inventory because we always care aobut the TARGET materials, not how many LEFT there are.
             int materialsNeeded = materialTarget.getTargetCount()
                     /*- mod.getItemStorage().getItemCountInventoryOnly(materialTarget.getMatches())*/ // See comment above
-                    - mod.getItemStorage().getItemCountInventoryOnly(outputTarget.getMatches())
+                    - AltoClef.INSTANCE.getItemStorage().getItemCountInventoryOnly(outputTarget.getMatches())
                     - (materialTarget.matches(_furnaceCache.materialSlot.getItem()) ? _furnaceCache.materialSlot.getCount() : 0)
                     - (outputTarget.matches(_furnaceCache.outputSlot.getItem()) ? _furnaceCache.outputSlot.getCount() : 0);
             double totalFuelInFurnace = ItemHelper.getFuelAmount(_furnaceCache.fuelSlot) + _furnaceCache.burningFuelCount + _furnaceCache.burnPercentage;
@@ -182,29 +182,29 @@ public class SmeltInFurnaceTask extends ResourceTask {
                     ? Math.min(materialTarget.matches(_furnaceCache.materialSlot.getItem()) ? _furnaceCache.materialSlot.getCount() : 0, materialTarget.getTargetCount())
                     : materialTarget.getTargetCount()
                     /* - mod.getItemStorage().getItemCountInventoryOnly(materialTarget.getMatches()) */
-                    - mod.getItemStorage().getItemCountInventoryOnly(outputTarget.getMatches())
+                    - AltoClef.INSTANCE.getItemStorage().getItemCountInventoryOnly(outputTarget.getMatches())
                     - (outputTarget.matches(_furnaceCache.outputSlot.getItem()) ? _furnaceCache.outputSlot.getCount() : 0)
                     - totalFuelInFurnace;
 
             // We don't have enough materials...
-            if (mod.getItemStorage().getItemCountInventoryOnly(materialTarget.getMatches()) < materialsNeeded) {
+            if (AltoClef.INSTANCE.getItemStorage().getItemCountInventoryOnly(materialTarget.getMatches()) < materialsNeeded) {
                 setDebugState("Getting Materials");
                 return getMaterialTask(_target.getMaterial());
             }
 
             // We don't have enough fuel...
-            if (_furnaceCache.burningFuelCount <= 0 && StorageHelper.calculateInventoryFuelCount(mod) < fuelNeeded) {
+            if (_furnaceCache.burningFuelCount <= 0 && StorageHelper.calculateInventoryFuelCount(AltoClef.INSTANCE) < fuelNeeded) {
                 setDebugState("Getting Fuel");
                 return new CollectFuelTask(fuelNeeded + 1);
             }
 
             // Make sure our materials are accessible in our inventory
-            if (StorageHelper.isItemInaccessibleToContainer(mod, _allMaterials)) {
+            if (StorageHelper.isItemInaccessibleToContainer(AltoClef.INSTANCE, _allMaterials)) {
                 return new MoveInaccessibleItemToInventoryTask(_allMaterials);
             }
 
             // We have fuel and materials. Get to our container and smelt!
-            return super.onTick(mod);
+            return super.onTick();
         }
 
         // Override this if our materials must be acquired in a special way.

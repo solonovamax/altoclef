@@ -15,7 +15,13 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.RaycastContext;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -28,13 +34,9 @@ import java.util.function.Predicate;
  * (for example, "Build this bridge and avoid mining any blocks nearby")
  */
 public class BotBehaviour {
-
-    private final AltoClef _mod;
     Deque<State> _states = new ArrayDeque<>();
 
-    public BotBehaviour(AltoClef mod) {
-        _mod = mod;
-
+    public BotBehaviour() {
         // Start with one state.
         push();
     }
@@ -139,7 +141,7 @@ public class BotBehaviour {
 
     public void setRayTracingFluidHandling(RaycastContext.FluidHandling fluidHandling) {
         current().rayFluidHandling = fluidHandling;
-        //Debug.logMessage("OOF: " + fluidHandling);
+        // Debug.logMessage("OOF: " + fluidHandling);
         current().applyState();
     }
 
@@ -184,7 +186,7 @@ public class BotBehaviour {
     }
 
     public void setPreferredStairs(boolean allow) {
-        //current().preferredStairs = allow;
+        // current().preferredStairs = allow;
         current().applyState();
     }
 
@@ -266,7 +268,7 @@ public class BotBehaviour {
         public boolean mineScanDroppedItems;
         public boolean swimThroughLava;
         public boolean allowDiagonalAscend;
-        //public boolean preferredStairs;
+        // public boolean preferredStairs;
         public double blockPlacePenalty;
         public double blockBreakAdditionalPenalty;
 
@@ -285,7 +287,7 @@ public class BotBehaviour {
         public List<Predicate<BlockPos>> avoidWalkingThrough = new ArrayList<>();
         public List<BiPredicate<BlockState, ItemStack>> forceUseTools = new ArrayList<>();
         public List<BiFunction<Double, BlockPos, Double>> globalHeuristics = new ArrayList<>();
-        public boolean _allowWalkThroughFlowingWater = false;
+        public boolean _allowWalkThroughFlowingWater;
 
         // Minecraft config
         public boolean pauseOnLostFocus = true;
@@ -302,9 +304,9 @@ public class BotBehaviour {
 
         public State(State toCopy) {
             // Read in current state
-            readState(_mod.getClientBaritoneSettings());
+            readState(AltoClef.INSTANCE.getClientBaritoneSettings());
 
-            readExtraState(_mod.getExtraBaritoneSettings());
+            readExtraState(AltoClef.INSTANCE.getExtraBaritoneSettings());
 
             readMinecraftState();
 
@@ -323,7 +325,7 @@ public class BotBehaviour {
          * Make the current state match our copy
          */
         public void applyState() {
-            applyState(_mod.getClientBaritoneSettings(), _mod.getExtraBaritoneSettings());
+            applyState(AltoClef.INSTANCE.getClientBaritoneSettings(), AltoClef.INSTANCE.getExtraBaritoneSettings());
         }
 
         /**
@@ -336,7 +338,7 @@ public class BotBehaviour {
             allowDiagonalAscend = s.allowDiagonalAscend.value;
             blockPlacePenalty = s.blockPlacementPenalty.value;
             blockBreakAdditionalPenalty = s.blockBreakAdditionalPenalty.value;
-            //preferredStairs = s.allowDownward.value;
+            // preferredStairs = s.allowDownward.value;
         }
 
         private void readExtraState(AltoClefSettings settings) {
@@ -379,7 +381,7 @@ public class BotBehaviour {
             s.blockBreakAdditionalPenalty.value = blockBreakAdditionalPenalty;
 
             // We need an alternrative method to handle this, this method makes navigation much less reliable.
-            //s.allowDownward.value = preferredStairs;
+            // s.allowDownward.value = preferredStairs;
 
             // Kinda jank but it works.
             synchronized (sa.getBreakMutex()) {

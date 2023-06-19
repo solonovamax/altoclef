@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.resources;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasksystem.Task;
@@ -8,6 +7,7 @@ import adris.altoclef.util.CraftingRecipe;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.RecipeTarget;
 import adris.altoclef.util.helpers.StorageHelper;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.Item;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -27,12 +27,12 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _finished = false;
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
         // TODO: Cache this once instead of doing it every frame.
 
         // Stuff to get, both catalogued + individual items.
@@ -41,12 +41,12 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
 
         for (RecipeTarget target : _targets) {
             // Ignore this recipe if we have its item.
-            //if (mod.getItemStorage().targetMet(target.getItem())) continue;
+            // if (mod.getItemStorage().targetMet(target.getItem())) continue;
 
             // null = empty which is always met.
             if (target == null) continue;
 
-            int weNeed = target.getTargetCount() - mod.getItemStorage().getItemCount(target.getOutputItem());
+            int weNeed = target.getTargetCount() - AltoClef.INSTANCE.getItemStorage().getItemCount(target.getOutputItem());
 
             if (weNeed > 0) {
                 CraftingRecipe recipe = target.getRecipe();
@@ -83,7 +83,7 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
             int count = catalogueCount.get(catalogueMaterialName);
             if (count > 0) {
                 ItemTarget itemTarget = new ItemTarget(catalogueMaterialName, count);
-                if (!StorageHelper.itemTargetsMet(mod, itemTarget)) {
+                if (!StorageHelper.itemTargetsMet(AltoClef.INSTANCE, itemTarget)) {
                     setDebugState("Getting " + itemTarget);
                     return TaskCatalogue.getItemTask(catalogueMaterialName, count);
                 }
@@ -92,7 +92,7 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
         for (Item item : itemCount.keySet()) {
             int count = itemCount.get(item);
             if (count > 0) {
-                if (mod.getItemStorage().getItemCount(item) < count) {
+                if (AltoClef.INSTANCE.getItemStorage().getItemCount(item) < count) {
                     setDebugState("Getting " + item.getTranslationKey());
                     return TaskCatalogue.getItemTask(item, count);
                 }
@@ -105,7 +105,7 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
 
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
 
     }
 
@@ -123,9 +123,9 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished() {
         if (_finished) {
-            if (!StorageHelper.hasRecipeMaterialsOrTarget(mod, this._targets)) {
+            if (!StorageHelper.hasRecipeMaterialsOrTarget(AltoClef.INSTANCE, this._targets)) {
                 _finished = false;
                 Debug.logMessage("Invalid collect recipe \"finished\" state, resetting.");
             }

@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.container;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.DoToClosestBlockTask;
 import adris.altoclef.tasks.InteractWithBlockTask;
@@ -14,6 +13,7 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.slots.Slot;
 import adris.altoclef.util.time.TimerGame;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.math.BlockPos;
@@ -51,29 +51,28 @@ public abstract class DoStuffInContainerTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
-        mod.getBehaviour().push();
+    protected void onStart() {
+        AltoClef.INSTANCE.getBehaviour().push();
         if (_openTableTask == null) {
             _openTableTask = new DoToClosestBlockTask(InteractWithBlockTask::new, _containerBlocks);
         }
 
-        mod.getBlockTracker().trackBlock(_containerBlocks);
+        AltoClef.INSTANCE.getBlockTracker().trackBlock(_containerBlocks);
 
         // Protect container since we might place it.
-        mod.getBehaviour().addProtectedItems(ItemHelper.blocksToItems(_containerBlocks));
+        AltoClef.INSTANCE.getBehaviour().addProtectedItems(ItemHelper.blocksToItems(_containerBlocks));
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-
+    protected Task onTick() {
         // If we're placing, keep on placing.
-        if (mod.getItemStorage().hasItem(ItemHelper.blocksToItems(_containerBlocks)) && _placeTask.isActive() && !_placeTask.isFinished(mod)) {
+        if (AltoClef.INSTANCE.getItemStorage().hasItem(ItemHelper.blocksToItems(_containerBlocks)) && _placeTask.isActive() && !_placeTask.isFinished()) {
             setDebugState("Placing container");
             return _placeTask;
         }
 
-        if (isContainerOpen(mod)) {
-            return containerSubTask(mod);
+        if (isContainerOpen(AltoClef.INSTANCE)) {
+            return containerSubTask(AltoClef.INSTANCE);
         }
 
         // infinity if such a container does not exist.
@@ -81,20 +80,20 @@ public abstract class DoStuffInContainerTask extends Task {
 
         Optional<BlockPos> nearest;
 
-        Vec3d currentPos = mod.getPlayer().getPos();
-        BlockPos override = overrideContainerPosition(mod);
+        Vec3d currentPos = AltoClef.INSTANCE.getPlayer().getPos();
+        BlockPos override = overrideContainerPosition(AltoClef.INSTANCE);
 
-        if (override != null && mod.getBlockTracker().blockIsValid(override, _containerBlocks)) {
+        if (override != null && AltoClef.INSTANCE.getBlockTracker().blockIsValid(override, _containerBlocks)) {
             // We have an override so go there instead.
             nearest = Optional.of(override);
         } else {
             // Track nearest container
-            nearest = mod.getBlockTracker().getNearestTracking(currentPos, blockPos -> WorldHelper.canReach(mod, blockPos), _containerBlocks);
+            nearest = AltoClef.INSTANCE.getBlockTracker().getNearestTracking(currentPos, blockPos -> WorldHelper.canReach(AltoClef.INSTANCE, blockPos), _containerBlocks);
         }
         if (nearest.isEmpty()) {
             // If all else fails, try using our placed task
             nearest = Optional.ofNullable(_placeTask.getPlaced());
-            if (nearest.isPresent() && !mod.getBlockTracker().blockIsValid(nearest.get(), _containerBlocks)) {
+            if (nearest.isPresent() && !AltoClef.INSTANCE.getBlockTracker().blockIsValid(nearest.get(), _containerBlocks)) {
                 nearest = Optional.empty();
             }
         }
@@ -104,7 +103,7 @@ public abstract class DoStuffInContainerTask extends Task {
 
         // Make a new container if going to the container is a pretty bad cost.
         // Also keep on making the container if we're stuck in some
-        if (costToWalk > getCostToMakeNew(mod)) {
+        if (costToWalk > getCostToMakeNew(AltoClef.INSTANCE)) {
             _placeForceTimer.reset();
         }
         if (nearest.isEmpty() || (!_placeForceTimer.elapsed() && _justPlacedTimer.elapsed())) {
@@ -114,7 +113,7 @@ public abstract class DoStuffInContainerTask extends Task {
             _cachedContainerPosition = null;
 
             // Get if we don't have...
-            if (!mod.getItemStorage().hasItem(_containerTarget)) {
+            if (!AltoClef.INSTANCE.getItemStorage().hasItem(_containerTarget)) {
                 setDebugState("Getting container item");
                 return TaskCatalogue.getItemTask(_containerTarget);
             }
@@ -133,22 +132,22 @@ public abstract class DoStuffInContainerTask extends Task {
         // Walk to it and open it
 
         // Wait for food
-        if (mod.getFoodChain().needsToEat()) {
+        if (AltoClef.INSTANCE.getFoodChain().needsToEat()) {
             setDebugState("Waiting for eating...");
             return null;
         }
         setDebugState("Walking to container... " + nearest.get().toShortString());
 
         if (!StorageHelper.getItemStackInCursorSlot().isEmpty()) {
-            Optional<Slot> toMoveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(StorageHelper.getItemStackInCursorSlot(), false);
+            Optional<Slot> toMoveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(StorageHelper.getItemStackInCursorSlot(), false);
             if (toMoveTo.isEmpty()) {
                 return new EnsureFreeInventorySlotTask();
             }
-            if (ItemHelper.canThrowAwayStack(mod, StorageHelper.getItemStackInCursorSlot())) {
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, StorageHelper.getItemStackInCursorSlot())) {
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
                 return null;
             }
-            mod.getSlotHandler().clickSlot(toMoveTo.get(), 0, SlotActionType.PICKUP);
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(toMoveTo.get(), 0, SlotActionType.PICKUP);
             return null;
         }
         return _openTableTask;
@@ -169,9 +168,9 @@ public abstract class DoStuffInContainerTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getBehaviour().pop();
-        mod.getBlockTracker().stopTracking(_containerBlocks);
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getBehaviour().pop();
+        AltoClef.INSTANCE.getBlockTracker().stopTracking(_containerBlocks);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package adris.altoclef.tasks.entity;
 
-import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.movement.GetToEntityTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
@@ -12,6 +11,7 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import adris.altoclef.util.slots.Slot;
 import baritone.api.pathing.goals.GoalRunAway;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
@@ -46,54 +46,54 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
         _progress.reset();
         ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
         if (!cursorStack.isEmpty()) {
-            Optional<Slot> moveTo = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
-            moveTo.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            if (ItemHelper.canThrowAwayStack(mod, cursorStack)) {
-                mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            Optional<Slot> moveTo = AltoClef.INSTANCE.getItemStorage().getSlotThatCanFitInPlayerInventory(cursorStack, false);
+            moveTo.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            if (ItemHelper.canThrowAwayStack(AltoClef.INSTANCE, cursorStack)) {
+                AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
             }
-            Optional<Slot> garbage = StorageHelper.getGarbageSlot(mod);
+            Optional<Slot> garbage = StorageHelper.getGarbageSlot(AltoClef.INSTANCE);
             // Try throwing away cursor slot if it's garbage
-            garbage.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
-            mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
+            garbage.ifPresent(slot -> AltoClef.INSTANCE.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
+            AltoClef.INSTANCE.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
         } else {
             StorageHelper.closeScreen();
         } // Kinda duct tape but it should be future proof ish
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
-        if (mod.getClientBaritone().getPathingBehavior().isPathing()) {
+    protected Task onTick() {
+        if (AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isPathing()) {
             _progress.reset();
         }
 
-        Optional<Entity> checkEntity = getEntityTarget(mod);
+        Optional<Entity> checkEntity = getEntityTarget(AltoClef.INSTANCE);
 
 
         // Oof
         if (checkEntity.isEmpty()) {
-            mod.getMobDefenseChain().resetTargetEntity();
-            mod.getMobDefenseChain().resetForceField();
+            AltoClef.INSTANCE.getMobDefenseChain().resetTargetEntity();
+            AltoClef.INSTANCE.getMobDefenseChain().resetForceField();
         } else {
-            mod.getMobDefenseChain().setTargetEntity(checkEntity.get());
+            AltoClef.INSTANCE.getMobDefenseChain().setTargetEntity(checkEntity.get());
         }
         if (checkEntity.isPresent()) {
             Entity entity = checkEntity.get();
 
-            double playerReach = mod.getModSettings().getEntityReachRange();
+            double playerReach = AltoClef.INSTANCE.getModSettings().getEntityReachRange();
 
             // TODO: This is basically useless.
-            EntityHitResult result = LookHelper.raycast(mod.getPlayer(), entity, playerReach);
+            EntityHitResult result = LookHelper.raycast(AltoClef.INSTANCE.getPlayer(), entity, playerReach);
 
-            double sqDist = entity.squaredDistanceTo(mod.getPlayer());
+            double sqDist = entity.squaredDistanceTo(AltoClef.INSTANCE.getPlayer());
 
             if (sqDist < _combatGuardLowerRange * _combatGuardLowerRange) {
-                mod.getMobDefenseChain().setForceFieldRange(_combatGuardLowerFieldRadius);
+                AltoClef.INSTANCE.getMobDefenseChain().setForceFieldRange(_combatGuardLowerFieldRadius);
             } else {
-                mod.getMobDefenseChain().resetForceField();
+                AltoClef.INSTANCE.getMobDefenseChain().resetForceField();
             }
 
             // If we don't specify a maintain distance, default to within 1 block of our reach.
@@ -103,25 +103,25 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
 
             // Step away if we're too close
             if (tooClose) {
-                //setDebugState("Maintaining distance");
-                if (!mod.getClientBaritone().getCustomGoalProcess().isActive()) {
-                    mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(new GoalRunAway(maintainDistance, entity.getBlockPos()));
+                // setDebugState("Maintaining distance");
+                if (!AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().isActive()) {
+                    AltoClef.INSTANCE.getClientBaritone().getCustomGoalProcess().setGoalAndPath(new GoalRunAway(maintainDistance, entity.getBlockPos()));
                 }
             }
 
-            if (mod.getControllerExtras().inRange(entity) && result != null &&
-                    result.getType() == HitResult.Type.ENTITY && !mod.getFoodChain().needsToEat() &&
-                    !mod.getMLGBucketChain().isFallingOhNo(mod) && mod.getMLGBucketChain().doneMLG() &&
-                    !mod.getMLGBucketChain().isChorusFruiting() &&
-                    mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
+            if (AltoClef.INSTANCE.getControllerExtras().inRange(entity) && result != null &&
+                    result.getType() == HitResult.Type.ENTITY && !AltoClef.INSTANCE.getFoodChain().needsToEat() &&
+                    !AltoClef.INSTANCE.getMLGBucketChain().isFallingOhNo(AltoClef.INSTANCE) && AltoClef.INSTANCE.getMLGBucketChain().doneMLG() &&
+                    !AltoClef.INSTANCE.getMLGBucketChain().isChorusFruiting() &&
+                    AltoClef.INSTANCE.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
                 _progress.reset();
-                return onEntityInteract(mod, entity);
+                return onEntityInteract(AltoClef.INSTANCE, entity);
             } else if (!tooClose) {
                 setDebugState("Approaching target");
-                if (!_progress.check(mod)) {
+                if (!_progress.check(AltoClef.INSTANCE)) {
                     _progress.reset();
                     Debug.logMessage("Failed to get to target, blacklisting.");
-                    mod.getEntityTracker().requestEntityUnreachable(entity);
+                    AltoClef.INSTANCE.getEntityTracker().requestEntityUnreachable(entity);
                 }
                 // Move to target
                 return new GetToEntityTask(entity, maintainDistance);
@@ -152,9 +152,9 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
     protected abstract Task onEntityInteract(AltoClef mod, Entity entity);
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        mod.getMobDefenseChain().setTargetEntity(null);
-        mod.getMobDefenseChain().resetForceField();
+    protected void onStop(Task interruptTask) {
+        AltoClef.INSTANCE.getMobDefenseChain().setTargetEntity(null);
+        AltoClef.INSTANCE.getMobDefenseChain().resetForceField();
     }
 
     protected abstract Optional<Entity> getEntityTarget(AltoClef mod);
