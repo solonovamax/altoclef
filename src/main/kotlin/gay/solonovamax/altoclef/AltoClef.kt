@@ -10,11 +10,6 @@ import adris.altoclef.commandsystem.CommandExecutor
 import adris.altoclef.control.InputControls
 import adris.altoclef.control.PlayerExtraController
 import adris.altoclef.control.SlotHandler
-import adris.altoclef.eventbus.EventBus
-import adris.altoclef.eventbus.events.ClientRenderEvent
-import adris.altoclef.eventbus.events.ClientTickEvent
-import adris.altoclef.eventbus.events.SendChatEvent
-import adris.altoclef.eventbus.events.TitleScreenEntryEvent
 import adris.altoclef.tasksystem.Task
 import adris.altoclef.tasksystem.TaskRunner
 import adris.altoclef.trackers.*
@@ -28,6 +23,9 @@ import baritone.Baritone
 import baritone.altoclef.AltoClefSettings
 import baritone.api.BaritoneAPI
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
+import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
 import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
@@ -163,9 +161,9 @@ object AltoClef : ModInitializer {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
         // However, some things (like resources) may still be uninitialized.
         // As such, nothing will be loaded here but basic initialization.
-        EventBus.subscribe(TitleScreenEntryEvent::class.java) {
-            onInitializeLoad()
-        }
+        onInitializeLoad()
+//        EventBus.subscribe(TitleScreenEntryEvent::class.java) {
+//        }
     }
 
     fun onInitializeLoad() {
@@ -206,19 +204,16 @@ object AltoClef : ModInitializer {
             }
         }
 
-        // Receive + cancel chat
-        EventBus.subscribe(SendChatEvent::class.java) { evt: SendChatEvent ->
-            val line = evt.message
-            if (commandExecutor.isClientCommand(line)) {
-                evt.cancel()
-                commandExecutor.execute(line)
-            }
+        ClientSendMessageEvents.ALLOW_CHAT.register { message ->
+            if (commandExecutor.isClientCommand(message)) {
+                commandExecutor.execute(message)
+                true
+            } else false
         }
 
-        // Tick with the client
-        EventBus.subscribe(ClientTickEvent::class.java) { onClientTick() }
-        // Render
-        EventBus.subscribe(ClientRenderEvent::class.java) { evt: ClientRenderEvent -> onClientRenderOverlay(evt.stack) }
+        ClientTickEvents.START_CLIENT_TICK.register { onClientTick() }
+        HudRenderCallback.EVENT.register { matrixStack, _ -> onClientRenderOverlay(matrixStack) }
+
 
         // External mod initialization
         runEnqueuedPostInits()

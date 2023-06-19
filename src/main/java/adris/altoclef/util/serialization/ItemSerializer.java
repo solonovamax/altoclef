@@ -7,25 +7,19 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import net.minecraft.item.Item;
 
 import java.io.IOException;
-import java.util.List;
 
-public class ItemSerializer extends StdSerializer<Object> {
+public class ItemSerializer extends StdSerializer<Item> {
     public ItemSerializer() {
         this(null);
     }
 
-    public ItemSerializer(Class<Object> vc) {
+    public ItemSerializer(Class<Item> vc) {
         super(vc);
     }
 
     @Override
-    public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        List<Item> items = (List<Item>) value;
-        gen.writeStartArray();
-        for (Item item : items) {
-            String key = ItemHelper.trimItemName(item.getTranslationKey());
-            gen.writeString(key);
-        }
-        gen.writeEndArray();
+    public void serialize(Item item, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        String key = ItemHelper.trimItemName(item.getTranslationKey());
+        gen.writeString(key);
     }
 }

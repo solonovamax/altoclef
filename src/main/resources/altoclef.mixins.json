@@ -1,35 +1,31 @@
 {
-  "required": true,
-  "minVersion": "0.8",
-  "package": "adris.altoclef.mixins",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "AbstractFurnaceScreenHandlerAccessor",
-    "BlockModifiedByPlayerMixin",
-    "ClientBlockBreakAccessor",
-    "ClientConnectionAccessor",
-    "ClientInteractWithBlockMixin",
-    "ClientPlayerInteractionAccessor",
-    "ClientUIMixin",
-    "EntityAccessor",
-    "GameOverlayMixin",
-    "PersistentProjectileEntityAccessor",
-    "SlotClickMixin",
-    "WorldBlockModifiedMixin",
-    "DeathScreenAccessor"
-  ],
-  "client": [
-    "ChatInputMixin",
-    "ChatReadMixin",
-    "ClientBlockBreakMixin",
-    "ClientOpenScreenMixin",
-    "ClientTickMixin",
-    "EntryMixin",
-    "LoadChunkMixin",
-    "MixinLocalPlayer",
-    "PlayerCollidesWithEntityMixin"
-  ],
-  "injectors": {
-    "defaultRequire": 1
-  }
+    "required": true,
+    "minVersion": "0.8",
+    "package": "adris.altoclef.mixins",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": [
+        "AbstractFurnaceScreenHandlerAccessor",
+        "BlockModifiedByPlayerMixin",
+        "ClientBlockBreakAccessor",
+        "ClientConnectionAccessor",
+        "ClientInteractWithBlockMixin",
+        "ClientPlayerInteractionAccessor",
+        "DeathScreenAccessor",
+        "EntityAccessor",
+        "GameOverlayMixin",
+        "PersistentProjectileEntityAccessor",
+        "SlotClickMixin",
+        "WorldBlockModifiedMixin"
+    ],
+    "client": [
+        "ChatReadMixin",
+        "ClientBlockBreakMixin",
+        "ClientOpenScreenMixin",
+        "LoadChunkMixin",
+        "MixinLocalPlayer",
+        "PlayerCollidesWithEntityMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
 }

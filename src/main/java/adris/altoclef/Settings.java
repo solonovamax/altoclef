@@ -6,13 +6,9 @@ import adris.altoclef.util.BlockRange;
 import adris.altoclef.util.helpers.ConfigHelper;
 import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.serialization.IFailableConfigFile;
-import adris.altoclef.util.serialization.ItemDeserializer;
-import adris.altoclef.util.serialization.ItemSerializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.Streams;
 import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.item.Item;
@@ -300,8 +296,8 @@ public class Settings implements IFailableConfigFile {
     /**
      * If we need to throw away something, throw away these items first.
      */
-    @JsonSerialize(using = ItemSerializer.class)
-    @JsonDeserialize(using = ItemDeserializer.class)
+    // @JsonSerialize(using = ItemSerializer.class)
+    // @JsonDeserialize(using = ItemDeserializer.class)
     private List<Item> throwawayItems = Arrays.asList(
             // Overworld junk
             Items.DRIPSTONE_BLOCK,
@@ -354,8 +350,8 @@ public class Settings implements IFailableConfigFile {
      * We will NEVER throw away these items.
      * Even if "throwAwayUnusedItems" is true and one of these items is not used in a task.
      */
-    @JsonSerialize(using = ItemSerializer.class)
-    @JsonDeserialize(using = ItemDeserializer.class)
+    // @JsonSerialize(using = ItemSerializer.class)
+    // @JsonDeserialize(using = ItemDeserializer.class)
     private List<Item> importantItems = Streams.concat(
             Stream.of(
                     Items.TOTEM_OF_UNDYING,
@@ -392,8 +388,8 @@ public class Settings implements IFailableConfigFile {
     /**
      * If `limitFuelsToSupportedFuels` is true, will use these items and ONLY these items as smelting fuel.
      */
-    @JsonSerialize(using = ItemSerializer.class)
-    @JsonDeserialize(using = ItemDeserializer.class)
+    // @JsonSerialize(using = ItemSerializer.class)
+    // @JsonDeserialize(using = ItemDeserializer.class)
     private List<Item> supportedFuels = Streams.concat(
             Stream.of(
                     Items.COAL,

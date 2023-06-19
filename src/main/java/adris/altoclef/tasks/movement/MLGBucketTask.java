@@ -7,14 +7,10 @@ import adris.altoclef.util.helpers.EntityHelper;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.MathsHelper;
 import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.serialization.ItemDeserializer;
-import adris.altoclef.util.serialization.ItemSerializer;
 import baritone.api.utils.IPlayerContext;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.RotationUtils;
 import baritone.api.utils.input.Input;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -204,7 +200,7 @@ public class MLGBucketTask extends Task {
                 }
             }
             // Try to capture tall grass as well...
-            BlockPos[] toCheckLook = new BlockPos[]{toPlaceOn, toPlaceOn.up(), toPlaceOn.up(2)};
+            BlockPos[] toCheckLook = {toPlaceOn, toPlaceOn.up(), toPlaceOn.up(2)};
             if (hasClutch && Arrays.stream(toCheckLook).anyMatch(check -> AltoClef.INSTANCE.getClientBaritone().getPlayerContext().isLookingAt(check))) {
                 Debug.logMessage("HIT: " + willLandIn);
                 _placedPos = willLandIn;
@@ -295,7 +291,7 @@ public class MLGBucketTask extends Task {
         velCheck.multiply(10, 0, 10);
         Box b = AltoClef.INSTANCE.getPlayer().getBoundingBox().offset(velCheck);
         Vec3d c = b.getCenter();
-        Vec3d[] coords = new Vec3d[]{
+        Vec3d[] coords = {
                 c,
                 new Vec3d(b.minX, c.y, b.minZ),
                 new Vec3d(b.maxX, c.y, b.minZ),
@@ -382,7 +378,7 @@ public class MLGBucketTask extends Task {
         }
 
         // Perform NEARBY sweep
-        //int nearbySweepSize =
+        // int nearbySweepSize =
         Vec3d center = AltoClef.INSTANCE.getPlayer().getPos();
         for (int dx = -2; dx <= 2; ++dx) {
             for (int dz = -2; dz <= 2; ++dz) {
@@ -464,19 +460,19 @@ public class MLGBucketTask extends Task {
         public int epicClutchConeYawDivisionEnd = 20; // How many divisions to move the cone clutch at torwars the end
         public int preferLavaWhenFallDropsHealthBelowThreshold = 3; // If a fall results in our player's health going below this value, consider it deadly.
         public int lavaLevelOrGreaterWillCancelFallDamage = 5; // Lava at this level will cancel our fall damage if we hold space.
-        @JsonSerialize(using = ItemSerializer.class)
-        @JsonDeserialize(using = ItemDeserializer.class)
+        // @JsonSerialize(using = ItemSerializer.class)
+        // @JsonDeserialize(using = ItemDeserializer.class)
         public List<Item> clutchItems = List.of(Items.HAY_BLOCK, Items.TWISTING_VINES);
     }
 
     class ConeClutchContext {
         private final boolean hasClutchItem;
-        public BlockPos bestBlock = null;
+        public BlockPos bestBlock;
         private double highestY = Double.NEGATIVE_INFINITY;
         private double closestXZ = Double.POSITIVE_INFINITY;
-        private boolean bestBlockIsSafe = false;
-        private boolean bestBlockIsDeadlyFall = false;
-        private boolean bestBlockIsLava = false;
+        private boolean bestBlockIsSafe;
+        private boolean bestBlockIsDeadlyFall;
+        private boolean bestBlockIsLava;
 
         public ConeClutchContext() {
             hasClutchItem = hasClutchItem();
