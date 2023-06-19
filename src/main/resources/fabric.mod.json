@@ -20,7 +20,7 @@
     "entrypoints": {
         "main": [
             {
-                "value": "adris.altoclef.AltoClef",
+                "value": "gay.solonovamax.altoclef.AltoClef",
                 "adapter": "kotlin"
             }
         ]
