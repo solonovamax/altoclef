@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.stupid;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.entity.AbstractKillEntityTask;
 import adris.altoclef.tasks.entity.DoToClosestEntityTask;
 import adris.altoclef.tasks.movement.GetToEntityTask;

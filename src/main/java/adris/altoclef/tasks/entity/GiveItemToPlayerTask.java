@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.entity;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.movement.FollowPlayerTask;

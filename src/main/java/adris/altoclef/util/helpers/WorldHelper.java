@@ -1,6 +1,6 @@
 package adris.altoclef.util.helpers;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.mixins.ClientConnectionAccessor;
 import adris.altoclef.mixins.EntityAccessor;
 import adris.altoclef.util.Dimension;

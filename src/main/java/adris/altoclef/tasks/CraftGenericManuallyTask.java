@@ -1,6 +1,6 @@
 package adris.altoclef.tasks;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.slot.MoveItemToSlotFromInventoryTask;
 import adris.altoclef.tasks.slot.ReceiveCraftingOutputSlotTask;
 import adris.altoclef.tasksystem.Task;

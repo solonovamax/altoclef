@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.movement;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;

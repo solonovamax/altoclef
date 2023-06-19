@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.construction.compound;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.construction.DestroyBlockTask;
 import adris.altoclef.tasks.construction.PlaceBlockTask;
 import adris.altoclef.tasks.squashed.CataloguedResourceTask;

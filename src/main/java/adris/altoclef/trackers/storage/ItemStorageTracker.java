@@ -1,6 +1,6 @@
 package adris.altoclef.trackers.storage;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.trackers.Tracker;
 import adris.altoclef.trackers.TrackerManager;
 import adris.altoclef.util.ItemTarget;
@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -27,11 +26,10 @@ public class ItemStorageTracker extends Tracker {
     private final InventorySubTracker _inventory;
     private final ContainerSubTracker _containers;
 
-    public ItemStorageTracker(AltoClef mod, TrackerManager manager, Consumer<ContainerSubTracker> containerTrackerConsumer) {
+    public ItemStorageTracker(AltoClef mod, TrackerManager manager, ContainerSubTracker containerSubTracker) {
         super(manager);
         _inventory = new InventorySubTracker(manager);
-        _containers = new ContainerSubTracker(manager);
-        containerTrackerConsumer.accept(_containers);
+        _containers = containerSubTracker;
     }
 
     private static Slot[] getCurrentConversionSlots() {

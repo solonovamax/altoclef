@@ -1,6 +1,6 @@
 package adris.altoclef.trackers;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 
 public abstract class Tracker {
 

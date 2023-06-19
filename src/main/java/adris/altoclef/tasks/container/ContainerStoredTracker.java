@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.container;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.Subscription;
 import adris.altoclef.eventbus.events.SlotClickChangedEvent;

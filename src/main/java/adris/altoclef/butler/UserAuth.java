@@ -1,6 +1,6 @@
 package adris.altoclef.butler;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.util.helpers.ConfigHelper;
 
 public class UserAuth {

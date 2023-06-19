@@ -59,7 +59,9 @@ dependencies {
     }
 
     // Runtime mods for performance
-    modLocalRuntime(libs.bundles.mod.runtime)
+//    modLocalRuntime(libs.bundles.mod.runtime)
+
+    modRuntimeOnly(libs.bundles.mod.runtime)
 
     // Thank you georgeagostino for fixing my garbage
     if (project.hasProperty("altoclef.development")) {

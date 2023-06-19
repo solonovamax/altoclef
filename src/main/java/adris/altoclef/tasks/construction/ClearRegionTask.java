@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.construction;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.ITaskRequiresGrounded;
 import adris.altoclef.tasksystem.Task;
 import net.minecraft.client.MinecraftClient;

@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.movement;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.ChunkPos;

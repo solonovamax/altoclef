@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.movement;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.construction.compound.ConstructNetherPortalObsidianTask;
 import adris.altoclef.tasks.speedrun.MarvionBeatMinecraftTask;

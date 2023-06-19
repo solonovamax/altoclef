@@ -1,5 +1,6 @@
 package adris.altoclef;
 
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 

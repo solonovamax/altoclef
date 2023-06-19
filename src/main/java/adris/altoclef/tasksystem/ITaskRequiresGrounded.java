@@ -1,6 +1,6 @@
 package adris.altoclef.tasksystem;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 
 /**
  * Some tasks may mess up royally if we interrupt them while mid air.

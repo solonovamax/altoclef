@@ -1,6 +1,6 @@
 package adris.altoclef.tasksystem;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 
 /**
  * Lets a task declare that it's parent can NOT interrupt itself, and that this task MUST keep executing.

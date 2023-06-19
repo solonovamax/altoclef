@@ -1,6 +1,6 @@
 package adris.altoclef.commands;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.commandsystem.*;
 import adris.altoclef.tasksystem.Task;

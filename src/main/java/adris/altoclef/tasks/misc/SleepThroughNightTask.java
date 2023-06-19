@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.misc;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 
 public class SleepThroughNightTask extends Task {

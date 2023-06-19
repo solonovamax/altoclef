@@ -4,8 +4,10 @@ import adris.altoclef.util.slots.Slot;
 import baritone.altoclef.AltoClefSettings;
 import baritone.api.Settings;
 import baritone.api.utils.RayTraceUtils;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -360,7 +362,10 @@ public class BotBehaviour {
         }
 
         private void readMinecraftState() {
-            pauseOnLostFocus = MinecraftClient.getInstance().options.pauseOnLostFocus;
+            GameOptions options = MinecraftClient.getInstance().options;
+
+            if (options != null)
+                pauseOnLostFocus = options.pauseOnLostFocus;
         }
 
         /**

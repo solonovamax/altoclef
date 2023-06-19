@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.entity;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import net.minecraft.entity.Entity;
 
 import java.util.Objects;

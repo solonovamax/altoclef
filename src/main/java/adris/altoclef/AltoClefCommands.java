@@ -2,6 +2,7 @@ package adris.altoclef;
 
 import adris.altoclef.commands.*;
 import adris.altoclef.commandsystem.CommandException;
+import gay.solonovamax.altoclef.AltoClef;
 
 /**
  * Initializes altoclef's built in commands.

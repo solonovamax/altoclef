@@ -1,6 +1,6 @@
 package adris.altoclef.tasks;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.movement.SafeRandomShimmyTask;

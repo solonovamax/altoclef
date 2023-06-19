@@ -1,6 +1,6 @@
 package adris.altoclef.util.time;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.mixins.ClientConnectionAccessor;
 import net.minecraft.client.MinecraftClient;

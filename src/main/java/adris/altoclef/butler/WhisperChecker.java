@@ -1,6 +1,6 @@
 package adris.altoclef.butler;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.util.time.TimerGame;
 

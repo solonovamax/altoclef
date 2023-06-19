@@ -1,6 +1,6 @@
 package adris.altoclef.tasks.resources;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.ResourceTask;
 import adris.altoclef.tasks.construction.PutOutFireTask;

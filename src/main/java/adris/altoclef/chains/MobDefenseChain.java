@@ -1,6 +1,6 @@
 package adris.altoclef.chains;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.control.KillAura;
 import adris.altoclef.tasks.entity.KillEntitiesTask;

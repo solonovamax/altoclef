@@ -1,6 +1,6 @@
 package adris.altoclef.tasksystem;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 
 import java.util.ArrayList;
 import java.util.List;

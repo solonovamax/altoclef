@@ -1,7 +1,7 @@
 package adris.altoclef.tasks.squashed;
 
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.tasks.ResourceTask;
 import adris.altoclef.tasks.container.UpgradeInSmithingTableTask;
 import adris.altoclef.tasksystem.Task;

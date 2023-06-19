@@ -1,6 +1,6 @@
 package adris.altoclef.commandsystem;
 
-import adris.altoclef.AltoClef;
+import gay.solonovamax.altoclef.AltoClef;
 import adris.altoclef.Debug;
 
 import java.util.Collection;
