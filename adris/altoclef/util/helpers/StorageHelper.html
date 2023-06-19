@@ -159,7 +159,7 @@ loadScripts(document, 'script');</script>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#getBuildingMaterialCount(gay.solonovamax.altoclef.AltoClef)" class="member-name-link">getBuildingMaterialCount</a><wbr>(gay.solonovamax.altoclef.AltoClef&nbsp;mod)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="../MiningRequirement.html" title="enum class in adris.altoclef.util">MiningRequirement</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#getCurrentMiningRequirement(gay.solonovamax.altoclef.AltoClef)" class="member-name-link">getCurrentMiningRequirement</a><wbr>(gay.solonovamax.altoclef.AltoClef&nbsp;mod)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#getCurrentMiningRequirement()" class="member-name-link">getCurrentMiningRequirement</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a>&lt;<a href="../slots/Slot.html" title="class in adris.altoclef.util.slots">Slot</a>&gt;</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#getFilledInventorySlotInaccessibleToContainer(gay.solonovamax.altoclef.AltoClef,adris.altoclef.util.ItemTarget)" class="member-name-link">getFilledInventorySlotInaccessibleToContainer</a><wbr>(gay.solonovamax.altoclef.AltoClef&nbsp;mod,
@@ -252,8 +252,7 @@ loadScripts(document, 'script');</script>
  <a href="../ItemTarget.html" title="class in adris.altoclef.util">ItemTarget</a>...&nbsp;targetsToMeet)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static boolean</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#itemTargetsMetInventory(gay.solonovamax.altoclef.AltoClef,adris.altoclef.util.ItemTarget...)" class="member-name-link">itemTargetsMetInventory</a><wbr>(gay.solonovamax.altoclef.AltoClef&nbsp;mod,
- <a href="../ItemTarget.html" title="class in adris.altoclef.util">ItemTarget</a>...&nbsp;targetsToMeet)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#itemTargetsMetInventory(adris.altoclef.util.ItemTarget...)" class="member-name-link">itemTargetsMetInventory</a><wbr>(<a href="../ItemTarget.html" title="class in adris.altoclef.util">ItemTarget</a>...&nbsp;targetsToMeet)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">AVOID using this unless it's the end goal to keep an item in our inventory.</div>
 </div>
@@ -264,8 +263,7 @@ loadScripts(document, 'script');</script>
 <div class="block">Same as <code>itemTargetsMetInventory</code> but it ignores the cursor slot.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static boolean</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#miningRequirementMet(gay.solonovamax.altoclef.AltoClef,adris.altoclef.util.MiningRequirement)" class="member-name-link">miningRequirementMet</a><wbr>(gay.solonovamax.altoclef.AltoClef&nbsp;mod,
- <a href="../MiningRequirement.html" title="enum class in adris.altoclef.util">MiningRequirement</a>&nbsp;requirement)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#miningRequirementMet(adris.altoclef.util.MiningRequirement)" class="member-name-link">miningRequirementMet</a><wbr>(<a href="../MiningRequirement.html" title="enum class in adris.altoclef.util">MiningRequirement</a>&nbsp;requirement)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static boolean</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#miningRequirementMetInventory(gay.solonovamax.altoclef.AltoClef,adris.altoclef.util.MiningRequirement)" class="member-name-link">miningRequirementMetInventory</a><wbr>(gay.solonovamax.altoclef.AltoClef&nbsp;mod,
@@ -329,16 +327,15 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="getCurrentMiningRequirement(gay.solonovamax.altoclef.AltoClef)">
+<section class="detail" id="getCurrentMiningRequirement()">
 <h3>getCurrentMiningRequirement</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="../MiningRequirement.html" title="enum class in adris.altoclef.util">MiningRequirement</a></span>&nbsp;<span class="element-name">getCurrentMiningRequirement</span><wbr><span class="parameters">(gay.solonovamax.altoclef.AltoClef&nbsp;mod)</span></div>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="../MiningRequirement.html" title="enum class in adris.altoclef.util">MiningRequirement</a></span>&nbsp;<span class="element-name">getCurrentMiningRequirement</span>()</div>
 </section>
 </li>
 <li>
-<section class="detail" id="miningRequirementMet(gay.solonovamax.altoclef.AltoClef,adris.altoclef.util.MiningRequirement)">
+<section class="detail" id="miningRequirementMet(adris.altoclef.util.MiningRequirement)">
 <h3>miningRequirementMet</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">miningRequirementMet</span><wbr><span class="parameters">(gay.solonovamax.altoclef.AltoClef&nbsp;mod,
- <a href="../MiningRequirement.html" title="enum class in adris.altoclef.util">MiningRequirement</a>&nbsp;requirement)</span></div>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">miningRequirementMet</span><wbr><span class="parameters">(<a href="../MiningRequirement.html" title="enum class in adris.altoclef.util">MiningRequirement</a>&nbsp;requirement)</span></div>
 </section>
 </li>
 <li>
@@ -373,10 +370,9 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="itemTargetsMetInventory(gay.solonovamax.altoclef.AltoClef,adris.altoclef.util.ItemTarget...)">
+<section class="detail" id="itemTargetsMetInventory(adris.altoclef.util.ItemTarget...)">
 <h3>itemTargetsMetInventory</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">itemTargetsMetInventory</span><wbr><span class="parameters">(gay.solonovamax.altoclef.AltoClef&nbsp;mod,
- <a href="../ItemTarget.html" title="class in adris.altoclef.util">ItemTarget</a>...&nbsp;targetsToMeet)</span></div>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">itemTargetsMetInventory</span><wbr><span class="parameters">(<a href="../ItemTarget.html" title="class in adris.altoclef.util">ItemTarget</a>...&nbsp;targetsToMeet)</span></div>
 <div class="block">AVOID using this unless it's the end goal to keep an item in our inventory.</div>
 <dl class="notes">
 <dt>Returns:</dt>
