@@ -85,7 +85,7 @@ loadScripts(document, 'script');</script>
 <section class="class-description" id="class-description">
 <dl class="notes">
 <dt>All Implemented Interfaces:</dt>
-<dd><code>net.minecraft.entity.Attackable</code>, <code>net.minecraft.server.command.CommandOutput</code>, <code>net.minecraft.util.Nameable</code>, <code>net.minecraft.world.entity.EntityLike</code></dd>
+<dd><code>net.kyori.adventure.identity.Identified</code>, <code>net.kyori.adventure.platform.fabric.EntityHoverEventSource</code>, <code>net.kyori.adventure.sound.Sound.Emitter</code>, <code>net.kyori.adventure.text.event.HoverEventSource&lt;net.kyori.adventure.text.event.HoverEvent.ShowEntity&gt;</code>, <code>net.minecraft.entity.Attackable</code>, <code>net.minecraft.server.command.CommandOutput</code>, <code>net.minecraft.util.Nameable</code>, <code>net.minecraft.world.entity.EntityLike</code></dd>
 </dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public abstract class </span><span class="element-name type-name-label">MixinLocalPlayer</span>
@@ -184,6 +184,15 @@ loadScripts(document, 'script');</script>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-net.minecraft.server.command.CommandOutput">Methods inherited from interface&nbsp;net.minecraft.server.command.CommandOutput</h3>
 <code>cannotBeSilenced</code></div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-net.kyori.adventure.platform.fabric.EntityHoverEventSource">Methods inherited from interface&nbsp;net.kyori.adventure.platform.fabric.EntityHoverEventSource</h3>
+<code>asHoverEvent</code></div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-net.kyori.adventure.text.event.HoverEventSource">Methods inherited from interface&nbsp;net.kyori.adventure.text.event.HoverEventSource</h3>
+<code>asHoverEvent</code></div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-net.kyori.adventure.identity.Identified">Methods inherited from interface&nbsp;net.kyori.adventure.identity.Identified</h3>
+<code>identity</code></div>
 </section>
 </li>
 </ul>
