@@ -5,7 +5,8 @@ plugins {
 }
 
 repositories {
-    maven("https://maven.solo-studios.ca/releases/")
+    //maven("https://maven.solo-studios.ca/releases/")
+
     mavenCentral()
     // for kotlin-dsl plugin
     gradlePluginPortal()

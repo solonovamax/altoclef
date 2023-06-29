@@ -5,14 +5,24 @@ import adris.altoclef.BotBehaviour
 import adris.altoclef.Debug
 import adris.altoclef.Settings
 import adris.altoclef.butler.Butler
-import adris.altoclef.chains.*
+import adris.altoclef.chains.DeathMenuChain
+import adris.altoclef.chains.FoodChain
+import adris.altoclef.chains.MLGBucketFallChain
+import adris.altoclef.chains.MobDefenseChain
+import adris.altoclef.chains.PlayerInteractionFixChain
+import adris.altoclef.chains.UserTaskChain
+import adris.altoclef.chains.WorldSurvivalChain
 import adris.altoclef.commandsystem.CommandExecutor
 import adris.altoclef.control.InputControls
 import adris.altoclef.control.PlayerExtraController
 import adris.altoclef.control.SlotHandler
 import adris.altoclef.tasksystem.Task
 import adris.altoclef.tasksystem.TaskRunner
-import adris.altoclef.trackers.*
+import adris.altoclef.trackers.BlockTracker
+import adris.altoclef.trackers.EntityTracker
+import adris.altoclef.trackers.MiscBlockTracker
+import adris.altoclef.trackers.SimpleChunkTracker
+import adris.altoclef.trackers.TrackerManager
 import adris.altoclef.trackers.storage.ContainerSubTracker
 import adris.altoclef.trackers.storage.ItemStorageTracker
 import adris.altoclef.ui.CommandStatusOverlay
@@ -22,27 +32,69 @@ import adris.altoclef.util.helpers.InputHelper
 import baritone.Baritone
 import baritone.altoclef.AltoClefSettings
 import baritone.api.BaritoneAPI
+import cloud.commandframework.fabric.FabricClientCommandManager
+import cloud.commandframework.fabric.argument.FabricArgumentParsers
+import cloud.commandframework.kotlin.coroutines.annotations.installCoroutineSupport
+import cloud.commandframework.meta.SimpleCommandMeta
+import cloud.commandframework.minecraft.extras.AudienceProvider
+import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler
+import cloud.commandframework.minecraft.extras.MinecraftHelp
+import gay.solonovamax.altoclef.command.CoreCommands
+import gay.solonovamax.altoclef.command.InventoryCommands
+import gay.solonovamax.altoclef.command.MiscCommands
+import gay.solonovamax.altoclef.command.ResourceCommands
+import gay.solonovamax.altoclef.command.SpeedrunCommands
+import gay.solonovamax.altoclef.command.UtilCommands
+import gay.solonovamax.altoclef.command.source.ClientCommand
+import gay.solonovamax.altoclef.util.AnnotationParser
+import gay.solonovamax.altoclef.util.ScheduledThreadPool
+import gay.solonovamax.altoclef.util.currentThread
+import gay.solonovamax.altoclef.util.parseCommands
+import gay.solonovamax.altoclef.util.registerParserSupplier
+import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
+import net.kyori.adventure.extra.kotlin.text
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.command.argument.ItemPredicateArgumentType
+import net.minecraft.command.argument.ItemPredicateArgumentType.ItemStackPredicateArgument
 import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
 import org.lwjgl.glfw.GLFW
-import java.util.*
+import java.util.ArrayDeque
+import java.util.Queue
+import java.util.concurrent.ThreadFactory
 import java.util.function.Consumer
 import baritone.api.Settings as BaritoneSettings
+import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator as AsyncCommandCoordinator
 
 /**
  * Central access point for AltoClef
  */
 object AltoClef : ModInitializer {
+    val scheduledThreadPool = ScheduledThreadPool(Runtime.getRuntime().availableProcessors(), AltoClefThreadFactory)
+    val coroutineDispatcher: ExecutorCoroutineDispatcher = scheduledThreadPool.asCoroutineDispatcher()
+    val scope: CoroutineScope = CoroutineScope(SupervisorJob() + coroutineDispatcher)
+
+    val messagePrefix = text {
+        color(NamedTextColor.AQUA)
+        content("[ALTOCLEF]")
+    }.append(Component.space())
+
+
     // Static access to altoclef
     private val postInitQueue: Queue<Consumer<AltoClef>> = ArrayDeque()
 
@@ -161,12 +213,7 @@ object AltoClef : ModInitializer {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
         // However, some things (like resources) may still be uninitialized.
         // As such, nothing will be loaded here but basic initialization.
-        onInitializeLoad()
-//        EventBus.subscribe(TitleScreenEntryEvent::class.java) {
-//        }
-    }
 
-    fun onInitializeLoad() {
         // This code should be run after Minecraft loads everything else in.
         // This is the actual start point, controlled by a mixin.
         initializeBaritoneSettings()
@@ -207,8 +254,8 @@ object AltoClef : ModInitializer {
         ClientSendMessageEvents.ALLOW_CHAT.register { message ->
             if (commandExecutor.isClientCommand(message)) {
                 commandExecutor.execute(message)
-                true
-            } else false
+                false
+            } else true
         }
 
         ClientTickEvents.START_CLIENT_TICK.register { onClientTick() }
@@ -294,8 +341,42 @@ object AltoClef : ModInitializer {
 
     // List all command sources here.
     private fun initializeCommands() {
+        val manager = FabricClientCommandManager(
+            AsyncCommandCoordinator.builder<ClientCommand>()
+                .withAsynchronousParsing()
+                .withExecutor(scheduledThreadPool)
+                .build(),
+            ::ClientCommand,
+            ClientCommand::source
+        )
+
+        manager.parserRegistry().registerParserSupplier<ItemStackPredicateArgument, _> {
+            FabricArgumentParsers.contextual(ItemPredicateArgumentType::itemPredicate)
+        }
+
+        MinecraftExceptionHandler<ClientCommand>()
+            .withDefaultHandlers()
+            .withDecorator { message: Component -> messagePrefix.append(message) }
+            .apply(manager, AudienceProvider.nativeAudience<ClientCommand>())
+
+        val annotationParser = AnnotationParser<ClientCommand>(manager) { SimpleCommandMeta.empty() }.apply {
+            installCoroutineSupport()
+        }
+
+        val help = MinecraftHelp.createNative("altoclef help", manager)
+
+        annotationParser.parseCommands(
+            CoreCommands(help),
+            UtilCommands(),
+            InventoryCommands(),
+            MiscCommands(),
+            ResourceCommands(),
+            SpeedrunCommands(),
+        )
+
         try {
-            // This creates the commands. If you want any more commands feel free to initialize new command lists.
+            // Legacy commands
+            // TODO port these commands to cloud commands
             AltoClefCommands()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -379,5 +460,12 @@ object AltoClef : ModInitializer {
                 postInitQueue.poll().accept(this)
             }
         }
+    }
+
+    private object AltoClefThreadFactory : ThreadFactory {
+        private val threadGroup = currentThread.threadGroup
+        private val threadCount = atomic(0)
+        override fun newThread(runnable: Runnable): Thread =
+            Thread(threadGroup, runnable, "AltoClef-Worker-${threadCount.getAndIncrement()}", 0)
     }
 }

@@ -1,6 +1,13 @@
 package adris.altoclef;
 
-import adris.altoclef.commands.*;
+import adris.altoclef.commands.EquipCommand;
+import adris.altoclef.commands.FollowCommand;
+import adris.altoclef.commands.FoodCommand;
+import adris.altoclef.commands.GetCommand;
+import adris.altoclef.commands.GiveCommand;
+import adris.altoclef.commands.GotoCommand;
+import adris.altoclef.commands.InventoryCommand;
+import adris.altoclef.commands.TestCommand;
 import adris.altoclef.commandsystem.CommandException;
 import gay.solonovamax.altoclef.AltoClef;
 
@@ -12,33 +19,15 @@ public class AltoClefCommands {
     public AltoClefCommands() throws CommandException {
         // List commands here
         AltoClef.INSTANCE.getCommandExecutor().registerNewCommand(
-                new HelpCommand(),
                 new GetCommand(),
                 new FollowCommand(),
                 new GiveCommand(),
                 new EquipCommand(),
-                new DepositCommand(),
-                new StashCommand(),
                 new GotoCommand(),
-                new IdleCommand(),
-                new CoordsCommand(),
-                new StatusCommand(),
                 new InventoryCommand(),
-                new LocateStructureCommand(),
-                new StopCommand(),
                 new TestCommand(),
-                new FoodCommand(),
-                new MeatCommand(),
-                new ReloadSettingsCommand(),
-                new GamerCommand(),
-                new MarvionCommand(),
-                new PunkCommand(),
-                new HeroCommand(),
-                new SetGammaCommand(),
-                new ListCommand(),
-                new CoverWithSandCommand(),
-                new CoverWithBlocksCommand()
-                //new TestMoveInventoryCommand(),
+                new FoodCommand()
+                // new TestMoveInventoryCommand(),
                 //    new TestSwapInventoryCommand()
         );
     }

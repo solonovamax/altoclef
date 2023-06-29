@@ -5,7 +5,7 @@ kotlin = "1.8.20"
 # Minecraft
 minecraft = "1.19.4"
 # Loom
-loom = "1.2.7"
+loom = "1.2.3"
 # Quilt
 quilt-loader = "0.18.5"
 quilt-mappings = "1.19.4+build.10"
@@ -19,6 +19,7 @@ fabric-language-kotlin = "1.9.3+kotlin.1.8.20"
 fabric-yarn = "1.19.4+build.2"
 
 owo-lib = "0.10.3+1.19.3"
+adventure = "4.14.0"
 
 mixin = "0.12.4+mixin.0.8.5"
 
@@ -111,6 +112,11 @@ owo-lib = { group = "io.wispforest", name = "owo-lib", version.ref = "owo-lib" }
 owo-sentinel = { group = "io.wispforest", name = "owo-sentinel", version.ref = "owo-lib" }
 
 
+adventure-api = { group = "net.kyori", name = "adventure-api", version.ref = "adventure" }
+adventure-kotlin = { group = "net.kyori", name = "adventure-extra-kotlin", version.ref = "adventure" }
+adventure-fabric = { group = "net.kyori", name = "adventure-platform-fabric", version = "5.8.0" }
+
+
 konf = { group = "com.uchuhimo", name = "konf", version = "1.1.2" }
 
 
@@ -159,6 +165,20 @@ silk = [
     "silk-persistence",
 ]
 
+adventure = [
+    "adventure-api",
+    "adventure-kotlin",
+    "adventure-fabric",
+]
+
+jackson = [
+    "jackson-core",
+    "jackson-databind",
+    "jackson-annotations",
+    "jackson-module-kotlin",
+]
+
+
 mod-runtime = [
     "mod-runtime-sodium",
     "mod-runtime-sodium-extra",
@@ -168,16 +188,9 @@ mod-runtime = [
     "mod-runtime-lithium",
     "mod-runtime-ferrite-core",
     "mod-runtime-starlight",
-#    "mod-runtime-krypton",
+    #    "mod-runtime-krypton",
     "mod-runtime-c2me",
-#    "mod-runtime-fastload",
+    #    "mod-runtime-fastload",
     "mod-runtime-chat-reports",
     "mod-runtime-fabric-carpet",
-]
-
-jackson = [
-    "jackson-core",
-    "jackson-databind",
-    "jackson-annotations",
-    "jackson-module-kotlin",
 ]

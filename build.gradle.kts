@@ -1,8 +1,8 @@
 plugins {
     `maven-publish`
 
-    // alias(libs.plugins.quilt.loom)
-    alias(libs.plugins.fabric.loom)
+    alias(libs.plugins.quilt.loom)
+//    alias(libs.plugins.fabric.loom)
 
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
@@ -45,6 +45,11 @@ dependencies {
 
     // Silk
     modImplementation(libs.bundles.silk) {
+        include(this)
+    }
+
+    // Adventure
+    modImplementation(libs.bundles.adventure) {
         include(this)
     }
 

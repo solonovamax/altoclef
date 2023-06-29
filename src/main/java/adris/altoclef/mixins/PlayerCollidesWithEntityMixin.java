@@ -8,6 +8,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Entity.class)
 public class PlayerCollidesWithEntityMixin {
@@ -17,7 +18,7 @@ public class PlayerCollidesWithEntityMixin {
             method = "onPlayerCollision",
             at = @At("HEAD")
     )
-    private void onCollideWithEntity(PlayerEntity player) {
+    private void onCollideWithEntity(PlayerEntity player, CallbackInfo info) {
         // TODO: Less hard-coded manual means of enforcing client side access
         if (player instanceof ClientPlayerEntity) {
             EventBus.publish(new PlayerCollidedWithEntityEvent(player, (Entity) (Object) this));
