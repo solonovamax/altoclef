@@ -32,6 +32,7 @@ import adris.altoclef.util.helpers.InputHelper
 import baritone.Baritone
 import baritone.altoclef.AltoClefSettings
 import baritone.api.BaritoneAPI
+import ca.solostudios.adventure.kotlin.dsl.text
 import cloud.commandframework.fabric.FabricClientCommandManager
 import cloud.commandframework.fabric.argument.FabricArgumentParsers
 import cloud.commandframework.kotlin.coroutines.annotations.installCoroutineSupport
@@ -60,7 +61,6 @@ import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
-import net.kyori.adventure.extra.kotlin.text
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.block.Blocks
@@ -91,8 +91,8 @@ object AltoClef : ModInitializer {
 
     val messagePrefix = text {
         color(NamedTextColor.AQUA)
-        content("[ALTOCLEF]")
-    }.append(Component.space())
+        content("[ALTOCLEF] ")
+    }
 
 
     // Static access to altoclef

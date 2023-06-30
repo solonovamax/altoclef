@@ -1,6 +1,7 @@
 package gay.solonovamax.altoclef.command
 
 import adris.altoclef.util.helpers.ConfigHelper
+import ca.solostudios.adventure.kotlin.dsl.text
 import cloud.commandframework.annotations.Argument
 import cloud.commandframework.annotations.CommandDescription
 import cloud.commandframework.annotations.CommandMethod
@@ -8,11 +9,10 @@ import cloud.commandframework.annotations.specifier.Greedy
 import cloud.commandframework.minecraft.extras.MinecraftHelp
 import gay.solonovamax.altoclef.AltoClef
 import gay.solonovamax.altoclef.command.source.ClientCommand
-import net.kyori.adventure.extra.kotlin.text
 
 @CommandMethod("altoclef")
 class CoreCommands(
-    private val help: MinecraftHelp<ClientCommand>
+    private val help: MinecraftHelp<ClientCommand>,
 ) {
     @CommandMethod("help [query]")
     @CommandDescription("Displays help menu")

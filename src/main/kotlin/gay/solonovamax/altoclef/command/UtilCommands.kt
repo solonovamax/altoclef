@@ -2,12 +2,12 @@ package gay.solonovamax.altoclef.command
 
 import adris.altoclef.tasks.movement.IdleTask
 import adris.altoclef.util.helpers.WorldHelper
+import ca.solostudios.adventure.kotlin.dsl.text
 import cloud.commandframework.annotations.Argument
 import cloud.commandframework.annotations.CommandDescription
 import cloud.commandframework.annotations.CommandMethod
 import gay.solonovamax.altoclef.AltoClef
 import gay.solonovamax.altoclef.command.source.ClientCommand
-import net.kyori.adventure.extra.kotlin.text
 import net.minecraft.client.MinecraftClient
 
 @CommandMethod("altoclef")

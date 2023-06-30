@@ -114,6 +114,7 @@ owo-sentinel = { group = "io.wispforest", name = "owo-sentinel", version.ref = "
 
 adventure-api = { group = "net.kyori", name = "adventure-api", version.ref = "adventure" }
 adventure-kotlin = { group = "net.kyori", name = "adventure-extra-kotlin", version.ref = "adventure" }
+adventure-kotlin-dsl = { group = "ca.solo-studios", name = "adventure-kotlin-dsl", version = "0.1.0" }
 adventure-fabric = { group = "net.kyori", name = "adventure-platform-fabric", version = "5.8.0" }
 
 
@@ -167,7 +168,7 @@ silk = [
 
 adventure = [
     "adventure-api",
-    "adventure-kotlin",
+    "adventure-kotlin-dsl",
     "adventure-fabric",
 ]
 
