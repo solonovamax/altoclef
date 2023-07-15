@@ -3,25 +3,32 @@
 kotlin = "1.8.20"
 
 # Minecraft
-minecraft = "1.19.4"
-# Loom
-loom = "1.3"
+minecraft = "1.19.4" # TODO: update to 1.20
+
 # Quilt
-quilt-loader = "0.18.5"
+quilt-loom = "1.2.3"
+quilt-loader = "0.19.2"
 quilt-mappings = "1.19.4+build.10"
-quilt-kotlin-libraries = "2.0.2+kt.1.8.20+flk.1.9.3"
+quilt-kotlin-libraries = "2.1.0+kt.1.8.22+flk.1.9.4"
 quilt-standard-libraries = "5.0.0-beta.10+1.19.4"
 quilt-fabric-api = "6.0.0-beta.9+0.83.0-1.19.4"
+
 # Fabric
-fabric-loader = "0.14.19"
-fabric-api = "0.77.0+1.19.4"
-fabric-language-kotlin = "1.9.3+kotlin.1.8.20"
+fabric-loom = "1.3.8"
+fabric-loader = "0.14.21"
+fabric-api = "0.85.0+1.19.4"
+fabric-language-kotlin = "1.9.4+kotlin.1.8.21" # newest is 1.10.0+kotlin.1.9.0, but qkl only has 2.1.0+kt.1.8.22+flk.1.9.4
 fabric-yarn = "1.19.4+build.2"
 
-owo-lib = "0.10.3+1.19.3"
+owo-lib = "0.10.6+1.19.4"
 adventure = "4.14.0"
+adventure-fabric = "5.8.0"
+adventure-kotlin-dsl = "0.1.0"
 
-mixin = "0.12.4+mixin.0.8.5"
+# SLF4K
+slf4k = "0.5.1"
+
+mixin = "0.12.5+mixin.0.8.5"
 
 # Shadow
 shadow = "8.1.1"
@@ -30,10 +37,10 @@ shadow = "8.1.1"
 cloud = "1.8.3"
 
 # Silk
-silk = "1.9.6"
+silk = "1.9.8"
 
 # Jackson
-jackson = "2.14.2"
+jackson = "2.15.2"
 
 [plugins]
 
@@ -43,8 +50,8 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 
-quilt-loom = { id = "org.quiltmc.loom", version.ref = "loom" }
-fabric-loom = { id = "fabric-loom", version.ref = "loom" }
+quilt-loom = { id = "org.quiltmc.loom", version.ref = "quilt-loom" }
+fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
 
 [libraries]
 
@@ -79,7 +86,7 @@ quilt-qsl-worldgen = { group = "org.quiltmc.qsl", name = "worldgen", version.ref
 
 # SLF4K
 ## SLF4K is a set of kotlin extensions for SLF4J
-slf4k = { group = "ca.solo-studios", name = "slf4k", version = "0.5.1" }
+slf4k = { group = "ca.solo-studios", name = "slf4k", version.ref = "slf4k" }
 
 
 # Sponge Mixin
@@ -113,9 +120,9 @@ owo-sentinel = { group = "io.wispforest", name = "owo-sentinel", version.ref = "
 
 
 adventure-api = { group = "net.kyori", name = "adventure-api", version.ref = "adventure" }
-adventure-kotlin = { group = "net.kyori", name = "adventure-extra-kotlin", version.ref = "adventure" }
-adventure-kotlin-dsl = { group = "ca.solo-studios", name = "adventure-kotlin-dsl", version = "0.1.0" }
-adventure-fabric = { group = "net.kyori", name = "adventure-platform-fabric", version = "5.8.0" }
+adventure-fabric = { group = "net.kyori", name = "adventure-platform-fabric", version.ref = "adventure-fabric" }
+adventure-kotlin-extra = { group = "net.kyori", name = "adventure-extra-kotlin", version.ref = "adventure" }
+adventure-kotlin-dsl = { group = "ca.solo-studios", name = "adventure-kotlin-dsl", version.ref = "adventure-kotlin-dsl" }
 
 
 konf = { group = "com.uchuhimo", name = "konf", version = "1.1.2" }
@@ -168,8 +175,8 @@ silk = [
 
 adventure = [
     "adventure-api",
-    "adventure-kotlin-dsl",
     "adventure-fabric",
+    "adventure-kotlin-dsl",
 ]
 
 jackson = [
